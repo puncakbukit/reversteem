@@ -4,7 +4,7 @@
 
 // ----- CONFIG -----
 const RPC = "https://api.steemit.com";
-const client = new dhive.Client(RPC);
+// const client = new dhive.Client(RPC);
 
 let username = null;
 
