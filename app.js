@@ -17,6 +17,7 @@ board[28] = "black";
 board[35] = "black";
 board[36] = "white";
 
+// ----- Wait for Steem Keychain-----
   function waitForKeychain(cb) {
     if (window.steem_keychain) {
       cb();
