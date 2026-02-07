@@ -17,8 +17,17 @@ board[28] = "black";
 board[35] = "black";
 board[36] = "white";
 
+  function waitForKeychain(cb) {
+    if (window.steem_keychain) {
+      cb();
+    } else {
+      setTimeout(() => waitForKeychain(cb), 100);
+    }
+  }
+
 // ----- LOGIN -----
 function login() {
+  waitForKeychain(() => {
   steem_keychain.requestSignBuffer(
     "",
     "Login to Reversteem",
@@ -31,6 +40,7 @@ function login() {
       }
     }
   );
+  });
 }
 
 // ----- RENDER -----
@@ -75,7 +85,7 @@ function postMove(index) {
     action: "move",
     index: index
   };
-
+  waitForKeychain(() => {
   steem_keychain.requestPost(
     username,
     "Reversi Move",
@@ -88,6 +98,7 @@ function postMove(index) {
       console.log("Move posted", res);
     }
   );
+  });
 }
 
 // ----- START -----
