@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Reversteem - Reversi on Steem</title>
+
+  <!-- Steem libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/dhive@0.14.0/dist/dhive.min.js"></script>
+
+  <!-- Steem Keychain -->
+  <script src="https://cdn.jsdelivr.net/npm/steem-keychain@1.6.3/dist/steem-keychain.min.js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(8, 40px);
+      gap: 4px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .cell {
+      width: 40px;
+      height: 40px;
+      background: #2e7d32;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .black {
+      background: black;
+      border-radius: 50%;
+    }
+    .white {
+      background: white;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Reversteem - Reversi on Steem</h1>
+
+<button onclick="login()">Login with Steem</button>
+<p id="user"></p>
+
+<div id="board"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
