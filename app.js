@@ -1,3 +1,7 @@
+// Reversteem
+// https://github.com/puncakbukit/reversteem
+// Licensed under the MIT License
+
 // ----- CONFIG -----
 const RPC = "https://api.steemit.com";
 const client = new dhive.Client(RPC);
