@@ -4,19 +4,15 @@
 
 // ----- CONFIG -----
 const RPC = "https://api.steemit.com";
-const client = new dhive.Client(RPC);
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
+const LOGIN_REJECTED = 'Login rejected';
+
+// ----- CONSTANT -----
+const client = new dhive.Client(RPC);
 const userP = document.getElementById("user");
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const boardDiv = document.getElementById("board");
-
-// ----- Auto-detect previously logged-in user -----
-let username = "";
-username = localStorage.getItem('steem_user');
-if (username) {
-  showLoggedIn(username);
-}
 
 // ----- REVERSI STATE -----
 let board = Array(64).fill(null);
@@ -26,6 +22,13 @@ board[27] = "white";
 board[28] = "black";
 board[35] = "black";
 board[36] = "white";
+
+// ----- Auto-detect previously logged-in user -----
+let username = "";
+username = localStorage.getItem('steem_user');
+if (username) {
+  showLoggedIn(username);
+}
 
 // ----- Show logged in -----
 function showLoggedIn(username) {
@@ -69,7 +72,8 @@ function login() {
         localStorage.setItem('steem_user', username);
         showLoggedIn(username);
       } else {
-        result.textContent = 'Login rejected';
+        alert(LOGIN_REJECTED);
+        return;
       }
     }
   );
