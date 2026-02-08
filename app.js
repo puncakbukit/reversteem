@@ -56,6 +56,7 @@ function login() {
   }
   username = prompt('Enter your Steem username');
   if (!username) return;
+  username = username.trim();
   const message = `Login to Reversteem`;
   steem_keychain.requestSignBuffer(
     username,
