@@ -12,6 +12,7 @@ let username = localStorage.getItem('steem_user');
 if (username) {
   document.getElementById("user").innerText =
     "Welcome back @" + username;
+    loginBtn.style.display = 'none';
 }
 
 // ----- REVERSI STATE -----
