@@ -27,7 +27,7 @@ board[36] = "white";
 
 // ----- Show logged in -----
 function showLoggedIn(username) {
-  document.getElementById("user").innerText = "Welcome @${username}";
+  document.getElementById("user").innerText = "Welcome @" + username;
   loginBtn.style.display = 'none';
   logoutBtn.style.display = 'inline-block';
 }
