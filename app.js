@@ -31,6 +31,7 @@ board[36] = "white";
 // - You flip all sandwiched discs
 // - In all 8 directions
 
+// Directions we need to scan
 const DIRECTIONS = [
   -8,  // up
   8,   // down
