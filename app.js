@@ -23,6 +23,14 @@ board[28] = "black";
 board[35] = "black";
 board[36] = "white";
 
+// A move is valid if:
+// 1. The target cell is empty
+// 2. In at least one direction, you get:
+//    your disc → opponent disc(s) → your disc
+// When placing:
+// - You flip all sandwiched discs
+// - In all 8 directions
+
 // ----- Auto-detect previously logged-in user -----
 let username = "";
 username = localStorage.getItem('steem_user');
