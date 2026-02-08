@@ -10,7 +10,8 @@ const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 
 // ----- Auto-detect previously logged-in user -----
-let username = localStorage.getItem('steem_user');
+let username = "";
+username = localStorage.getItem('steem_user');
 if (username) {
   showLoggedIn(username);
 }
