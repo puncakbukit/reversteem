@@ -31,6 +31,18 @@ board[36] = "white";
 // - You flip all sandwiched discs
 // - In all 8 directions
 
+const DIRECTIONS = [
+  -8,  // up
+  8,   // down
+  -1,  // left
+  1,   // right
+  -9,  // up-left
+  -7,  // up-right
+  7,   // down-left
+  9    // down-right
+];
+
+
 // ----- Auto-detect previously logged-in user -----
 let username = "";
 username = localStorage.getItem('steem_user');
