@@ -6,8 +6,10 @@
 const RPC = "https://api.steemit.com";
 const client = new dhive.Client(RPC);
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
+const userP = document.getElementById("user");
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
+const boardDiv = document.getElementById("board");
 
 // ----- Auto-detect previously logged-in user -----
 let username = "";
@@ -27,14 +29,14 @@ board[36] = "white";
 
 // ----- Show logged in -----
 function showLoggedIn(username) {
-  document.getElementById("user").innerText = "Welcome @" + username;
+  userP.innerText = "Welcome @" + username;
   loginBtn.style.display = 'none';
   logoutBtn.style.display = 'inline-block';
 }
 
 // ----- Show logged out -----
 function showLoggedOut() {
-  document.getElementById("user").innerText = '';
+  userP.innerText = '';
   loginBtn.style.display = 'inline-block';
   logoutBtn.style.display = 'none';
 }
@@ -81,7 +83,6 @@ function logout() {
 
 // ----- RENDER -----
 function render() {
-  const boardDiv = document.getElementById("board");
   boardDiv.innerHTML = "";
 
   for (let i = 0; i < 64; i++) {
