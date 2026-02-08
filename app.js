@@ -7,7 +7,12 @@ const RPC = "https://api.steemit.com";
 const client = new dhive.Client(RPC);
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
 
-let username = null;
+// ----- Auto-detect previously logged-in user -----
+let username = localStorage.getItem('steem_user');
+if (username) {
+  document.getElementById("user").innerText =
+    "Welcome back @" + username;
+}
 
 // ----- REVERSI STATE -----
 let board = Array(64).fill(null);
@@ -33,7 +38,7 @@ function login() {
     alert(EXTENSION_NOT_INSTALLED);
     return;
   }
-  const username = prompt('Enter your Steem username');
+  username = prompt('Enter your Steem username');
   if (!username) return;
   const message = `Login to Reversteem`;
   steem_keychain.requestSignBuffer(
