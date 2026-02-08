@@ -4,7 +4,8 @@
 
 // ----- CONFIG -----
 const RPC = "https://api.steemit.com";
-// const client = new dhive.Client(RPC);
+const client = new dhive.Client(RPC);
+const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
 
 let username = null;
 
@@ -18,17 +19,20 @@ board[35] = "black";
 board[36] = "white";
 
 // ----- Wait for Steem Keychain-----
-  function waitForKeychain(cb) {
-    if (window.steem_keychain) {
-      cb();
-    } else {
-      setTimeout(() => waitForKeychain(cb), 100);
-    }
+function waitForKeychain(cb) {
+  if (window.steem_keychain) {
+    cb();
+  } else {
+    setTimeout(() => waitForKeychain(cb), 100);
   }
+}
 
 // ----- LOGIN -----
 function login() {
-  waitForKeychain(() => {
+  if (!window.steem_keychain) {
+    alert(EXTENSION_NOT_INSTALLED);
+    return;
+  }
   steem_keychain.requestSignBuffer(
     "",
     "Login to Reversteem",
@@ -41,7 +45,6 @@ function login() {
       }
     }
   );
-  });
 }
 
 // ----- RENDER -----
@@ -81,12 +84,15 @@ function makeMove(index) {
 
 // ----- POST MOVE TO STEEM -----
 function postMove(index) {
+  if (!window.steem_keychain) {
+    alert(EXTENSION_NOT_INSTALLED);
+    return;
+  }
   const json = {
     app: "reversteem/0.1",
     action: "move",
     index: index
   };
-  waitForKeychain(() => {
   steem_keychain.requestPost(
     username,
     "Reversi Move",
@@ -99,7 +105,6 @@ function postMove(index) {
       console.log("Move posted", res);
     }
   );
-  });
 }
 
 // ----- START -----
