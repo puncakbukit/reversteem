@@ -50,6 +50,7 @@ function login() {
       if (res.success) {
         document.getElementById("user").innerText =
           "Logged in as @" + username;
+        loginBtn.style.display = 'none';
         localStorage.setItem('steem_user', username);
       } else {
         result.textContent = 'Login rejected';
