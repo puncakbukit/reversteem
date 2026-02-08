@@ -100,28 +100,6 @@ function getFlips(index, player) {
   return allFlips;
 }
 
-// Update makeMove()
-function makeMove(index) {
-  if (!username) {
-    alert("Login first");
-    return;
-  }
-
-  const player = "black"; // MVP: single-player color
-  const flips = getFlips(index, player);
-
-  if (flips.length === 0) {
-    alert("Invalid move");
-    return;
-  }
-
-  board[index] = player;
-  flips.forEach(i => board[i] = player);
-
-  render();
-  postMove(index);
-}
-
 // ----- Auto-detect previously logged-in user -----
 let username = "";
 username = localStorage.getItem('steem_user');
@@ -204,18 +182,26 @@ function render() {
   }
 }
 
-// ----- MOVE LOGIC (MINIMAL) -----
+// ----- MOVE LOGIC -----
+// Update makeMove()
 function makeMove(index) {
   if (!username) {
     alert("Login first");
     return;
   }
-  if (board[index]) return;
 
-  // NOTE: This MVP skips legality checks for brevity
-  board[index] = "black";
+  const player = "black"; // MVP: single-player color
+  const flips = getFlips(index, player);
+
+  if (flips.length === 0) {
+    alert("Invalid move");
+    return;
+  }
+
+  board[index] = player;
+  flips.forEach(i => board[i] = player);
+
   render();
-
   postMove(index);
 }
 
