@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Steem Keychain Login</title>
+</head>
+
+<body>
+  <button id="loginBtn">Login with Steem Keychain</button>
+
+  <pre id="result"></pre>
+
+  <script>
+    const loginBtn = document.getElementById('loginBtn');
+    const result = document.getElementById('result');
+
+    loginBtn.onclick = () => {
+      if (!window.steem_keychain) {
+        alert('Steem Keychain extension is not installed');
+        return;
+      }
+
+      const username = prompt('Enter your Steem username');
+      if (!username) return;
+
+      // Harmless challenge string
+      const message = `Login to MyDApp at ${new Date().toISOString()}`;
+
+      steem_keychain.requestSignBuffer(
+        username,
+        message,
+        'Posting',
+        (response) => {
+          if (response.success) {
+            result.textContent =
+              `Logged in as @${username}\n\nSignature:\n${response.result}`;
+
+            // Example: persist session
+            localStorage.setItem('steem_user', username);
+          } else {
+            result.textContent = 'Login rejected';
+          }
+        }
+      );
+    };
+  </script>
+</body>
+</html>
