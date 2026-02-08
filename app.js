@@ -33,15 +33,20 @@ function login() {
     alert(EXTENSION_NOT_INSTALLED);
     return;
   }
+  const username = prompt('Enter your Steem username');
+  if (!username) return;
+  const message = `Login to Reversteem`;
   steem_keychain.requestSignBuffer(
-    "",
-    "Login to Reversteem",
+    username,
+    message,
     "Posting",
     (res) => {
       if (res.success) {
-        username = res.data.username;
         document.getElementById("user").innerText =
           "Logged in as @" + username;
+        localStorage.setItem('steem_user', username);
+      } else {
+        result.textContent = 'Login rejected';
       }
     }
   );
