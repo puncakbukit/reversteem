@@ -6,13 +6,13 @@
 const RPC = "https://api.steemit.com";
 const client = new dhive.Client(RPC);
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
 
 // ----- Auto-detect previously logged-in user -----
 let username = localStorage.getItem('steem_user');
 if (username) {
-  document.getElementById("user").innerText =
-    "Welcome back @" + username;
-    loginBtn.style.display = 'none';
+  showLoggedIn(username);
 }
 
 // ----- REVERSI STATE -----
@@ -23,6 +23,20 @@ board[27] = "white";
 board[28] = "black";
 board[35] = "black";
 board[36] = "white";
+
+// ----- Show logged in -----
+function showLoggedIn(username) {
+  document.getElementById("user").innerText = "Welcome @${username}";
+  loginBtn.style.display = 'none';
+  logoutBtn.style.display = 'inline-block';
+}
+
+// ----- Show logged out -----
+function showLoggedOut() {
+  document.getElementById("user").innerText = '';
+  loginBtn.style.display = 'inline-block';
+  logoutBtn.style.display = 'none';
+}
 
 // ----- Wait for Steem Keychain-----
 function waitForKeychain(cb) {
@@ -48,15 +62,19 @@ function login() {
     "Posting",
     (res) => {
       if (res.success) {
-        document.getElementById("user").innerText =
-          "Logged in as @" + username;
-        loginBtn.style.display = 'none';
         localStorage.setItem('steem_user', username);
+        showLoggedIn(username);
       } else {
         result.textContent = 'Login rejected';
       }
     }
   );
+}
+
+// ----- LOGOUT -----
+function logout() {
+  localStorage.removeItem('steem_user');
+  showLoggedOut();
 }
 
 // ----- RENDER -----
