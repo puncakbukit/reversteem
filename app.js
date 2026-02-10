@@ -109,8 +109,7 @@ if (username) {
 
 // ----- Show logged in -----
 function showLoggedIn(username) {
-  us
-    erP.innerText = "Welcome @" + username;
+  userP.innerText = "Welcome @" + username;
   loginBtn.style.display = 'none';
   logoutBtn.style.display = 'inline-block';
 }
