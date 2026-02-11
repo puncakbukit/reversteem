@@ -16,6 +16,21 @@ So we will:
 We do not trust local state for turns.
 **/
 
+/**
+Turn model (simple & robust)
+Move number	Player color
+ 0	black
+ 1	white
+ 2	black
+ 3	white
+ …	…
+
+So:
+ currentPlayer = (moveCount % 2 === 0) ? "black" : "white";
+
+This works forever and is replayable from chain history.
+**/
+
 // ----- CONFIG -----
 const RPC = "https://api.steemit.com";
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
