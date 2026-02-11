@@ -47,6 +47,10 @@ const boardDiv = document.getElementById("board");
 const GAME_AUTHOR = "reversteem";
 const GAME_PERMLINK = "game-1"; // fixed for MVP
 
+// 
+let moves = [];       // [{index, player}]
+let currentPlayer = "black";
+
 // ----- REVERSI STATE -----
 let board = Array(64).fill(null);
 
