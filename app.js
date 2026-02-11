@@ -219,25 +219,26 @@ function render() {
 }
 
 // ----- MOVE LOGIC -----
-// Update makeMove()
+// Enforce turns in makeMove
+// ⚠️ No hardcoded "black" anymore
 function makeMove(index) {
   if (!username) {
     alert("Login first");
     return;
   }
 
-  const player = "black"; // MVP: single-player color
-  const flips = getFlips(index, player);
+  const flips = getFlips(index, currentPlayer);
 
   if (flips.length === 0) {
     alert("Invalid move");
     return;
   }
 
-  board[index] = player;
-  flips.forEach(i => board[i] = player);
-
+  // Optimistic local update
+  board[index] = currentPlayer;
+  flips.forEach(i => board[i] = currentPlayer);
   render();
+
   postMove(index);
 }
 
