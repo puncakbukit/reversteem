@@ -266,5 +266,26 @@ function postMove(index) {
   );
 }
 
+// Load moves from Steem comments
+async function loadMovesFromSteem() {
+  const replies = await client.database.call(
+    "get_content_replies",
+    [GAME_AUTHOR, GAME_PERMLINK]
+  );
+
+  moves = [];
+
+  for (const reply of replies) {
+    try {
+      const meta = JSON.parse(reply.json_metadata);
+      if (meta.app === "reversteem/0.1" && meta.action === "move") {
+        moves.push(meta.index);
+      }
+    } catch (e) {}
+  }
+
+  replayMoves();
+}
+
 // ----- START -----
 render();
