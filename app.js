@@ -153,6 +153,7 @@ function login() {
     message,
     "Posting",
     (res) => {
+      console.log("login", res);
       if (res.success) {
         localStorage.setItem('steem_user', username);
         showLoggedIn(username);
@@ -355,7 +356,7 @@ function postMove(index) {
     JSON.stringify(json),
     `reversteem-move-${Date.now()}`,
     (res) => {
-      console.log("Move posted", res);
+      console.log("postMove", res);
     }
   );
 }
@@ -384,6 +385,7 @@ function startGame() {
     JSON.stringify(json),
     permlink,
     (res) => {
+      console.log("startGame", res);
       if (res.success) {
         currentGame = {
           author: username,
