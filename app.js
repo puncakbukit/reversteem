@@ -382,6 +382,8 @@ function startGame() {
     type: "game_start"
   };
   console.log("startGame", "requestPost");
+  console.log("permlink", permlink);
+  console.log("json", json);
   console.log(window.steem_keychain);
   steem_keychain.requestPost(
     username,
