@@ -60,6 +60,7 @@ const client = new dhive.Client(RPC);
 const userP = document.getElementById("user");
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
+const startGameBtn = document.getElementById('startGameBtn');
 const boardDiv = document.getElementById("board");
 
 let currentGame = null; 
@@ -111,68 +112,12 @@ if (savedGame) {
   currentGame = JSON.parse(savedGame);
 }
 
-// Helper: board coordinates
-function row(i) { return Math.floor(i / 8); }
-function col(i) { return i % 8; }
-
-// Helper: is index on board & continuous
-function isOnBoard(from, to, dir) {
-  if (to < 0 || to >= 64) return false;
-
-  // Prevent wrapping (left/right edges)
-  if (dir === -1 || dir === 1) {
-    return row(from) === row(to);
-  }
-
-  if (dir === -9 || dir === 7) {
-    return col(to) < col(from);
-  }
-
-  if (dir === -7 || dir === 9) {
-    return col(to) > col(from);
-  }
-
-  return true;
-}
-
-// Core logic: collect flips in one direction
-function collectFlips(start, dir, player) {
-  const opponent = player === "black" ? "white" : "black";
-  const flips = [];
-
-  let current = start + dir;
-
-  while (isOnBoard(start, current, dir) && board[current] === opponent) {
-    flips.push(current);
-    current += dir;
-  }
-
-  if (isOnBoard(start, current, dir) && board[current] === player) {
-    return flips;
-  }
-
-  return [];
-}
-
-// Check if a move is valid + get all flips
-function getFlips(index, player) {
-  if (board[index]) return [];
-
-  let allFlips = [];
-
-  for (const dir of DIRECTIONS) {
-    const flips = collectFlips(index, dir, player);
-    allFlips = allFlips.concat(flips);
-  }
-
-  return allFlips;
-}
-
 // ----- Show logged in -----
 function showLoggedIn(username) {
   userP.innerText = "Welcome @" + username;
   loginBtn.style.display = 'none';
   logoutBtn.style.display = 'inline-block';
+  startGameBtn.style.display = 'inline-block';
 }
 
 // ----- Show logged out -----
@@ -180,6 +125,7 @@ function showLoggedOut() {
   userP.innerText = '';
   loginBtn.style.display = 'inline-block';
   logoutBtn.style.display = 'none';
+  startGameBtn.style.display = 'none';
 }
 
 // ----- Wait for Steem Keychain-----
@@ -223,6 +169,30 @@ function logout() {
   showLoggedOut();
 }
 
+// Helper: board coordinates
+function row(i) { return Math.floor(i / 8); }
+function col(i) { return i % 8; }
+
+// Helper: is index on board & continuous
+function isOnBoard(from, to, dir) {
+  if (to < 0 || to >= 64) return false;
+
+  // Prevent wrapping (left/right edges)
+  if (dir === -1 || dir === 1) {
+    return row(from) === row(to);
+  }
+
+  if (dir === -9 || dir === 7) {
+    return col(to) < col(from);
+  }
+
+  if (dir === -7 || dir === 9) {
+    return col(to) > col(from);
+  }
+
+  return true;
+}
+
 // ----- RENDER -----
 function render() {
   boardDiv.innerHTML = "";
@@ -240,6 +210,39 @@ function render() {
     cell.onclick = () => makeMove(i);
     boardDiv.appendChild(cell);
   }
+}
+
+// Core logic: collect flips in one direction
+function collectFlips(start, dir, player) {
+  const opponent = player === "black" ? "white" : "black";
+  const flips = [];
+
+  let current = start + dir;
+
+  while (isOnBoard(start, current, dir) && board[current] === opponent) {
+    flips.push(current);
+    current += dir;
+  }
+
+  if (isOnBoard(start, current, dir) && board[current] === player) {
+    return flips;
+  }
+
+  return [];
+}
+
+// Check if a move is valid + get all flips
+function getFlips(index, player) {
+  if (board[index]) return [];
+
+  let allFlips = [];
+
+  for (const dir of DIRECTIONS) {
+    const flips = collectFlips(index, dir, player);
+    allFlips = allFlips.concat(flips);
+  }
+
+  return allFlips;
 }
 
 // ----- MOVE LOGIC -----
