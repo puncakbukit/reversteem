@@ -382,6 +382,7 @@ function startGame() {
     type: "game_start"
   };
   console.log("startGame", "requestPost");
+  console.log(window.steem_keychain);
   steem_keychain.requestPost(
     username,
     "Reversteem Game Started",
