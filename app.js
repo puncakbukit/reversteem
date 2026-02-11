@@ -148,6 +148,7 @@ function login() {
   if (!username) return;
   username = username.trim();
   const message = `Login to Reversteem`;
+  console.log("login", "requestSignBuffer");
   steem_keychain.requestSignBuffer(
     username,
     message,
@@ -336,17 +337,20 @@ function makeMove(index) {
 // - Blockchain = full move history
 // 🔥 Fully decentralized.
 function postMove(index) {
+  if (!window.steem_keychain) {
+    alert(EXTENSION_NOT_INSTALLED);
+    return;
+  }
   if (!currentGame) {
     alert("No active game");
     return;
   }
-
   const json = {
     app: APP_INFO,
     action: "move",
     index: index
   };
-
+  console.log("postMove", "requestPost");
   steem_keychain.requestPost(
     username,
     "Reversi Move",
@@ -364,18 +368,20 @@ function postMove(index) {
 // ----- START_GAME -----
 // When a user clicks “Start Game”, create a post on Steem.
 function startGame() {
+  if (!window.steem_keychain) {
+    alert(EXTENSION_NOT_INSTALLED);
+    return;
+  }
   if (!username) {
     alert("Login first");
     return;
   }
-
   const permlink = `reversteem-game-${Date.now()}`;
-
   const json = {
     app: APP_INFO,
     type: "game_start"
   };
-
+  console.log("startGame", "requestPost");
   steem_keychain.requestPost(
     username,
     "Reversteem Game Started",
@@ -391,7 +397,6 @@ function startGame() {
           author: username,
           permlink: permlink
         };
-
         localStorage.setItem("current_game", JSON.stringify(currentGame));
         alert("Game created!");
       }
