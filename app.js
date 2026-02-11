@@ -287,5 +287,29 @@ async function loadMovesFromSteem() {
   replayMoves();
 }
 
+// Rebuild board from moves (deterministic)
+// This is huge:
+// ➡️ Any client can reconstruct the full game state from comments alone.
+function replayMoves() {
+  board = Array(64).fill(null);
+
+  // initial position
+  board[27] = "white";
+  board[28] = "black";
+  board[35] = "black";
+  board[36] = "white";
+
+  moves.forEach((index, i) => {
+    const player = (i % 2 === 0) ? "black" : "white";
+    const flips = getFlips(index, player);
+
+    board[index] = player;
+    flips.forEach(j => board[j] = player);
+  });
+
+  currentPlayer = (moves.length % 2 === 0) ? "black" : "white";
+  render();
+}
+ 
 // ----- START -----
 render();
