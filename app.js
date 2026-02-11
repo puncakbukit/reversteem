@@ -245,6 +245,62 @@ function getFlips(index, player) {
   return allFlips;
 }
 
+// Load moves from Steem comments
+async function loadMovesFromSteem() {
+  if (!currentGame) {
+    console.log("No active game");
+    return;
+  }
+
+  const replies = await client.database.call(
+    "get_content_replies",
+    [currentGame.author, currentGame.permlink]
+  );
+
+  moves = [];
+
+  for (const reply of replies) {
+    try {
+      const meta = JSON.parse(reply.json_metadata);
+
+      if (
+        meta.app === "reversteem/0.1" &&
+        meta.action === "move"
+      ) {
+        moves.push(meta.index);
+      }
+    } catch (e) {
+      console.log("Invalid metadata", e);
+    }
+  }
+
+  replayMoves();
+}
+
+// Rebuild board from moves (deterministic)
+// This is huge:
+// ➡️ Any client can reconstruct the full game state from comments alone.
+function replayMoves() {
+  board = Array(64).fill(null);
+
+  // initial position
+  board[27] = "white";
+  board[28] = "black";
+  board[35] = "black";
+  board[36] = "white";
+
+  moves.forEach((index, i) => {
+    const player = (i % 2 === 0) ? "black" : "white";
+    const flips = getFlips(index, player);
+
+    board[index] = player;
+    flips.forEach(j => board[j] = player);
+  });
+
+  currentPlayer = (moves.length % 2 === 0) ? "black" : "white";
+  render();
+}
+
 // ----- MOVE LOGIC -----
 // Enforce turns in makeMove
 // ⚠️ No hardcoded "black" anymore
@@ -301,51 +357,6 @@ function postMove(index) {
       console.log("Move posted", res);
     }
   );
-}
-
-// Load moves from Steem comments
-async function loadMovesFromSteem() {
-  const replies = await client.database.call(
-    "get_content_replies",
-    [GAME_AUTHOR, GAME_PERMLINK]
-  );
-
-  moves = [];
-
-  for (const reply of replies) {
-    try {
-      const meta = JSON.parse(reply.json_metadata);
-      if (meta.app === "reversteem/0.1" && meta.action === "move") {
-        moves.push(meta.index);
-      }
-    } catch (e) {}
-  }
-
-  replayMoves();
-}
-
-// Rebuild board from moves (deterministic)
-// This is huge:
-// ➡️ Any client can reconstruct the full game state from comments alone.
-function replayMoves() {
-  board = Array(64).fill(null);
-
-  // initial position
-  board[27] = "white";
-  board[28] = "black";
-  board[35] = "black";
-  board[36] = "white";
-
-  moves.forEach((index, i) => {
-    const player = (i % 2 === 0) ? "black" : "white";
-    const flips = getFlips(index, player);
-
-    board[index] = player;
-    flips.forEach(j => board[j] = player);
-  });
-
-  currentPlayer = (moves.length % 2 === 0) ? "black" : "white";
-  render();
 }
 
 // ----- START_GAME -----
