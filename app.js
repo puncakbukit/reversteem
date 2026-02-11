@@ -355,8 +355,8 @@ function postMove(index) {
     username,
     "Reversi Move",
     `Move at ${index}`,
-    currentGame.author,
     currentGame.permlink,
+    currentGame.author,
     JSON.stringify(json),
     `reversteem-move-${Date.now()}`,
     (res) => {
@@ -386,8 +386,8 @@ function startGame() {
     username,
     "Reversteem Game Started",
     "A new Reversi game has begun!",
-    "",                 // parent author (empty = top level post)
     "reversi",          // parent permlink (category/tag)
+    "",                 // parent author (empty = top level post)
     JSON.stringify(json),
     permlink,
     (res) => {
