@@ -43,6 +43,10 @@ const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const boardDiv = document.getElementById("board");
 
+// ----- GAME THREAD -----
+const GAME_AUTHOR = "reversteem";
+const GAME_PERMLINK = "game-1"; // fixed for MVP
+
 // ----- REVERSI STATE -----
 let board = Array(64).fill(null);
 
