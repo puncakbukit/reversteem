@@ -54,6 +54,7 @@ And every move will be a comment under that post.
 const RPC = "https://api.steemit.com";
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
 const LOGIN_REJECTED = 'Login rejected';
+const APP_INFO = "reversteem/0.1";
 
 // ----- CONSTANT -----
 const client = new dhive.Client(RPC);
@@ -264,7 +265,7 @@ async function loadMovesFromSteem() {
       const meta = JSON.parse(reply.json_metadata);
 
       if (
-        meta.app === "reversteem/0.1" &&
+        meta.app === APP_INFO &&
         meta.action === "move"
       ) {
         moves.push(meta.index);
@@ -340,7 +341,7 @@ function postMove(index) {
   }
 
   const json = {
-    app: "reversteem/0.1",
+    app: APP_INFO,
     action: "move",
     index: index
   };
@@ -370,7 +371,7 @@ function startGame() {
   const permlink = `reversteem-game-${Date.now()}`;
 
   const json = {
-    app: "reversteem/0.1",
+    app: APP_INFO,
     type: "game_start"
   };
 
