@@ -2,6 +2,20 @@
 // https://github.com/puncakbukit/reversteem
 // Licensed under the MIT License
 
+/**
+The core idea (important)
+ On Steem, comments are the source of truth.
+
+So we will:
+ 1. Define one game thread (root post)
+ 2. Each move = one comment with JSON metadata
+ 3. The number of moves so far determines:
+    - whose turn it is
+    - what color the player uses
+
+We do not trust local state for turns.
+**/
+
 // ----- CONFIG -----
 const RPC = "https://api.steemit.com";
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
