@@ -312,4 +312,5 @@ function replayMoves() {
 }
  
 // ----- START -----
-render();
+// Load game on startup
+loadMovesFromSteem();
