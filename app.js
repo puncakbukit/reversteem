@@ -243,26 +243,25 @@ function makeMove(index) {
 }
 
 // ----- POST MOVE TO STEEM -----
+// Include player color implicitly via move order
 function postMove(index) {
-  if (!window.steem_keychain) {
-    alert(EXTENSION_NOT_INSTALLED);
-    return;
-  }
   const json = {
     app: "reversteem/0.1",
     action: "move",
     index: index
   };
+
   steem_keychain.requestPost(
     username,
-    "Reversi Move",
+    "Reversteem Move",
     `Move at ${index}`,
-    "reversi-root-author",
-    "reversi-root-permlink",
+    GAME_AUTHOR,
+    GAME_PERMLINK,
     JSON.stringify(json),
     "",
-    (res) => {
-      console.log("Move posted", res);
+    () => {
+      // reload from chain to stay canonical
+      setTimeout(loadMovesFromSteem, 3000);
     }
   );
 }
