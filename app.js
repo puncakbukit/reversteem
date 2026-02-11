@@ -57,7 +57,7 @@ const LOGIN_REJECTED = 'Login rejected';
 const APP_INFO = "reversteem/0.1";
 
 // ----- CONSTANT -----
-const client = new dhive.Client(RPC);
+//const client = new dhive.Client(RPC);
 const userP = document.getElementById("user");
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
