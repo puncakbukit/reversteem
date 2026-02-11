@@ -31,6 +31,25 @@ So:
 This works forever and is replayable from chain history.
 **/
 
+/**
+The game thread must be created dynamically
+and its author + permlink stored as the game ID.
+
+In Steem every post has:
+ - author
+ - permlink
+
+Together they uniquely identify a post.
+So a game should be like:
+
+GAME = {
+  author: "alice",
+  permlink: "reversteem-game-2026-02-11-123456"
+}
+
+And every move will be a comment under that post.
+**/
+
 // ----- CONFIG -----
 const RPC = "https://api.steemit.com";
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
@@ -43,9 +62,8 @@ const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const boardDiv = document.getElementById("board");
 
-// ----- GAME THREAD -----
-const GAME_AUTHOR = "reversteem";
-const GAME_PERMLINK = "game-1"; // fixed for MVP
+let currentGame = null; 
+// { author: "...", permlink: "..." }
 
 // Track moves from the blockchain
 let moves = [];       // [{index, player}]
@@ -79,6 +97,19 @@ const DIRECTIONS = [
   7,   // down-left
   9    // down-right
 ];
+
+// ----- Auto-detect previously logged-in user -----
+let username = "";
+username = localStorage.getItem('steem_user');
+if (username) {
+  showLoggedIn(username);
+}
+
+// When page loads:
+const savedGame = localStorage.getItem("current_game");
+if (savedGame) {
+  currentGame = JSON.parse(savedGame);
+}
 
 // Helper: board coordinates
 function row(i) { return Math.floor(i / 8); }
@@ -135,13 +166,6 @@ function getFlips(index, player) {
   }
 
   return allFlips;
-}
-
-// ----- Auto-detect previously logged-in user -----
-let username = "";
-username = localStorage.getItem('steem_user');
-if (username) {
-  showLoggedIn(username);
 }
 
 // ----- Show logged in -----
@@ -244,7 +268,18 @@ function makeMove(index) {
 
 // ----- POST MOVE TO STEEM -----
 // Include player color implicitly via move order
+// Post Moves to THAT Game
+// Now:
+// - Root post = the game
+// - Comments = moves
+// - Blockchain = full move history
+// 🔥 Fully decentralized.
 function postMove(index) {
+  if (!currentGame) {
+    alert("No active game");
+    return;
+  }
+
   const json = {
     app: "reversteem/0.1",
     action: "move",
@@ -253,15 +288,14 @@ function postMove(index) {
 
   steem_keychain.requestPost(
     username,
-    "Reversteem Move",
+    "Reversi Move",
     `Move at ${index}`,
-    GAME_AUTHOR,
-    GAME_PERMLINK,
+    currentGame.author,
+    currentGame.permlink,
     JSON.stringify(json),
-    "",
-    () => {
-      // reload from chain to stay canonical
-      setTimeout(loadMovesFromSteem, 3000);
+    `reversteem-move-${Date.now()}`,
+    (res) => {
+      console.log("Move posted", res);
     }
   );
 }
@@ -309,6 +343,43 @@ function replayMoves() {
 
   currentPlayer = (moves.length % 2 === 0) ? "black" : "white";
   render();
+}
+
+// ----- START_GAME -----
+// When a user clicks “Start Game”, create a post on Steem.
+function startGame() {
+  if (!username) {
+    alert("Login first");
+    return;
+  }
+
+  const permlink = `reversteem-game-${Date.now()}`;
+
+  const json = {
+    app: "reversteem/0.1",
+    type: "game_start"
+  };
+
+  steem_keychain.requestPost(
+    username,
+    "Reversteem Game Started",
+    "A new Reversi game has begun!",
+    "",                 // parent author (empty = top level post)
+    "reversi",          // parent permlink (category/tag)
+    JSON.stringify(json),
+    permlink,
+    (res) => {
+      if (res.success) {
+        currentGame = {
+          author: username,
+          permlink: permlink
+        };
+
+        localStorage.setItem("current_game", JSON.stringify(currentGame));
+        alert("Game created!");
+      }
+    }
+  );
 }
  
 // ----- START -----
