@@ -54,7 +54,9 @@ And every move will be a comment under that post.
 const RPC = "https://api.steemit.com";
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
 const LOGIN_REJECTED = 'Login rejected';
-const APP_INFO = "reversteem/0.1";
+const APP_NAME = "reversteem";
+const APP_VER = "0.1";
+const APP_INFO = APP_NAME + "/" + APP_VER;
 
 // ----- CONSTANT -----
 //const client = new dhive.Client(RPC);
@@ -357,7 +359,7 @@ function postMove(index) {
     `Move at ${index}`,
     currentGame.permlink,
     currentGame.author,
-    JSON.stringify(json),
+    json,
     `reversteem-move-${Date.now()}`,
     (res) => {
       console.log("postMove", res);
@@ -376,7 +378,7 @@ function startGame() {
     alert("Login first");
     return;
   }
-  const permlink = `reversteem-game-${Date.now()}`;
+  const permlink = APP_NAME + `-${Date.now()}`;
   const json = {
     app: APP_INFO,
     type: "game_start"
@@ -389,9 +391,9 @@ function startGame() {
     username,
     "Reversteem Game Started",
     "A new Reversi game has begun!",
-    "reversi",          // parent permlink (category/tag)
+    APP_NAME,          // parent permlink (category/tag)
     "",                 // parent author (empty = top level post)
-    JSON.stringify(json),
+    json,
     permlink,
     (res) => {
       console.log("startGame", res);
