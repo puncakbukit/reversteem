@@ -77,6 +77,10 @@ const logoutBtn = document.getElementById('logoutBtn');
 const startGameBtn = document.getElementById('startGameBtn');
 const boardDiv = document.getElementById("board");
 
+// Store Player Roles
+let blackPlayer = null;
+let whitePlayer = null;
+
 let currentGame = null; 
 // { author: "...", permlink: "..." }
 
@@ -263,37 +267,83 @@ function getFlips(index, player) {
 }
 
 // Load moves from Steem comments
+/**
+Load Player Roles From Blockchain
+We need to:
+ - Load the root post
+ - Read json_metadata.black
+ - Determine white as first distinct commenter
+**/
 async function loadMovesFromSteem() {
   if (!currentGame) {
     console.log("No active game");
     return;
   }
+
   return new Promise((resolve, reject) => {
-    steem.api.getContentReplies(
+
+    // 1️⃣ Load root post (to get black player)
+    steem.api.getContent(
       currentGame.author,
       currentGame.permlink,
-      (err, replies) => {
+      (err, root) => {
+
         if (err) {
-          console.log("RPC error", err);
+          console.log("Root load error", err);
           reject(err);
           return;
         }
-        moves = [];
-        replies.forEach(reply => {
-          try {
-            const meta = JSON.parse(reply.json_metadata);
-            if (
-              meta.app === APP_INFO &&
-              meta.action === "move"
-            ) {
-              moves.push(meta.index);
+
+        try {
+          const meta = JSON.parse(root.json_metadata);
+          blackPlayer = meta.black;
+        } catch (e) {
+          console.log("Invalid root metadata");
+        }
+
+        // 2️⃣ Load replies (moves)
+        steem.api.getContentReplies(
+          currentGame.author,
+          currentGame.permlink,
+          (err2, replies) => {
+
+            if (err2) {
+              console.log("RPC error", err2);
+              reject(err2);
+              return;
             }
-          } catch (e) {
-            console.log("Invalid metadata", e);
+
+            moves = [];
+            whitePlayer = null;
+
+            replies.forEach(reply => {
+              try {
+                const meta = JSON.parse(reply.json_metadata);
+
+                if (
+                  meta.app === APP_INFO &&
+                  meta.action === "move"
+                ) {
+                  moves.push({
+                    index: meta.index,
+                    author: reply.author
+                  });
+
+                  // First non-black mover becomes white
+                  if (!whitePlayer && reply.author !== blackPlayer) {
+                    whitePlayer = reply.author;
+                  }
+                }
+
+              } catch (e) {
+                console.log("Invalid metadata", e);
+              }
+            });
+
+            replayMoves();
+            resolve();
           }
-        });
-        replayMoves();
-        resolve();
+        );
       }
     );
   });
