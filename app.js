@@ -387,34 +387,33 @@ async function loadMovesFromSteem() {
             moves = [];
             whitePlayer = null;
 
-            replies.forEach(reply => {
-              try {
-                const meta = JSON.parse(reply.json_metadata);
+replies.forEach(reply => {
+  try {
+    const meta = JSON.parse(reply.json_metadata);
 
-                if (
-                  meta.app === APP_INFO &&
-                  meta.action === "move"
-                ) {
-                  moves.push({
-                    index: meta.index,
-                    author: reply.author
-                  });
+    if (meta.app !== APP_INFO) return;
 
-                  // First non-black mover becomes white
-if (
-  meta.app === APP_INFO &&
-  meta.action === "join" &&
-  !whitePlayer &&
-  reply.author !== blackPlayer
-) {
-  whitePlayer = reply.author;
-}
-                }
+    // JOIN
+    if (
+      meta.action === "join" &&
+      !whitePlayer &&
+      reply.author !== blackPlayer
+    ) {
+      whitePlayer = reply.author;
+    }
 
-              } catch (e) {
-                console.log("Invalid metadata", e);
-              }
-            });
+    // MOVE
+    if (meta.action === "move") {
+      moves.push({
+        index: meta.index,
+        author: reply.author
+      });
+    }
+
+  } catch (e) {
+    console.log("Invalid metadata", e);
+  }
+});
 
 const gameStatus = whitePlayer ? "active" : "open";
            
