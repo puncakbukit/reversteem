@@ -50,6 +50,17 @@ GAME = {
 And every move will be a comment under that post.
 **/
 
+/**
+Right now our system determines turn purely by move count:
+
+currentPlayer = (moves.length % 2 === 0) ? "black" : "white";
+
+Now to enforce identity, we need three things:
+ - Store who is black (already done in game_start)
+ - Determine who is white
+ - Block moves if username !== expectedPlayer
+**/
+
 // ----- CONFIG -----
 const RPC = "https://api.steemit.com";
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
