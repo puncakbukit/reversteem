@@ -426,7 +426,7 @@ const body =
   steem_keychain.requestPost(
     username,
     "Reversteem Game Started",
-    "A new Reversi game has begun!",
+    body,
     APP_NAME,
     "",
     JSON.stringify(meta),
