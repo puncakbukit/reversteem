@@ -77,7 +77,6 @@ let currentPlayer = "black";
 
 let board = Array(64).fill(null);
 
-
 // ============================================================
 // INITIALIZATION
 // ============================================================
@@ -471,7 +470,7 @@ function postMove(index) {
 
 const body =
   `## Move by @${username}\n\n` +
-  `Played at index ${index}\n\n` +
+  `Played at index ${indexToCoord(index)}\n\n` +
   boardToMarkdown(board);
   
   steem_keychain.requestPost(
@@ -487,6 +486,36 @@ const body =
   );
 }
 
+// Board → Markdown Renderer
+function boardToMarkdown(boardArray) {
+  const symbols = {
+    black: "⚫",
+    white: "⚪",
+    null:  "·"
+  };
+
+  let md = "### Current Board\n\n";
+  md += "| A | B | C | D | E | F | G | H |\n";
+  md += "|---|---|---|---|---|---|---|---|\n";
+
+  for (let r = 0; r < 8; r++) {
+    md += "|";
+    for (let c = 0; c < 8; c++) {
+      const piece = boardArray[r * 8 + c];
+      md += ` ${symbols[piece]} |`;
+    }
+    md += "\n";
+  }
+
+  return md;
+}
+
+// Chess-style coordinates:
+function indexToCoord(index) {
+  const file = String.fromCharCode(65 + (index % 8));
+  const rank = 8 - Math.floor(index / 8);
+  return file + rank;
+}
 
 // ============================================================
 // JOIN FLOW
