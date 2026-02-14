@@ -62,8 +62,6 @@ Now to enforce identity, we need three things:
 **/
 
 /**
-
-/**
 We want:
 1. Discover open games
 2. Show them in UI
@@ -75,6 +73,30 @@ No backend.
 Fully derived from chain.
 **/
 
+/**
+JSON Metadata Architecture
+
+Root Post:
+{
+  "app": "reversteem/0.1",
+  "type": "game_start",
+  "black": "alice",
+  "white": null,
+  "status": "open"
+}
+
+Join Comment:
+{
+  "app": "reversteem/0.1",
+  "action": "join"
+}
+
+Move Comment:
+{
+  "app": "reversteem/0.1",
+  "action": "move",
+  "index": 34
+}
 **/
 
 // ----- CONFIG -----
@@ -92,6 +114,7 @@ const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const startGameBtn = document.getElementById('startGameBtn');
 const boardDiv = document.getElementById("board");
+const gameListDiv = document.getElementById("gameList");
 
 // Store Player Roles
 let blackPlayer = null;
@@ -551,6 +574,60 @@ function joinGame(author, permlink) {
   localStorage.setItem("current_game", JSON.stringify(currentGame));
   loadMovesFromSteem();
 }
+
+// Render Game List
+function renderGameList(games) {
+  gameListDiv.innerHTML = "";
+
+  games.forEach(post => {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      Game by @${post.author}
+      <button>Join</button>
+    `;
+
+    div.querySelector("button").onclick = () => {
+      joinGame(post.author, post.permlink);
+    };
+
+    gameListDiv.appendChild(div);
+  });
+}
+
+// Explicit Join System
+// First `"join"` comment = white
+// Join Post Function
+function postJoin() {
+  if (!window.steem_keychain) {
+    alert(EXTENSION_NOT_INSTALLED);
+    return;
+  }
+
+  const json = {
+    app: APP_INFO,
+    action: "join"
+  };
+
+  steem_keychain.requestPost(
+    username,
+    "Join Game",
+    "Joining this game as white.",
+    currentGame.permlink,
+    currentGame.author,
+    JSON.stringify(json),
+    `reversteem-join-${Date.now()}`,
+    "",
+    (res) => {
+      if (res.success) {
+        loadMovesFromSteem();
+      }
+    }
+  );
+}
+
+// Call on startup:
+// Now users can SEE open games.
+loadOpenGames();
 
 // ----- START -----
 // Load game on startup
