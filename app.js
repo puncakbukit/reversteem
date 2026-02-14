@@ -394,7 +394,12 @@ function makeMove(index) {
     alert("Not your turn");
     return;
   }
-
+ 
+if (currentPlayer === "white" && !whitePlayer) {
+  alert("No opponent yet");
+  return;
+}
+ 
   const flips = getFlips(index, currentPlayer);
 
   if (flips.length === 0) {
