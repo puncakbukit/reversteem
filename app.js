@@ -450,9 +450,11 @@ function startGame() {
   }
   const permlink = APP_NAME + `-${Date.now()}`;
   const json = {
-    app: APP_INFO,
-    type: "game_start",
-    black: username
+    "app": APP_INFO,
+    "type": "game_start",
+    "black": username,
+    "white": null,
+    "status": "open"   
   };
   steem_keychain.requestPost(
     username,
