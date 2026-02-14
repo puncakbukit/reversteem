@@ -270,6 +270,8 @@ We need to:
  - Load the root post
  - Read json_metadata.black
  - Determine white as first distinct commenter
+
+ Update Game Status Automatically
 **/
 async function loadMovesFromSteem() {
   if (!currentGame) {
