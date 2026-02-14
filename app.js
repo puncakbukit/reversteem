@@ -445,10 +445,14 @@ const body =
 function postJoin() {
   const meta = { app: APP_INFO, action: "join" };
 
+const body =
+  `## @${username} joined as White\n\n` +
+  boardToMarkdown(board);
+  
   steem_keychain.requestPost(
     username,
     "Join Game",
-    "Joining as white.",
+    body,
     currentGame.permlink,
     currentGame.author,
     JSON.stringify(meta),
