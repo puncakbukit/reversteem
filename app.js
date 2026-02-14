@@ -362,6 +362,7 @@ function postMove(index) {
     currentGame.author,
     JSON.stringify(json),
     `reversteem-move-${Date.now()}`,
+    "",
     (res) => {
       console.log("postMove", res);
     }
@@ -398,7 +399,7 @@ function startGame() {
     "",                 // parent author (empty = top level post)
     JSON.stringify(json),
     permlink,
-    null,
+    "",
     (res) => {
       console.log("startGame", JSON.stringify(res));
       if (res.success) {
