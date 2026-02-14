@@ -61,6 +61,22 @@ Now to enforce identity, we need three things:
  - Block moves if username !== expectedPlayer
 **/
 
+/**
+
+/**
+We want:
+1. Discover open games
+2. Show them in UI
+3. Allow user to click “Join”
+4. Post a `"join"` comment
+5. Lock white player permanently
+
+No backend.
+Fully derived from chain.
+**/
+
+**/
+
 // ----- CONFIG -----
 const RPC = "https://api.steemit.com";
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
