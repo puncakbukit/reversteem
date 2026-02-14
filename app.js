@@ -480,7 +480,14 @@ function startGame() {
     }
   );
 }
- 
+
+// Add “Join Game” Mechanism
+function joinGame(author, permlink) {
+  currentGame = { author, permlink };
+  localStorage.setItem("current_game", JSON.stringify(currentGame));
+  loadMovesFromSteem();
+}
+
 // ----- START -----
 // Load game on startup
 loadMovesFromSteem();
