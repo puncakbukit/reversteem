@@ -151,6 +151,7 @@ function login() {
   username = username.trim();
   const message = `Login to Reversteem`;
   console.log("login", "requestSignBuffer");
+  console.log("steem_keychain", JSON.stringify(window.steem_keychain));
   steem_keychain.requestSignBuffer(
     username,
     message,
@@ -359,7 +360,7 @@ function postMove(index) {
     `Move at ${index}`,
     currentGame.permlink,
     currentGame.author,
-    json,
+    JSON.stringify(json),
     `reversteem-move-${Date.now()}`,
     (res) => {
       console.log("postMove", res);
