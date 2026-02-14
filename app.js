@@ -342,6 +342,8 @@ if (
               }
             });
 
+const gameStatus = whitePlayer ? "active" : "open";
+           
             replayMoves();
 if (!whitePlayer && username !== blackPlayer) {
   console.log("Game open for white");
