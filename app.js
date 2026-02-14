@@ -384,7 +384,7 @@ function startGame() {
     type: "game_start"
   };
   console.log("startGame", "requestPost");
-  console.log(window.steem_keychain);
+  console.log("steem_keychain", JSON.stringify(window.steem_keychain));
   console.log("username", username);
   console.log("APP_NAME", APP_NAME);
   console.log("json", JSON.stringify(json));
@@ -398,7 +398,7 @@ function startGame() {
     json,
     permlink,
     (res) => {
-      console.log("startGame", res);
+      console.log("startGame", JSON.stringify(res));
       if (res.success) {
         currentGame = {
           author: username,
