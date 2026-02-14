@@ -417,6 +417,12 @@ function startGame() {
     status: "open"
   };
 
+const body =
+  `## New Reversteem Game\n\n` +
+  `Black: @${username}\n\n` +
+  boardToMarkdown(board) +
+  `\n\n---\nMove by commenting via Reversteem.`;
+  
   steem_keychain.requestPost(
     username,
     "Reversteem Game Started",
