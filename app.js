@@ -257,30 +257,35 @@ async function loadMovesFromSteem() {
     console.log("No active game");
     return;
   }
-
-  const replies = await client.database.call(
-    "get_content_replies",
-    [currentGame.author, currentGame.permlink]
-  );
-
-  moves = [];
-
-  for (const reply of replies) {
-    try {
-      const meta = JSON.parse(reply.json_metadata);
-
-      if (
-        meta.app === APP_INFO &&
-        meta.action === "move"
-      ) {
-        moves.push(meta.index);
+  return new Promise((resolve, reject) => {
+    steem.api.getContentReplies(
+      currentGame.author,
+      currentGame.permlink,
+      (err, replies) => {
+        if (err) {
+          console.log("RPC error", err);
+          reject(err);
+          return;
+        }
+        moves = [];
+        replies.forEach(reply => {
+          try {
+            const meta = JSON.parse(reply.json_metadata);
+            if (
+              meta.app === APP_INFO &&
+              meta.action === "move"
+            ) {
+              moves.push(meta.index);
+            }
+          } catch (e) {
+            console.log("Invalid metadata", e);
+          }
+        });
+        replayMoves();
+        resolve();
       }
-    } catch (e) {
-      console.log("Invalid metadata", e);
-    }
-  }
-
-  replayMoves();
+    );
+  });
 }
 
 // Rebuild board from moves (deterministic)
