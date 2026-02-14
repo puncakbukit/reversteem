@@ -568,10 +568,23 @@ function startGame() {
 }
 
 // Add “Join Game” Mechanism
+/**
+When user clicks Join:
+- Load the game
+- If no white yet → call postJoin()
+- Otherwise just spectate
+**/
 function joinGame(author, permlink) {
   currentGame = { author, permlink };
   localStorage.setItem("current_game", JSON.stringify(currentGame));
-  loadMovesFromSteem();
+
+  loadMovesFromSteem().then(() => {
+
+    if (!whitePlayer && username !== blackPlayer) {
+      postJoin();
+    }
+
+  });
 }
 
 // Render Game List
