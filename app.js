@@ -311,13 +311,13 @@ function replayMoves() {
   board[35] = "black";
   board[36] = "white";
 
-  moves.forEach((index, i) => {
-    const player = (i % 2 === 0) ? "black" : "white";
-    const flips = getFlips(index, player);
+moves.forEach((move, i) => {
+  const player = (i % 2 === 0) ? "black" : "white";
+  const flips = getFlips(move.index, player);
 
-    board[index] = player;
-    flips.forEach(j => board[j] = player);
-  });
+  board[move.index] = player;
+  flips.forEach(j => board[j] = player);
+});
 
   currentPlayer = (moves.length % 2 === 0) ? "black" : "white";
   render();
