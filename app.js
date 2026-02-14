@@ -157,7 +157,7 @@ function login() {
     message,
     "Posting",
     (res) => {
-      console.log("login", res);
+      console.log("login", JSON.stringify(res));
       if (res.success) {
         localStorage.setItem('steem_user', username);
         showLoggedIn(username);
