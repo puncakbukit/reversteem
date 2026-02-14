@@ -463,16 +463,16 @@ function makeMove(index) {
     return;
   }
 
-  const expectedPlayer =
-    currentPlayer === "black" ? blackPlayer : whitePlayer;
-
-  if (username !== expectedPlayer) {
-    alert("Not your turn");
-    return;
-  }
- 
 if (currentPlayer === "white" && !whitePlayer) {
   alert("No opponent yet");
+  return;
+}
+
+const expectedPlayer =
+  currentPlayer === "black" ? blackPlayer : whitePlayer;
+
+if (username !== expectedPlayer) {
+  alert("Not your turn");
   return;
 }
  
