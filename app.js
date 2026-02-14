@@ -380,6 +380,7 @@ moves.forEach((move, i) => {
 
 // ----- MOVE LOGIC -----
 // Enforce turns in makeMove
+// Enforce That White Must Join Before Moving
 // ⚠️ No hardcoded "black" 
 function makeMove(index) {
   if (!username) {
