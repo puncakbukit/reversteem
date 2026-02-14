@@ -165,14 +165,11 @@ function login() {
   if (!username) return;
   username = username.trim();
   const message = `Login to Reversteem`;
-  console.log("login", "requestSignBuffer");
-  console.log("steem_keychain", JSON.stringify(window.steem_keychain));
   steem_keychain.requestSignBuffer(
     username,
     message,
     "Posting",
     (res) => {
-      console.log("login", JSON.stringify(res));
       if (res.success) {
         localStorage.setItem('steem_user', username);
         showLoggedIn(username);
@@ -426,7 +423,6 @@ function postMove(index) {
     action: "move",
     index: index
   };
-  console.log("postMove", "requestPost");
   steem_keychain.requestPost(
     username,
     "Reversi Move",
@@ -437,7 +433,6 @@ function postMove(index) {
     `reversteem-move-${Date.now()}`,
     "",
     (res) => {
-      console.log("postMove", res);
     }
   );
 }
@@ -459,12 +454,6 @@ function startGame() {
     type: "game_start",
     black: username
   };
-  console.log("startGame", "requestPost");
-  console.log("steem_keychain", JSON.stringify(window.steem_keychain));
-  console.log("username", username);
-  console.log("APP_NAME", APP_NAME);
-  console.log("json", JSON.stringify(json));
-  console.log("permlink", permlink);
   steem_keychain.requestPost(
     username,
     "Reversteem Game Started",
@@ -475,7 +464,6 @@ function startGame() {
     permlink,
     "",
     (res) => {
-      console.log("startGame", JSON.stringify(res));
       if (res.success) {
         currentGame = {
           author: username,
