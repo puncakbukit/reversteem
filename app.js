@@ -327,9 +327,14 @@ async function loadMovesFromSteem() {
                   });
 
                   // First non-black mover becomes white
-                  if (!whitePlayer && reply.author !== blackPlayer) {
-                    whitePlayer = reply.author;
-                  }
+if (
+  meta.app === APP_INFO &&
+  meta.action === "join" &&
+  !whitePlayer &&
+  reply.author !== blackPlayer
+) {
+  whitePlayer = reply.author;
+}
                 }
 
               } catch (e) {
