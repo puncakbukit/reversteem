@@ -325,10 +325,18 @@ moves.forEach((move, i) => {
 
 // ----- MOVE LOGIC -----
 // Enforce turns in makeMove
-// ⚠️ No hardcoded "black" anymore
+// ⚠️ No hardcoded "black" 
 function makeMove(index) {
   if (!username) {
     alert("Login first");
+    return;
+  }
+
+  const expectedPlayer =
+    currentPlayer === "black" ? blackPlayer : whitePlayer;
+
+  if (username !== expectedPlayer) {
+    alert("Not your turn");
     return;
   }
 
@@ -339,7 +347,6 @@ function makeMove(index) {
     return;
   }
 
-  // Optimistic local update
   board[index] = currentPlayer;
   flips.forEach(i => board[i] = currentPlayer);
   render();
