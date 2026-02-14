@@ -384,9 +384,11 @@ function startGame() {
     type: "game_start"
   };
   console.log("startGame", "requestPost");
-  console.log("permlink", permlink);
-  console.log("json", json);
   console.log(window.steem_keychain);
+  console.log("username", username);
+  console.log("APP_NAME", APP_NAME);
+  console.log("json", JSON.stringify(json));
+  console.log("permlink", permlink);
   steem_keychain.requestPost(
     username,
     "Reversteem Game Started",
