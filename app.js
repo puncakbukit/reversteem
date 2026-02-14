@@ -396,7 +396,7 @@ function startGame() {
     "A new Reversi game has begun!",
     APP_NAME,          // parent permlink (category/tag)
     "",                 // parent author (empty = top level post)
-    json,
+    JSON.stringify(json),
     permlink,
     (res) => {
       console.log("startGame", JSON.stringify(res));
