@@ -465,10 +465,15 @@ function postMove(index) {
     index
   };
 
+const body =
+  `## Move by @${username}\n\n` +
+  `Played at index ${index}\n\n` +
+  boardToMarkdown(board);
+  
   steem_keychain.requestPost(
     username,
     "Reversi Move",
-    `Move at ${index}`,
+    body,
     currentGame.permlink,
     currentGame.author,
     JSON.stringify(meta),
