@@ -279,6 +279,39 @@ function getFlips(index, player) {
   return allFlips;
 }
 
+// Game Discovery 
+/**
+Since our root posts use: "reversteem", that means every game is under that tag.
+We fetch them like this:
+**/
+function loadOpenGames() {
+  steem.api.getDiscussionsByCreated(
+    { tag: APP_NAME, limit: 20 },
+    (err, posts) => {
+
+      if (err) {
+        console.log("Error loading games", err);
+        return;
+      }
+
+      const openGames = posts.filter(post => {
+        try {
+          const meta = JSON.parse(post.json_metadata);
+          return (
+            meta.app === APP_INFO &&
+            meta.type === "game_start" &&
+            meta.status === "open"
+          );
+        } catch (e) {
+          return false;
+        }
+      });
+
+      renderGameList(openGames);
+    }
+  );
+}
+
 // Load moves from Steem comments
 /**
 Load Player Roles From Blockchain
