@@ -815,3 +815,19 @@ function joinGame(author, permlink) {
     }
   });
 }
+
+      const piece = boardArray[r * 8 + c];
+      md += ` ${symbols[piece]} |`;
+    }
+    md += "\n";
+  }
+
+  return md;
+}
+
+// Chess-style coordinates:
+function indexToCoord(index) {
+  const file = String.fromCharCode(65 + (index % 8));
+  const rank = 8 - Math.floor(index / 8);
+  return file + rank;
+}
