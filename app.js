@@ -697,10 +697,11 @@ function loadUserProfile(username) {
     let profile = {};
 
     try {
-      profile = JSON.parse(account.json_metadata).profile || {};
-      console.log("loadUserProfile result", JSON.stringify(result));
-      console.log("loadUserProfile profile", JSON.stringify(profile));
-    } catch (e) {}
+      const metadata = account.posting_json_metadata || account.json_metadata;
+      profile = JSON.parse(metadata).profile || {};
+    } catch (e) {
+      profile = {};
+    }
 
     renderUserProfile({
       username: account.name,
