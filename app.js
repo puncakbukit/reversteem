@@ -299,6 +299,59 @@ async function enrichGamesWithWhitePlayer(posts) {
   return enriched;
 }
 
+function deriveWhitePlayer(post) {
+
+  return new Promise(resolve => {
+
+    let meta = {};
+    try { meta = JSON.parse(post.json_metadata); } catch {}
+
+    const blackPlayer = meta.black;
+
+    steem.api.getContentReplies(
+      post.author,
+      post.permlink,
+      (err, replies) => {
+
+        let whitePlayer = null;
+
+        if (!err && replies) {
+
+          replies
+            .sort((a,b)=> new Date(a.created) - new Date(b.created))
+            .forEach(reply => {
+
+              if (whitePlayer) return;
+
+              try {
+                const rmeta = JSON.parse(reply.json_metadata);
+
+                if (
+                  rmeta.app === APP_INFO &&
+                  rmeta.action === "join" &&
+                  reply.author !== blackPlayer
+                ) {
+                  whitePlayer = reply.author;
+                }
+
+              } catch {}
+            });
+        }
+
+        resolve({
+          author: post.author,
+          permlink: post.permlink,
+          title: post.title,
+          created: post.created,
+          blackPlayer,
+          whitePlayer,
+          status: whitePlayer ? "in_progress" : "open"
+        });
+      }
+    );
+  });
+}
+
 // ============================================================
 // BLOCKCHAIN STATE LOADING
 // ============================================================
