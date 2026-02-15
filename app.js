@@ -269,6 +269,66 @@ function renderBoard() {
   }
 }
 
+// ============================================================
+// BOARD PREVIEW (Read-only Mini Board)
+// ============================================================
+
+function renderBoardPreview(game, container) {
+
+  // Create isolated board state
+  let previewBoard = Array(64).fill(null);
+
+  // Initial Reversi setup
+  previewBoard[27] = "white";
+  previewBoard[28] = "black";
+  previewBoard[35] = "black";
+  previewBoard[36] = "white";
+
+  // Load moves from blockchain
+  steem.api.getContentReplies(
+    game.author,
+    game.permlink,
+    (err, replies) => {
+
+      if (err) return;
+
+      let previewMoves = [];
+
+      replies.forEach(reply => {
+        try {
+          const meta = JSON.parse(reply.json_metadata);
+          if (
+            meta.app === APP_INFO &&
+            meta.action === "move"
+          ) {
+            previewMoves.push(meta.index);
+          }
+        } catch {}
+      });
+
+      // Replay moves locally
+      previewMoves.forEach((index, i) => {
+
+        const player = (i % 2 === 0)
+          ? "black"
+          : "white";
+
+        const flips = getFlipsForPreview(
+          previewBoard,
+          index,
+          player
+        );
+
+        previewBoard[index] = player;
+        flips.forEach(f => previewBoard[f] = player);
+      });
+
+      // Render mini board
+      drawMiniBoard(previewBoard, container);
+    }
+  );
+}
+
 
 // ============================================================
 // BLOCKCHAIN STATE LOADING
