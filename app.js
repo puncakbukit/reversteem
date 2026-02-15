@@ -329,6 +329,47 @@ function renderBoardPreview(game, container) {
   );
 }
 
+function getFlipsForPreview(boardState, index, player) {
+
+  if (boardState[index]) return [];
+
+  let all = [];
+
+  for (const dir of DIRECTIONS) {
+    all = all.concat(
+      collectFlipsPreview(boardState, index, dir, player)
+    );
+  }
+
+  return all;
+}
+
+function collectFlipsPreview(boardState, start, dir, player) {
+
+  const opponent = player === "black" ? "white" : "black";
+  const flips = [];
+
+  let current = start + dir;
+
+  while (
+    current >= 0 &&
+    current < 64 &&
+    boardState[current] === opponent
+  ) {
+    flips.push(current);
+    current += dir;
+  }
+
+  if (
+    current >= 0 &&
+    current < 64 &&
+    boardState[current] === player
+  ) {
+    return flips;
+  }
+
+  return [];
+}
 
 // ============================================================
 // BLOCKCHAIN STATE LOADING
