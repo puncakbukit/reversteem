@@ -792,4 +792,26 @@ function renderGameList(games) {
   });
 }
 
+// ============================================================
+// JOIN FLOW
+// ============================================================
 
+function joinGame(author, permlink) {
+  console.log("author", author);
+  console.log("permlink", permlink);
+  // Update URL hash
+  window.location.hash = `#/game/${author}/${permlink}`;
+
+  // Set current game
+  currentGame = { author, permlink };
+  localStorage.setItem("current_game", JSON.stringify(currentGame));
+
+  loadMovesFromSteem().then(() => {
+    // Render board is already called inside loadMovesFromSteem via replayMoves()
+
+    // Only try to join if the user is logged in and can be white
+    if (username && !whitePlayer && username !== blackPlayer) {
+      postJoin();
+    }
+  });
+}
