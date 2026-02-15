@@ -533,3 +533,26 @@ function joinGame(author, permlink) {
     }
   });
 }
+
+// ============================================================
+// KEYCHAIN NOTICE 
+// ============================================================
+
+function checkKeychain() {
+  const notice = document.getElementById("keychainNotice");
+
+  if (!window.steem_keychain) {
+    notice.style.display = "block";
+    notice.innerHTML = `
+      <strong>Spectator Mode</strong><br><br>
+      You are currently viewing games in read-only mode.<br><br>
+      To start or join games, please install 
+      <a href="https://chrome.google.com/webstore/detail/steem-keychain/" target="_blank">
+        Steem Keychain
+      </a> browser extension.
+    `;
+  } else {
+    notice.style.display = "none";
+  }
+}
+
