@@ -94,25 +94,27 @@ let board = Array(64).fill(null);
 // INITIALIZATION
 // ============================================================
 
-if (username) showLoggedIn(username);
-if (gameFromURL) {
-  currentGame = gameFromURL;
-  loadMovesFromSteem();
-} 
-else if (profileUser) {
-  document.title = `Reversteem – @${profileUser}`;
-  loadGamesByUser(profileUser);
-} 
-else {
-  loadOpenGames();
-}
-resetBoard();
+window.addEventListener("hashchange", initRoute);
 
 window.addEventListener("load", () => {
   waitForKeychain(checkKeychain);
-});
-window.addEventListener("hashchange", initRoute);
 
+  if (username) showLoggedIn(username);
+
+  if (gameFromURL) {
+    currentGame = gameFromURL;
+    loadMovesFromSteem();
+  }
+  else if (profileUser) {
+    document.title = `Reversteem – @${profileUser}`;
+    loadGamesByUser(profileUser);
+  }
+  else {
+    loadOpenGames();
+  }
+
+  resetBoard();
+});
 
 // ============================================================
 // AUTHENTICATION
