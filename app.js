@@ -722,8 +722,7 @@ function parseGames(posts) {
 
 // Featured Renderer
 function renderFeaturedGame(game) {
-  const container = document.getElementById("featuredGame");
-  container.innerHTML = "";
+  featuredDiv.innerHTML = "";
 
   const div = document.createElement("div");
 
@@ -741,7 +740,7 @@ function renderFeaturedGame(game) {
 
   attachJoinHandler(div, game);
 
-  container.appendChild(div);
+  featuredDiv.appendChild(div);
 
   renderBoardPreview(game, "featuredBoard");
 }
