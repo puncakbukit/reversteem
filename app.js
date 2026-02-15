@@ -124,6 +124,8 @@ function showLoggedIn(user) {
   loginBtn.style.display = "none";
   logoutBtn.style.display = "inline-block";
   startGameBtn.style.display = "inline-block";
+
+  loadUserProfile(username);
 }
 
 function showLoggedOut() {
@@ -681,3 +683,52 @@ function renderUserGameList(user, games) {
     gameListDiv.appendChild(div);
   });
 }
+
+// Fetch Account Data
+function loadUserProfile(username) {
+  steem.api.getAccounts([username], function(err, result) {
+    if (err || !result || !result.length) return;
+
+    const account = result[0];
+    let profile = {};
+
+    try {
+      profile = JSON.parse(account.json_metadata).profile || {};
+    } catch (e) {}
+
+    renderUserProfile({
+      username: account.name,
+      displayName: profile.name || account.name,
+      about: profile.about || "",
+      profileImage: profile.profile_image || "",
+      coverImage: profile.cover_image || ""
+    });
+  });
+}
+
+// Render Profile UI
+function renderUserProfile(data) {
+  const container = document.getElementById("profileHeader");
+
+  container.innerHTML = `
+    <div class="cover" style="
+      background-image:url('${data.coverImage}');
+      background-size:cover;
+      background-position:center;
+      height:150px;
+      border-radius:8px;
+    "></div>
+
+    <div style="display:flex; align-items:center; margin-top:-40px; padding:10px;">
+      <img src="${data.profileImage}" 
+           style="width:80px; height:80px; border-radius:50%; border:3px solid white; background:white;">
+      
+      <div style="margin-left:15px;">
+        <h2 style="margin:0;">${data.displayName}</h2>
+        <small>@${data.username}</small>
+        <p style="margin:5px 0;">${data.about}</p>
+      </div>
+    </div>
+  `;
+}
+
