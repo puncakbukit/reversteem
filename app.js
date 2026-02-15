@@ -265,33 +265,29 @@ function renderBoard() {
 // GAME DISCOVERY
 // ============================================================
 
-function loadOpenGames() {
+async function loadOpenGames() {
   steem.api.getDiscussionsByCreated(
     { tag: APP_NAME, limit: 20 },
-    (err, posts) => {
+    async (err, posts) => {
 
-      if (err) {
-        console.log("Error loading games", err);
-        return;
-      }
+      if (err) return;
 
       const games = posts.filter(post => {
         try {
           const meta = JSON.parse(post.json_metadata);
           return (
             meta.app === APP_INFO &&
-            meta.type === "game_start" &&
-            meta.status === "open"
+            meta.type === "game_start"
           );
         } catch {
           return false;
         }
       });
 
-      renderDashboard(parseGames(games));
+      const enriched = await enrichGamesWithWhitePlayer(games);
+      renderDashboard(enriched);
     }
   );
-}
 
 // ============================================================
 // BLOCKCHAIN STATE LOADING
@@ -1007,3 +1003,4 @@ function drawMiniBoard(boardState, container) {
 
   container.appendChild(miniBoard);
 }
+
