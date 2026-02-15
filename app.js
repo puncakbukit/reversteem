@@ -67,6 +67,7 @@ const gameListDiv  = document.getElementById("gameList");
 // STATE
 // ============================================================
 
+const profileUser = getProfileFromURL();
 let username     = localStorage.getItem("steem_user") || "";
 let currentGame  = JSON.parse(localStorage.getItem("current_game") || "null");
 
@@ -82,13 +83,16 @@ let board = Array(64).fill(null);
 // INITIALIZATION
 // ============================================================
 
-if (username) showLoggedIn(username);
-
 checkKeychain();
+if (username) showLoggedIn(username);
+if (profileUser) {
+  document.title = `Reversteem – @${profileUser}`;
+  loadGamesByUser(profileUser);
+} else {
+  loadOpenGames();
+}
 resetBoard();
-loadOpenGames();
 loadMovesFromSteem();
-
 
 // ============================================================
 // AUTHENTICATION
@@ -558,3 +562,68 @@ function checkKeychain() {
   }
 }
 
+// Parse Username from URL
+function getProfileFromURL() {
+  const path = window.location.pathname;
+
+  if (path.startsWith("/@")) {
+    return path.substring(2); // remove "/@"
+  }
+
+  return null;
+}
+
+// Load Games By User
+function loadGamesByUser(user) {
+  steem.api.getDiscussionsByBlog(
+    { tag: user, limit: 50 },
+    (err, posts) => {
+
+      if (err) {
+        console.log("Error loading user games", err);
+        return;
+      }
+
+      const games = posts.filter(post => {
+        try {
+          const meta = JSON.parse(post.json_metadata);
+          return (
+            meta.app === APP_INFO &&
+            meta.type === "game_start"
+          );
+        } catch {
+          return false;
+        }
+      });
+
+      renderUserGameList(user, games);
+    }
+  );
+}
+
+// Render user game list
+function renderUserGameList(user, games) {
+  gameListDiv.innerHTML = `
+    <h3>Games by @${user}</h3>
+  `;
+
+  if (games.length === 0) {
+    gameListDiv.innerHTML += `<p>No games found.</p>`;
+    return;
+  }
+
+  games.forEach(post => {
+    const div = document.createElement("div");
+
+    div.innerHTML = `
+      <strong>${post.title}</strong>
+      <button>View</button>
+    `;
+
+    div.querySelector("button").onclick = () => {
+      joinGame(post.author, post.permlink);
+    };
+
+    gameListDiv.appendChild(div);
+  });
+}
