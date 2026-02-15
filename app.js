@@ -614,3 +614,24 @@ function getGameStatus(game) {
   return "In Progress";
 }
 
+// Join Button Logic
+function renderJoinButtonHTML(game) {
+  if (!username) return "";
+
+  if (!game.whitePlayer && username !== game.blackPlayer) {
+    return `<button class="joinBtn">Join</button>`;
+  }
+
+  return "";
+}
+
+// And attach
+function attachJoinHandler(div, game) {
+  const joinBtn = div.querySelector(".joinBtn");
+  if (!joinBtn) return;
+
+  joinBtn.onclick = () => {
+    postJoinMove(game.author, game.permlink);
+  };
+}
+
