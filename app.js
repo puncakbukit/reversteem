@@ -279,7 +279,7 @@ function loadOpenGames() {
         }
       });
 
-      renderGameList(games);
+      renderDashboard(parsedGames);
     }
   );
 }
@@ -654,10 +654,36 @@ function loadGamesByUser(user) {
         }
       });
 
-      renderUserGameList(user, games);
+      renderDashboard(parsedGames);
     }
   );
 }
+
+---
+
+# ✅ Step 6 — Apply to Main Page
+
+In your `loadOpenGames()`:
+
+Instead of rendering directly:
+
+```js
+
+```
+
+---
+
+# ✅ Step 7 — Apply to User Page
+
+In `loadGamesByUser(username)`:
+
+After fetching and parsing:
+
+```js
+
+```
+
+
 
 // Render user game list
 function renderUserGameList(user, games) {
@@ -740,3 +766,97 @@ function renderUserProfile(data) {
   `;
 }
 
+
+// Status Resolver
+function getGameStatus(game) {
+  if (!game.whitePlayer) return "Waiting for opponent";
+  if (game.finished) return "Finished";
+  return "In Progress";
+}
+
+// Featured Renderer
+function renderFeaturedGame(game) {
+  const container = document.getElementById("featuredGame");
+  container.innerHTML = "";
+
+  const div = document.createElement("div");
+
+  div.innerHTML = `
+    <h2>${game.title}</h2>
+    <div id="featuredBoard"></div>
+    <p>Status: ${getGameStatus(game)}</p>
+    <button class="viewBtn">View</button>
+    ${renderJoinButtonHTML(game)}
+  `;
+
+  div.querySelector(".viewBtn").onclick = () => {
+    joinGame(game.author, game.permlink);
+  };
+
+  attachJoinHandler(div, game);
+
+  container.appendChild(div);
+
+  renderBoardPreview(game, "featuredBoard");
+}
+
+// Render List Games
+function renderGameList(games) {
+  const container = document.getElementById("gameList");
+  container.innerHTML = "";
+
+  games.forEach(game => {
+    const div = document.createElement("div");
+
+    div.innerHTML = `
+      <strong>${game.title}</strong>
+      <p>Status: ${getGameStatus(game)}</p>
+      <button class="viewBtn">View</button>
+      ${renderJoinButtonHTML(game)}
+    `;
+
+    div.querySelector(".viewBtn").onclick = () => {
+      joinGame(game.author, game.permlink);
+    };
+
+    attachJoinHandler(div, game);
+
+    container.appendChild(div);
+  });
+}
+
+// Join Button Logic
+function renderJoinButtonHTML(game) {
+  if (!username) return "";
+
+  if (!game.whitePlayer && username !== game.blackPlayer) {
+    return `<button class="joinBtn">Join</button>`;
+  }
+
+  return "";
+}
+
+// And attach
+function attachJoinHandler(div, game) {
+  const joinBtn = div.querySelector(".joinBtn");
+  if (!joinBtn) return;
+
+  joinBtn.onclick = () => {
+    postJoinMove(game.author, game.permlink);
+  };
+}
+
+// Unified Dashboard Renderer
+function renderDashboard(games) {
+  if (!games.length) return;
+
+  const sorted = games.sort((a, b) =>
+    new Date(b.created) - new Date(a.created)
+  );
+
+  const featured = sorted[0];
+  const others = sorted.slice(1);
+
+  renderFeaturedGame(featured);
+  renderGameList(others);
+}
