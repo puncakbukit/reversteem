@@ -371,6 +371,44 @@ function collectFlipsPreview(boardState, start, dir, player) {
   return [];
 }
 
+function drawMiniBoard(boardState, container) {
+
+  container.innerHTML = "";
+
+  const miniBoard = document.createElement("div");
+  miniBoard.style.display = "grid";
+  miniBoard.style.gridTemplateColumns = "repeat(8, 20px)";
+  miniBoard.style.gap = "2px";
+  miniBoard.style.margin = "10px auto";
+
+  for (let i = 0; i < 64; i++) {
+
+    const cell = document.createElement("div");
+    cell.style.width = "20px";
+    cell.style.height = "20px";
+    cell.style.background = "#2e7d32";
+    cell.style.borderRadius = "3px";
+
+    if (boardState[i]) {
+      const disk = document.createElement("div");
+      disk.style.width = "16px";
+      disk.style.height = "16px";
+      disk.style.borderRadius = "50%";
+      disk.style.margin = "2px";
+      disk.style.background =
+        boardState[i] === "black"
+          ? "black"
+          : "white";
+
+      cell.appendChild(disk);
+    }
+
+    miniBoard.appendChild(cell);
+  }
+
+  container.appendChild(miniBoard);
+}
+
 // ============================================================
 // BLOCKCHAIN STATE LOADING
 // ============================================================
