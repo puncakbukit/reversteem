@@ -534,7 +534,10 @@ function joinGame(author, permlink) {
   localStorage.setItem("current_game", JSON.stringify(currentGame));
 
   loadMovesFromSteem().then(() => {
-    if (!whitePlayer && username !== blackPlayer) {
+    // Render board is already called inside loadMovesFromSteem via replayMoves()
+
+    // Only try to join if the user is logged in and can be white
+    if (username && !whitePlayer && username !== blackPlayer) {
       postJoin();
     }
   });
