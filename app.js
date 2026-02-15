@@ -1021,7 +1021,7 @@ function renderBoardPreview(game, container) {
   });
 }
 
-function getFlipsForPreview(boardState, index, player) {
+function getFlipsForPreviewSafe(boardState, index, player) {
 
   if (boardState[index]) return [];
 
@@ -1029,7 +1029,7 @@ function getFlipsForPreview(boardState, index, player) {
 
   for (const dir of DIRECTIONS) {
     all = all.concat(
-      collectFlipsPreview(boardState, index, dir, player)
+      collectFlipsPreviewSafe(boardState, index, dir, player)
     );
   }
 
