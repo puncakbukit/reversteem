@@ -288,6 +288,7 @@ async function loadOpenGames() {
       renderDashboard(enriched);
     }
   );
+}
 
 // ============================================================
 // BLOCKCHAIN STATE LOADING
