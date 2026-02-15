@@ -607,3 +607,10 @@ function renderFeaturedGame(game) {
   renderBoardPreview(game, "featuredBoard");
 }
 
+// Status Resolver
+function getGameStatus(game) {
+  if (!game.whitePlayer) return "Waiting for opponent";
+  if (game.finished) return "Finished";
+  return "In Progress";
+}
+
