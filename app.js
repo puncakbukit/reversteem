@@ -231,12 +231,15 @@ function collectFlips(start, dir, player) {
   return [];
 }
 
-function getFlips(index, player) {
-  if (board[index]) return [];
+function getFlipsForBoard(boardState, index, player) {
+  if (boardState[index]) return [];
 
   let all = [];
+
   for (const dir of DIRECTIONS) {
-    all = all.concat(collectFlips(index, dir, player));
+    all = all.concat(
+      collectFlipsForBoard(boardState, index, dir, player)
+    );
   }
 
   return all;
