@@ -561,3 +561,22 @@ function renderDashboard(games) {
   renderFeaturedGame(featured);
   renderGameList(others);
 }
+
+// Parse games
+function parseGames(posts) {
+  return posts.map(post => {
+    let meta = {};
+    try {
+      meta = JSON.parse(post.json_metadata);
+    } catch {}
+
+    return {
+      author: post.author,
+      permlink: post.permlink,
+      title: post.title,
+      created: post.created,
+      black: meta.black || post.author,
+      status: meta.status || "open"
+    };
+  });
+}
