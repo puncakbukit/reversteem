@@ -698,7 +698,8 @@ function loadUserProfile(username) {
 
     try {
       profile = JSON.parse(account.json_metadata).profile || {};
-      console.log("loadUserProfile", JSON.stringify(profile));
+      console.log("loadUserProfile result", JSON.stringify(result));
+      console.log("loadUserProfile profile", JSON.stringify(profile));
     } catch (e) {}
 
     renderUserProfile({
