@@ -84,6 +84,7 @@ let board = Array(64).fill(null);
 
 if (username) showLoggedIn(username);
 
+checkKeychain();
 resetBoard();
 loadOpenGames();
 loadMovesFromSteem();
