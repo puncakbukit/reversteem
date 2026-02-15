@@ -1036,7 +1036,7 @@ function getFlipsForPreviewSafe(boardState, index, player) {
   return all;
 }
 
-function collectFlipsPreview(boardState, start, dir, player) {
+function collectFlipsPreviewSafe(boardState, start, dir, player) {
 
   const opponent = player === "black" ? "white" : "black";
   const flips = [];
@@ -1044,8 +1044,7 @@ function collectFlipsPreview(boardState, start, dir, player) {
   let current = start + dir;
 
   while (
-    current >= 0 &&
-    current < 64 &&
+    isOnBoardPreview(start, current, dir) &&
     boardState[current] === opponent
   ) {
     flips.push(current);
@@ -1053,8 +1052,7 @@ function collectFlipsPreview(boardState, start, dir, player) {
   }
 
   if (
-    current >= 0 &&
-    current < 64 &&
+    isOnBoardPreview(start, current, dir) &&
     boardState[current] === player
   ) {
     return flips;
