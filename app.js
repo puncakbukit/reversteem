@@ -486,3 +486,31 @@ function getGameFromURL() {
     permlink: parts[3]
   };
 }
+
+// Load Games By User
+function loadGamesByUser(user) {
+  steem.api.getDiscussionsByBlog(
+    { tag: user, limit: 50 },
+    (err, posts) => {
+
+      if (err) {
+        console.log("Error loading user games", err);
+        return;
+      }
+
+      const games = posts.filter(post => {
+        try {
+          const meta = JSON.parse(post.json_metadata);
+          return (
+            meta.app === APP_INFO &&
+            meta.type === "game_start"
+          );
+        } catch {
+          return false;
+        }
+      });
+
+      renderDashboard(parsedGames);
+    }
+  );
+}
