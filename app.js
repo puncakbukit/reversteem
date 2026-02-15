@@ -514,7 +514,7 @@ function loadOpenGames() {
         }
       });
 
-      renderDashboard(parsedGames);
+      renderDashboard(parseGames(games));
     }
   );
 }
@@ -542,7 +542,7 @@ function loadGamesByUser(user) {
         }
       });
 
-      renderDashboard(parsedGames);
+      renderDashboard(parseGames(games));
     }
   );
 }
