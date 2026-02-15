@@ -773,3 +773,23 @@ function attachJoinHandler(div, game) {
   };
 }
 
+// Render game list 
+function renderGameList(games) {
+  gameListDiv.innerHTML = "";
+
+  games.forEach(post => {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      Game by <a href="#/@${post.author}">@${post.author}</a>
+      <button>Join</button>
+    `;
+
+    div.querySelector("button").onclick = () => {
+      joinGame(post.author, post.permlink);
+    };
+
+    gameListDiv.appendChild(div);
+  });
+}
+
+
