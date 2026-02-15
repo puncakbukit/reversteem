@@ -97,8 +97,17 @@ let board = Array(64).fill(null);
 window.addEventListener("hashchange", initRoute);
 
 window.addEventListener("load", () => {
-  waitForKeychain(checkKeychain);
+  let attempts = 0;
 
+  const interval = setInterval(() => {
+    attempts++;
+
+    if (window.steem_keychain || attempts > 10) {
+      clearInterval(interval);
+      checkKeychain();
+    }
+  }, 100);
+  
   if (username) showLoggedIn(username);
 
   if (gameFromURL) {
