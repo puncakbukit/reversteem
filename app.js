@@ -747,9 +747,9 @@ function renderFeaturedGame(game) {
 
 // Status Resolver
 function getGameStatus(game) {
-  if (!game.whitePlayer) return "Waiting for opponent";
-  if (game.finished) return "Finished";
-  return "In Progress";
+  return game.status === "open"
+    ? "Waiting for opponent"
+    : "In Progress";
 }
 
 // Join Button Logic
