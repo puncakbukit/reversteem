@@ -290,6 +290,15 @@ async function loadOpenGames() {
   );
 }
 
+async function enrichGamesWithWhitePlayer(posts) {
+
+  const enriched = await Promise.all(
+    posts.map(post => deriveWhitePlayer(post))
+  );
+
+  return enriched;
+}
+
 // ============================================================
 // BLOCKCHAIN STATE LOADING
 // ============================================================
