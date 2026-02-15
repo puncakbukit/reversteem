@@ -269,6 +269,95 @@ function renderBoard() {
   }
 }
 
+function deriveGameState(rootPost, replies) {
+
+  let blackPlayer = null;
+  let whitePlayer = null;
+  let moves = [];
+
+  // ---- Extract black from root ----
+  try {
+    const meta = JSON.parse(rootPost.json_metadata);
+    blackPlayer = meta.black;
+  } catch {}
+
+  // ---- Sort replies chronologically ----
+  replies.sort((a,b)=> new Date(a.created) - new Date(b.created));
+
+  // ---- Extract join + moves ----
+  replies.forEach(reply => {
+    try {
+      const meta = JSON.parse(reply.json_metadata);
+      if (meta.app !== APP_INFO) return;
+
+      // Detect white join
+      if (
+        meta.action === "join" &&
+        !whitePlayer &&
+        reply.author !== blackPlayer
+      ) {
+        whitePlayer = reply.author;
+      }
+
+      // Detect move
+      if (
+        meta.action === "move" &&
+        typeof meta.index === "number" &&
+        meta.index >= 0 &&
+        meta.index < 64
+      ) {
+        moves.push({
+          index: meta.index,
+          author: reply.author
+        });
+      }
+
+    } catch {}
+  });
+
+  // ---- Replay deterministically ----
+
+  const board = Array(64).fill(null);
+  board[27] = "white";
+  board[28] = "black";
+  board[35] = "black";
+  board[36] = "white";
+
+  let validMoveCount = 0;
+
+  moves.forEach(move => {
+
+    const player =
+      (validMoveCount % 2 === 0) ? "black" : "white";
+
+    const expectedAuthor =
+      player === "black"
+        ? blackPlayer
+        : whitePlayer;
+
+    if (move.author !== expectedAuthor) return;
+
+    const flips = getFlipsForBoard(board, move.index, player);
+    if (flips.length === 0) return;
+
+    board[move.index] = player;
+    flips.forEach(f => board[f] = player);
+
+    validMoveCount++;
+  });
+
+  const currentPlayer =
+    (validMoveCount % 2 === 0) ? "black" : "white";
+
+  return {
+    blackPlayer,
+    whitePlayer,
+    board,
+    currentPlayer,
+    validMoveCount,
+    moves
+  };
+}
 
 // ============================================================
 // GAME DISCOVERY
