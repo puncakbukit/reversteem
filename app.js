@@ -264,7 +264,7 @@ function renderGameList(games) {
   games.forEach(post => {
     const div = document.createElement("div");
     div.innerHTML = `
-      Game by @${post.author}
+      Game by <a href=${LIVE_DEMO}#/@${post.author}>@${post.author}</a>
       <button>Join</button>
     `;
 
@@ -564,10 +564,10 @@ function checkKeychain() {
 
 // Parse Username from URL
 function getProfileFromURL() {
-  const path = window.location.pathname;
+  const hash = window.location.hash;
 
-  if (path.startsWith("/@")) {
-    return path.substring(2); // remove "/@"
+  if (hash.startsWith("#/@")) {
+    return hash.substring(3); // remove "#/@"
   }
 
   return null;
