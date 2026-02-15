@@ -69,6 +69,7 @@ const logoutBtn    = document.getElementById("logoutBtn");
 const startGameBtn = document.getElementById("startGameBtn");
 const boardDiv     = document.getElementById("board");
 const gameListDiv  = document.getElementById("gameList");
+const containerDiv = document.getElementById("profileHeader");
 
 
 // ============================================================
@@ -133,6 +134,8 @@ function showLoggedOut() {
   loginBtn.style.display = "inline-block";
   logoutBtn.style.display = "none";
   startGameBtn.style.display = "none";
+  
+  loadUserProfile(null);
 }
 
 function login() {
@@ -686,6 +689,7 @@ function renderUserGameList(user, games) {
 
 // Fetch Account Data
 function loadUserProfile(username) {
+  if (username) {
   steem.api.getAccounts([username], function(err, result) {
     if (err || !result || !result.length) return;
 
@@ -704,13 +708,14 @@ function loadUserProfile(username) {
       coverImage: profile.cover_image || ""
     });
   });
+  } else {
+   containerDiv.innerHTML = '';
+  }
 }
 
 // Render Profile UI
 function renderUserProfile(data) {
-  const container = document.getElementById("profileHeader");
-
-  container.innerHTML = `
+  containerDiv.innerHTML = `
     <div class="cover" style="
       background-image:url('${data.coverImage}');
       background-size:cover;
