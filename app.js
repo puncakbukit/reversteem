@@ -213,18 +213,24 @@ function isOnBoard(from, to, dir) {
   return true;
 }
 
-function collectFlips(start, dir, player) {
+function collectFlipsForBoard(boardState, start, dir, player) {
   const opponent = player === "black" ? "white" : "black";
   const flips = [];
 
   let current = start + dir;
 
-  while (isOnBoard(start, current, dir) && board[current] === opponent) {
+  while (
+    isOnBoardGeneric(start, current, dir) &&
+    boardState[current] === opponent
+  ) {
     flips.push(current);
     current += dir;
   }
 
-  if (isOnBoard(start, current, dir) && board[current] === player) {
+  if (
+    isOnBoardGeneric(start, current, dir) &&
+    boardState[current] === player
+  ) {
     return flips;
   }
 
