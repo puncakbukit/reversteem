@@ -742,7 +742,7 @@ function renderFeaturedGame(game) {
 
   featuredDiv.appendChild(div);
 
-  renderBoardPreview(game, featuredDiv);
+  renderBoardPreview(game, div.querySelector("#featuredBoard"));
 }
 
 // Status Resolver
