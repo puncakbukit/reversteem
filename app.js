@@ -580,3 +580,30 @@ function parseGames(posts) {
     };
   });
 }
+
+// Featured Renderer
+function renderFeaturedGame(game) {
+  const container = document.getElementById("featuredGame");
+  container.innerHTML = "";
+
+  const div = document.createElement("div");
+
+  div.innerHTML = `
+    <h2>${game.title}</h2>
+    <div id="featuredBoard"></div>
+    <p>Status: ${getGameStatus(game)}</p>
+    <button class="viewBtn">View</button>
+    ${renderJoinButtonHTML(game)}
+  `;
+
+  div.querySelector(".viewBtn").onclick = () => {
+    joinGame(game.author, game.permlink);
+  };
+
+  attachJoinHandler(div, game);
+
+  container.appendChild(div);
+
+  renderBoardPreview(game, "featuredBoard");
+}
+
