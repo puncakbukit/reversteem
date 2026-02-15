@@ -195,20 +195,20 @@ function resetBoard() {
 function row(i) { return Math.floor(i / 8); }
 function col(i) { return i % 8; }
 
-function isOnBoard(from, to, dir) {
+function isOnBoardGeneric(from, to, dir) {
   if (to < 0 || to >= 64) return false;
 
-  if (dir === -1 || dir === 1) {
+  const row = i => Math.floor(i / 8);
+  const col = i => i % 8;
+
+  if (dir === -1 || dir === 1)
     return row(from) === row(to);
-  }
 
-  if (dir === -9 || dir === 7) {
+  if (dir === -9 || dir === 7)
     return col(to) < col(from);
-  }
 
-  if (dir === -7 || dir === 9) {
+  if (dir === -7 || dir === 9)
     return col(to) > col(from);
-  }
 
   return true;
 }
