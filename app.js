@@ -756,7 +756,7 @@ function getGameStatus(game) {
 function renderJoinButtonHTML(game) {
   if (!username) return "";
 
-  if (!game.whitePlayer && username !== game.blackPlayer) {
+  if (game.status === "open" && username !== game.black) {
     return `<button class="joinBtn">Join</button>`;
   }
 
