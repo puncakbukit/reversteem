@@ -549,7 +549,7 @@ function checkKeychain() {
       <strong>Spectator Mode</strong><br><br>
       You are currently viewing games in read-only mode.<br><br>
       To start or join games, please install 
-      <a href="https://chrome.google.com/webstore/detail/steem-keychain/" target="_blank">
+      <a href="https://www.google.com/search?q=steem+keychain" target="_blank">
         Steem Keychain
       </a> browser extension.
     `;
