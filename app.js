@@ -42,6 +42,7 @@ currentPlayer = (moves.length % 2 === 0) ? "black" : "white"
 const RPC = "https://api.steemit.com";
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
 const LOGIN_REJECTED = "Login rejected";
+const LIVE_DEMO = "https://puncakbukit.github.io/reversteem/";
 
 const APP_NAME = "reversteem";
 const APP_VER  = "0.1";
@@ -420,7 +421,7 @@ const body =
   `## New Reversteem Game\n\n` +
   `Black: @${username}\n\n` +
   boardToMarkdown(board) +
-  `\n\n---\nMove by commenting via Reversteem.`;
+  `\n\n---\nMove by commenting via [Reversteem](${LIVE_DEMO}).`;
   
   steem_keychain.requestPost(
     username,
