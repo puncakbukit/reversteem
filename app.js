@@ -528,6 +528,8 @@ function indexToCoord(index) {
 // ============================================================
 
 function joinGame(author, permlink) {
+  console.log("author", author);
+  console.log("permlink", permlink);
   currentGame = { author, permlink };
   localStorage.setItem("current_game", JSON.stringify(currentGame));
 
@@ -583,7 +585,6 @@ function loadGamesByUser(user) {
         console.log("Error loading user games", err);
         return;
       }
-      console.log("loadGamesByUser->getDiscussionsByBlog", JSON.stringify(posts));
 
       const games = posts.filter(post => {
         try {
@@ -622,6 +623,7 @@ function renderUserGameList(user, games) {
     `;
 
     div.querySelector("button").onclick = () => {
+      console.log("post", JSON.stringify(post));
       joinGame(post.author, post.permlink);
     };
 
