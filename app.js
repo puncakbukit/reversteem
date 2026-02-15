@@ -878,8 +878,6 @@ joinBtn.onclick = () => {
   postJoin();
 };
 
-}
-
 // Unified Dashboard Renderer
 function renderDashboard(games) {
   if (!games.length) return;
