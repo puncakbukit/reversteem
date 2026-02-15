@@ -487,6 +487,38 @@ function getGameFromURL() {
   };
 }
 
+// ============================================================
+// GAME DISCOVERY
+// ============================================================
+
+function loadOpenGames() {
+  steem.api.getDiscussionsByCreated(
+    { tag: APP_NAME, limit: 20 },
+    (err, posts) => {
+
+      if (err) {
+        console.log("Error loading games", err);
+        return;
+      }
+
+      const games = posts.filter(post => {
+        try {
+          const meta = JSON.parse(post.json_metadata);
+          return (
+            meta.app === APP_INFO &&
+            meta.type === "game_start" &&
+            meta.status === "open"
+          );
+        } catch {
+          return false;
+        }
+      });
+
+      renderDashboard(parsedGames);
+    }
+  );
+}
+
 // Load Games By User
 function loadGamesByUser(user) {
   steem.api.getDiscussionsByBlog(
