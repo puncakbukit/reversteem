@@ -1061,6 +1061,28 @@ function collectFlipsPreviewSafe(boardState, start, dir, player) {
   return [];
 }
 
+function isOnBoardPreview(from, to, dir) {
+
+  if (to < 0 || to >= 64) return false;
+
+  const row = i => Math.floor(i / 8);
+  const col = i => i % 8;
+
+  if (dir === -1 || dir === 1) {
+    return row(from) === row(to);
+  }
+
+  if (dir === -9 || dir === 7) {
+    return col(to) < col(from);
+  }
+
+  if (dir === -7 || dir === 9) {
+    return col(to) > col(from);
+  }
+
+  return true;
+}
+
 function drawMiniBoard(boardState, container) {
 
   container.innerHTML = "";
