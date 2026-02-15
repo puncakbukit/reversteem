@@ -31,6 +31,14 @@ Move #   Player
 ...
 
 currentPlayer = (moves.length % 2 === 0) ? "black" : "white"
+
+URL Structure
+Homepage:
+#/
+Profile:
+#/ @username
+Game:
+#/game/author/permlink
 ==============================================================
 */
 
@@ -68,6 +76,8 @@ const gameListDiv  = document.getElementById("gameList");
 // ============================================================
 
 const profileUser = getProfileFromURL();
+const gameFromURL = getGameFromURL();
+
 let username     = localStorage.getItem("steem_user") || "";
 let currentGame  = JSON.parse(localStorage.getItem("current_game") || "null");
 
@@ -85,14 +95,22 @@ let board = Array(64).fill(null);
 
 checkKeychain();
 if (username) showLoggedIn(username);
-if (profileUser) {
+if (gameFromURL) {
+  currentGame = gameFromURL;
+  loadMovesFromSteem();
+} 
+else if (profileUser) {
   document.title = `Reversteem – @${profileUser}`;
   loadGamesByUser(profileUser);
-} else {
+} 
+else {
   loadOpenGames();
 }
 resetBoard();
 loadMovesFromSteem();
+window.addEventListener("hashchange", () => {
+  location.reload();
+});
 
 // ============================================================
 // AUTHENTICATION
@@ -364,7 +382,6 @@ function replayMoves() {
   renderBoard();
 }
 
-
 // ============================================================
 // GAME ACTIONS
 // ============================================================
@@ -530,6 +547,10 @@ function indexToCoord(index) {
 function joinGame(author, permlink) {
   console.log("author", author);
   console.log("permlink", permlink);
+  // Update URL hash
+  window.location.hash = `#/game/${author}/${permlink}`;
+
+  // Set current game
   currentGame = { author, permlink };
   localStorage.setItem("current_game", JSON.stringify(currentGame));
 
@@ -573,6 +594,22 @@ function getProfileFromURL() {
 
   if (hash.startsWith("#/@")) {
     return hash.substring(3); // remove "#/@"
+  }
+
+  return null;
+}
+
+// Parse Game From URL
+function getGameFromURL() {
+  const hash = window.location.hash;
+
+  if (hash.startsWith("#/game/")) {
+    const parts = hash.split("/");
+
+    return {
+      author: parts[2],
+      permlink: parts[3]
+    };
   }
 
   return null;
