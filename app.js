@@ -583,6 +583,7 @@ function loadGamesByUser(user) {
         console.log("Error loading user games", err);
         return;
       }
+      console.log("loadGamesByUser->getDiscussionsByBlog", JSON.stringify(posts));
 
       const games = posts.filter(post => {
         try {
