@@ -546,3 +546,18 @@ function loadGamesByUser(user) {
     }
   );
 }
+
+// Unified Dashboard Renderer
+function renderDashboard(games) {
+  if (!games.length) return;
+
+  const sorted = games.sort((a, b) =>
+    new Date(b.created) - new Date(a.created)
+  );
+
+  const featured = sorted[0];
+  const others = sorted.slice(1);
+
+  renderFeaturedGame(featured);
+  renderGameList(others);
+}
