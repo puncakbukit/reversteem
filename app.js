@@ -542,6 +542,8 @@ function checkKeychain() {
   const notice = document.getElementById("keychainNotice");
 
   if (!window.steem_keychain) {
+    loginBtn.disabled = true;
+    startGameBtn.disabled = true;
     notice.style.display = "block";
     notice.innerHTML = `
       <strong>Spectator Mode</strong><br><br>
