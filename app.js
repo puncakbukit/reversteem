@@ -93,7 +93,6 @@ let board = Array(64).fill(null);
 // INITIALIZATION
 // ============================================================
 
-checkKeychain();
 if (username) showLoggedIn(username);
 if (gameFromURL) {
   currentGame = gameFromURL;
@@ -108,6 +107,10 @@ else {
 }
 resetBoard();
 loadMovesFromSteem();
+
+window.addEventListener("load", () => {
+  waitForKeychain(checkKeychain);
+});
 window.addEventListener("hashchange", () => {
   location.reload();
 });
@@ -567,6 +570,14 @@ function joinGame(author, permlink) {
 // ============================================================
 // KEYCHAIN NOTICE 
 // ============================================================
+
+function waitForKeychain(callback) {
+  if (window.steem_keychain) {
+    callback();
+  } else {
+    setTimeout(() => waitForKeychain(callback), 100);
+  }
+}
 
 function checkKeychain() {
   const notice = document.getElementById("keychainNotice");
