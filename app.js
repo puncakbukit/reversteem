@@ -264,7 +264,7 @@ function renderGameList(games) {
   games.forEach(post => {
     const div = document.createElement("div");
     div.innerHTML = `
-      Game by <a href=${LIVE_DEMO}#/@${post.author}>@${post.author}</a>
+      Game by <a href="#/@${post.author}">@${post.author}</a>
       <button>Join</button>
     `;
 
