@@ -6,20 +6,24 @@
 // ============================================================
 
 /*
-==============================================================
+================================================================
 ARCHITECTURE OVERVIEW
-==============================================================
+================================================================
 
-Reversteem is fully decentralized.
+Reversteem is a fully decentralized Reversi (Othello) game.
 
-• Root Post      = Game thread
-• Join Comment   = White player registration
-• Move Comment   = One move
-• Comment order  = Turn order
+Blockchain Mapping:
+• Root Post      → Game thread (Black player)
+• Join Comment   → White player registration
+• Move Comment   → One move
+• Comment Order  → Turn order
 
-No backend.
-No trusted server.
-Game state is derived entirely from blockchain history.
+There is:
+• No backend
+• No server authority
+• No centralized state
+
+Game state is reconstructed entirely from blockchain history.
 
 Turn Model:
 ---------------------------------
@@ -28,18 +32,18 @@ Move #   Player
 1        White
 2        Black
 3        White
-...
 
-currentPlayer = (moves.length % 2 === 0) ? "black" : "white"
+currentPlayer = (moves.length % 2 === 0)
+                ? "black"
+                : "white"
 
-URL Structure
-Homepage:
-#/
-Profile:
-#/ @username
-Game:
-#/game/author/permlink
-==============================================================
+URL Routing:
+---------------------------------
+#/                 → Homepage
+#/@username        → Profile page
+#/game/a/p         → Game page
+
+================================================================
 */
 
 
@@ -48,13 +52,16 @@ Game:
 // ============================================================
 
 const RPC = "https://api.steemit.com";
-const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
-const LOGIN_REJECTED = "Login rejected";
-const LIVE_DEMO = "https://puncakbukit.github.io/reversteem/";
 
 const APP_NAME = "reversteem";
 const APP_VER  = "0.1";
 const APP_INFO = `${APP_NAME}/${APP_VER}`;
+
+const LIVE_DEMO = "https://puncakbukit.github.io/reversteem/";
+
+const EXTENSION_NOT_INSTALLED =
+  "Steem Keychain extension is not installed!";
+const LOGIN_REJECTED = "Login rejected";
 
 const DIRECTIONS = [-8, 8, -1, 1, -9, -7, 7, 9];
 
@@ -67,13 +74,16 @@ const userP        = document.getElementById("user");
 const loginBtn     = document.getElementById("loginBtn");
 const logoutBtn    = document.getElementById("logoutBtn");
 const startGameBtn = document.getElementById("startGameBtn");
+
 const boardDiv     = document.getElementById("board");
 const gameListDiv  = document.getElementById("gameList");
-const containerDiv = document.getElementById("profileHeader");
+const featuredDiv  = document.getElementById("featuredGame");
+const profileDiv   = document.getElementById("profileHeader");
+const keychainDiv  = document.getElementById("keychainNotice");
 
 
 // ============================================================
-// STATE
+// APPLICATION STATE
 // ============================================================
 
 const profileUser = getProfileFromURL();
@@ -90,31 +100,35 @@ let currentPlayer = "black";
 
 let board = Array(64).fill(null);
 
+
 // ============================================================
 // INITIALIZATION
 // ============================================================
 
-if (username) showLoggedIn(username);
-if (gameFromURL) {
-  currentGame = gameFromURL;
-  loadMovesFromSteem();
-} 
-else if (profileUser) {
-  document.title = `Reversteem – @${profileUser}`;
-  loadGamesByUser(profileUser);
-} 
-else {
-  loadOpenGames();
-}
-resetBoard();
-loadMovesFromSteem();
-
 window.addEventListener("load", () => {
   waitForKeychain(checkKeychain);
+
+  if (username) showLoggedIn(username);
+
+  if (gameFromURL) {
+    currentGame = gameFromURL;
+    loadMovesFromSteem();
+  }
+  else if (profileUser) {
+    document.title = `Reversteem – @${profileUser}`;
+    loadGamesByUser(profileUser);
+  }
+  else {
+    loadOpenGames();
+  }
+
+  resetBoard();
 });
+
 window.addEventListener("hashchange", () => {
   location.reload();
 });
+
 
 // ============================================================
 // AUTHENTICATION
@@ -126,7 +140,7 @@ function showLoggedIn(user) {
   logoutBtn.style.display = "inline-block";
   startGameBtn.style.display = "inline-block";
 
-  loadUserProfile(username);
+  loadUserProfile(user);
 }
 
 function showLoggedOut() {
@@ -134,7 +148,7 @@ function showLoggedOut() {
   loginBtn.style.display = "inline-block";
   logoutBtn.style.display = "none";
   startGameBtn.style.display = "none";
-  
+
   loadUserProfile(null);
 }
 
@@ -172,11 +186,12 @@ function logout() {
 
 
 // ============================================================
-// BOARD ENGINE
+// BOARD ENGINE (Pure Reversi Logic)
 // ============================================================
 
 function resetBoard() {
   board = Array(64).fill(null);
+
   board[27] = "white";
   board[28] = "black";
   board[35] = "black";
@@ -189,17 +204,14 @@ function col(i) { return i % 8; }
 function isOnBoard(from, to, dir) {
   if (to < 0 || to >= 64) return false;
 
-  if (dir === -1 || dir === 1) {
+  if (dir === -1 || dir === 1)
     return row(from) === row(to);
-  }
 
-  if (dir === -9 || dir === 7) {
+  if (dir === -9 || dir === 7)
     return col(to) < col(from);
-  }
 
-  if (dir === -7 || dir === 9) {
+  if (dir === -7 || dir === 9)
     return col(to) > col(from);
-  }
 
   return true;
 }
@@ -210,12 +222,18 @@ function collectFlips(start, dir, player) {
 
   let current = start + dir;
 
-  while (isOnBoard(start, current, dir) && board[current] === opponent) {
+  while (
+    isOnBoard(start, current, dir) &&
+    board[current] === opponent
+  ) {
     flips.push(current);
     current += dir;
   }
 
-  if (isOnBoard(start, current, dir) && board[current] === player) {
+  if (
+    isOnBoard(start, current, dir) &&
+    board[current] === player
+  ) {
     return flips;
   }
 
@@ -253,57 +271,6 @@ function renderBoard() {
 
 
 // ============================================================
-// GAME DISCOVERY
-// ============================================================
-
-function loadOpenGames() {
-  steem.api.getDiscussionsByCreated(
-    { tag: APP_NAME, limit: 20 },
-    (err, posts) => {
-
-      if (err) {
-        console.log("Error loading games", err);
-        return;
-      }
-
-      const games = posts.filter(post => {
-        try {
-          const meta = JSON.parse(post.json_metadata);
-          return (
-            meta.app === APP_INFO &&
-            meta.type === "game_start" &&
-            meta.status === "open"
-          );
-        } catch {
-          return false;
-        }
-      });
-
-      renderDashboard(parsedGames);
-    }
-  );
-}
-
-function renderGameList(games) {
-  gameListDiv.innerHTML = "";
-
-  games.forEach(post => {
-    const div = document.createElement("div");
-    div.innerHTML = `
-      Game by <a href="#/@${post.author}">@${post.author}</a>
-      <button>Join</button>
-    `;
-
-    div.querySelector("button").onclick = () => {
-      joinGame(post.author, post.permlink);
-    };
-
-    gameListDiv.appendChild(div);
-  });
-}
-
-
-// ============================================================
 // BLOCKCHAIN STATE LOADING
 // ============================================================
 
@@ -312,7 +279,6 @@ async function loadMovesFromSteem() {
 
   return new Promise((resolve, reject) => {
 
-    // Load root post (black player)
     steem.api.getContent(
       currentGame.author,
       currentGame.permlink,
@@ -325,7 +291,6 @@ async function loadMovesFromSteem() {
           blackPlayer = meta.black;
         } catch {}
 
-        // Load replies (join + moves)
         steem.api.getContentReplies(
           currentGame.author,
           currentGame.permlink,
@@ -341,7 +306,6 @@ async function loadMovesFromSteem() {
                 const meta = JSON.parse(reply.json_metadata);
                 if (meta.app !== APP_INFO) return;
 
-                // Join detection
                 if (
                   meta.action === "join" &&
                   !whitePlayer &&
@@ -350,7 +314,6 @@ async function loadMovesFromSteem() {
                   whitePlayer = reply.author;
                 }
 
-                // Move detection
                 if (meta.action === "move") {
                   moves.push({
                     index: meta.index,
@@ -370,362 +333,54 @@ async function loadMovesFromSteem() {
   });
 }
 
-
-// ============================================================
-// GAME REPLAY (DETERMINISTIC)
-// ============================================================
-
 function replayMoves() {
   resetBoard();
 
   moves.forEach((move, i) => {
-    const player = (i % 2 === 0) ? "black" : "white";
+    const player = (i % 2 === 0)
+      ? "black"
+      : "white";
+
     const flips = getFlips(move.index, player);
 
     board[move.index] = player;
     flips.forEach(f => board[f] = player);
   });
 
-  currentPlayer = (moves.length % 2 === 0) ? "black" : "white";
+  currentPlayer = (moves.length % 2 === 0)
+    ? "black"
+    : "white";
+
   renderBoard();
 }
 
+
 // ============================================================
-// GAME ACTIONS
+// PROFILE LOADING
 // ============================================================
 
-function makeMove(index) {
-  if (!username) {
-    alert("Login first");
+function loadUserProfile(user) {
+
+  if (!user) {
+    profileDiv.innerHTML = "";
     return;
   }
 
-  if (currentPlayer === "white" && !whitePlayer) {
-    alert("No opponent yet");
-    return;
-  }
+  steem.api.getAccounts([user], (err, result) => {
 
-  const expected =
-    currentPlayer === "black" ? blackPlayer : whitePlayer;
-
-  if (username !== expected) {
-    alert("Not your turn");
-    return;
-  }
-
-  const flips = getFlips(index, currentPlayer);
-  if (flips.length === 0) {
-    alert("Invalid move");
-    return;
-  }
-
-  board[index] = currentPlayer;
-  flips.forEach(i => board[i] = currentPlayer);
-  renderBoard();
-
-  postMove(index);
-}
-
-
-// ============================================================
-// BLOCKCHAIN POSTS
-// ============================================================
-
-function startGame() {
-  if (!window.steem_keychain || !username) {
-    alert("Login first");
-    return;
-  }
-
-  const permlink = `${APP_NAME}-${Date.now()}`;
-
-  const meta = {
-    app: APP_INFO,
-    type: "game_start",
-    black: username,
-    white: null,
-    status: "open"
-  };
-
-const body =
-  `## New Reversteem Game\n\n` +
-  `Black: @${username}\n\n` +
-  boardToMarkdown(board) +
-  `\n\n---\nMove by commenting via [Reversteem](${LIVE_DEMO}).`;
-  
-  steem_keychain.requestPost(
-    username,
-    "Reversteem Game Started",
-    body,
-    APP_NAME,
-    "",
-    JSON.stringify(meta),
-    permlink,
-    "",
-    (res) => {
-      if (!res.success) return;
-
-      currentGame = { author: username, permlink };
-      localStorage.setItem("current_game", JSON.stringify(currentGame));
-      alert("Game created!");
-    }
-  );
-}
-
-function postJoin() {
-  const meta = { app: APP_INFO, action: "join" };
-
-const body =
-  `## @${username} joined as White\n\n` +
-  boardToMarkdown(board);
-  
-  steem_keychain.requestPost(
-    username,
-    "Join Game",
-    body,
-    currentGame.permlink,
-    currentGame.author,
-    JSON.stringify(meta),
-    `reversteem-join-${Date.now()}`,
-    "",
-    () => loadMovesFromSteem()
-  );
-}
-
-function postMove(index) {
-  const meta = {
-    app: APP_INFO,
-    action: "move",
-    index
-  };
-
-const body =
-  `## Move by @${username}\n\n` +
-  `Played at index ${indexToCoord(index)}\n\n` +
-  boardToMarkdown(board);
-  
-  steem_keychain.requestPost(
-    username,
-    "Reversi Move",
-    body,
-    currentGame.permlink,
-    currentGame.author,
-    JSON.stringify(meta),
-    `reversteem-move-${Date.now()}`,
-    "",
-    () => {}
-  );
-}
-
-// Board → Markdown Renderer
-function boardToMarkdown(boardArray) {
-  const symbols = {
-    black: "⚫",
-    white: "⚪",
-    null:  "·"
-  };
-
-  let md = "### Current Board\n\n";
-  md += "| A | B | C | D | E | F | G | H |\n";
-  md += "|---|---|---|---|---|---|---|---|\n";
-
-  for (let r = 0; r < 8; r++) {
-    md += "|";
-    for (let c = 0; c < 8; c++) {
-      const piece = boardArray[r * 8 + c];
-      md += ` ${symbols[piece]} |`;
-    }
-    md += "\n";
-  }
-
-  return md;
-}
-
-// Chess-style coordinates:
-function indexToCoord(index) {
-  const file = String.fromCharCode(65 + (index % 8));
-  const rank = 8 - Math.floor(index / 8);
-  return file + rank;
-}
-
-// ============================================================
-// JOIN FLOW
-// ============================================================
-
-function joinGame(author, permlink) {
-  console.log("author", author);
-  console.log("permlink", permlink);
-  // Update URL hash
-  window.location.hash = `#/game/${author}/${permlink}`;
-
-  // Set current game
-  currentGame = { author, permlink };
-  localStorage.setItem("current_game", JSON.stringify(currentGame));
-
-  loadMovesFromSteem().then(() => {
-    // Render board is already called inside loadMovesFromSteem via replayMoves()
-
-    // Only try to join if the user is logged in and can be white
-    if (username && !whitePlayer && username !== blackPlayer) {
-      postJoin();
-    }
-  });
-}
-
-// ============================================================
-// KEYCHAIN NOTICE 
-// ============================================================
-
-function waitForKeychain(callback) {
-  if (window.steem_keychain) {
-    callback();
-  } else {
-    setTimeout(() => waitForKeychain(callback), 100);
-  }
-}
-
-function checkKeychain() {
-  const notice = document.getElementById("keychainNotice");
-
-  if (!window.steem_keychain) {
-    loginBtn.disabled = true;
-    startGameBtn.disabled = true;
-    notice.style.display = "block";
-    notice.innerHTML = `
-      <strong>Spectator Mode</strong><br><br>
-      You are currently viewing games in read-only mode.<br><br>
-      To start or join games, please install 
-      <a href="https://www.google.com/search?q=steem+keychain" target="_blank">
-        Steem Keychain
-      </a> browser extension.
-    `;
-  } else {
-    notice.style.display = "none";
-  }
-}
-
-// Parse Username from URL
-function getProfileFromURL() {
-  const hash = window.location.hash;
-
-  if (hash.startsWith("#/@")) {
-    return hash.substring(3); // remove "#/@"
-  }
-
-  return null;
-}
-
-// Parse Game From URL
-function getGameFromURL() {
-  const hash = window.location.hash;
-
-  if (hash.startsWith("#/game/")) {
-    const parts = hash.split("/");
-
-    return {
-      author: parts[2],
-      permlink: parts[3]
-    };
-  }
-
-  return null;
-}
-
-// Load Games By User
-function loadGamesByUser(user) {
-  steem.api.getDiscussionsByBlog(
-    { tag: user, limit: 50 },
-    (err, posts) => {
-
-      if (err) {
-        console.log("Error loading user games", err);
-        return;
-      }
-
-      const games = posts.filter(post => {
-        try {
-          const meta = JSON.parse(post.json_metadata);
-          return (
-            meta.app === APP_INFO &&
-            meta.type === "game_start"
-          );
-        } catch {
-          return false;
-        }
-      });
-
-      renderDashboard(parsedGames);
-    }
-  );
-}
-
----
-
-# ✅ Step 6 — Apply to Main Page
-
-In your `loadOpenGames()`:
-
-Instead of rendering directly:
-
-```js
-
-```
-
----
-
-# ✅ Step 7 — Apply to User Page
-
-In `loadGamesByUser(username)`:
-
-After fetching and parsing:
-
-```js
-
-```
-
-
-
-// Render user game list
-function renderUserGameList(user, games) {
-  gameListDiv.innerHTML = `
-    <h3>Games by @${user}</h3>
-  `;
-
-  if (games.length === 0) {
-    gameListDiv.innerHTML += `<p>No games found.</p>`;
-    return;
-  }
-
-  games.forEach(post => {
-    const div = document.createElement("div");
-
-    div.innerHTML = `
-      <strong>${post.title}</strong>
-      <button>View</button>
-    `;
-
-    div.querySelector("button").onclick = () => {
-      console.log("post", JSON.stringify(post));
-      joinGame(post.author, post.permlink);
-    };
-
-    gameListDiv.appendChild(div);
-  });
-}
-
-// Fetch Account Data
-function loadUserProfile(username) {
-  if (username) {
-  steem.api.getAccounts([username], function(err, result) {
-    if (err || !result || !result.length) return;
+    if (err || !result?.length) return;
 
     const account = result[0];
     let profile = {};
 
     try {
-      const metadata = account.posting_json_metadata || account.json_metadata;
+      const metadata =
+        account.posting_json_metadata ||
+        account.json_metadata;
+
       profile = JSON.parse(metadata).profile || {};
-    } catch (e) {
+    }
+    catch {
       profile = {};
     }
 
@@ -737,126 +392,97 @@ function loadUserProfile(username) {
       coverImage: profile.cover_image || ""
     });
   });
-  } else {
-   containerDiv.innerHTML = '';
-  }
 }
 
-// Render Profile UI
 function renderUserProfile(data) {
-  containerDiv.innerHTML = `
-    <div class="cover" style="
+
+  profileDiv.innerHTML = `
+    <div style="
       background-image:url('${data.coverImage}');
       background-size:cover;
-      background-position:center;
       height:150px;
-      border-radius:8px;
-    "></div>
+      border-radius:8px;">
+    </div>
 
-    <div style="display:flex; align-items:center; margin-top:-40px; padding:10px;">
-      <img src="${data.profileImage}" 
-           style="width:80px; height:80px; border-radius:50%; border:3px solid white; background:white;">
-      
+    <div style="
+      display:flex;
+      align-items:center;
+      margin-top:-40px;
+      padding:10px;">
+
+      <img src="${data.profileImage}"
+           style="
+             width:80px;
+             height:80px;
+             border-radius:50%;
+             border:3px solid white;
+             background:white;">
+
       <div style="margin-left:15px;">
-        <h2 style="margin:0;">${data.displayName}</h2>
+        <h2 style="margin:0;">
+          ${data.displayName}
+        </h2>
         <small>@${data.username}</small>
-        <p style="margin:5px 0;">${data.about}</p>
+        <p>${data.about}</p>
       </div>
     </div>
   `;
 }
 
 
-// Status Resolver
-function getGameStatus(game) {
-  if (!game.whitePlayer) return "Waiting for opponent";
-  if (game.finished) return "Finished";
-  return "In Progress";
-}
+// ============================================================
+// KEYCHAIN DETECTION
+// ============================================================
 
-// Featured Renderer
-function renderFeaturedGame(game) {
-  const container = document.getElementById("featuredGame");
-  container.innerHTML = "";
-
-  const div = document.createElement("div");
-
-  div.innerHTML = `
-    <h2>${game.title}</h2>
-    <div id="featuredBoard"></div>
-    <p>Status: ${getGameStatus(game)}</p>
-    <button class="viewBtn">View</button>
-    ${renderJoinButtonHTML(game)}
-  `;
-
-  div.querySelector(".viewBtn").onclick = () => {
-    joinGame(game.author, game.permlink);
-  };
-
-  attachJoinHandler(div, game);
-
-  container.appendChild(div);
-
-  renderBoardPreview(game, "featuredBoard");
-}
-
-// Render List Games
-function renderGameList(games) {
-  const container = document.getElementById("gameList");
-  container.innerHTML = "";
-
-  games.forEach(game => {
-    const div = document.createElement("div");
-
-    div.innerHTML = `
-      <strong>${game.title}</strong>
-      <p>Status: ${getGameStatus(game)}</p>
-      <button class="viewBtn">View</button>
-      ${renderJoinButtonHTML(game)}
-    `;
-
-    div.querySelector(".viewBtn").onclick = () => {
-      joinGame(game.author, game.permlink);
-    };
-
-    attachJoinHandler(div, game);
-
-    container.appendChild(div);
-  });
-}
-
-// Join Button Logic
-function renderJoinButtonHTML(game) {
-  if (!username) return "";
-
-  if (!game.whitePlayer && username !== game.blackPlayer) {
-    return `<button class="joinBtn">Join</button>`;
+function waitForKeychain(callback) {
+  if (window.steem_keychain) {
+    callback();
+  } else {
+    setTimeout(() =>
+      waitForKeychain(callback), 100);
   }
-
-  return "";
 }
 
-// And attach
-function attachJoinHandler(div, game) {
-  const joinBtn = div.querySelector(".joinBtn");
-  if (!joinBtn) return;
+function checkKeychain() {
 
-  joinBtn.onclick = () => {
-    postJoinMove(game.author, game.permlink);
+  if (!window.steem_keychain) {
+    loginBtn.disabled = true;
+    startGameBtn.disabled = true;
+
+    keychainDiv.style.display = "block";
+    keychainDiv.innerHTML = `
+      <strong>Spectator Mode</strong><br><br>
+      You are viewing games in read-only mode.<br><br>
+      Install Steem Keychain to play.
+    `;
+  }
+  else {
+    keychainDiv.style.display = "none";
+  }
+}
+
+
+// ============================================================
+// ROUTING HELPERS
+// ============================================================
+
+function getProfileFromURL() {
+  const hash = window.location.hash;
+  return hash.startsWith("#/@")
+    ? hash.substring(3)
+    : null;
+}
+
+function getGameFromURL() {
+  const hash = window.location.hash;
+
+  if (!hash.startsWith("#/game/"))
+    return null;
+
+  const parts = hash.split("/");
+
+  return {
+    author: parts[2],
+    permlink: parts[3]
   };
-}
-
-// Unified Dashboard Renderer
-function renderDashboard(games) {
-  if (!games.length) return;
-
-  const sorted = games.sort((a, b) =>
-    new Date(b.created) - new Date(a.created)
-  );
-
-  const featured = sorted[0];
-  const others = sorted.slice(1);
-
-  renderFeaturedGame(featured);
-  renderGameList(others);
 }
