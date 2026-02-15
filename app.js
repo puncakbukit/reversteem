@@ -931,58 +931,94 @@ function initRoute() {
 
 function renderBoardPreview(game, container) {
 
-  // Create isolated board state
-  let previewBoard = Array(64).fill(null);
+  steem.api.getContent(game.author, game.permlink, (err, root) => {
 
-  // Initial Reversi setup
-  previewBoard[27] = "white";
-  previewBoard[28] = "black";
-  previewBoard[35] = "black";
-  previewBoard[36] = "white";
+    if (err) return;
 
-  // Load moves from blockchain
-  steem.api.getContentReplies(
-    game.author,
-    game.permlink,
-    (err, replies) => {
+    let blackPlayer = null;
+    try {
+      const meta = JSON.parse(root.json_metadata);
+      blackPlayer = meta.black;
+    } catch {}
 
-      if (err) return;
+    steem.api.getContentReplies(
+      game.author,
+      game.permlink,
+      (err2, replies) => {
 
-      let previewMoves = [];
+        if (err2) return;
 
-      replies.forEach(reply => {
-        try {
-          const meta = JSON.parse(reply.json_metadata);
-          if (
-            meta.app === APP_INFO &&
-            meta.action === "move"
-          ) {
-            previewMoves.push(meta.index);
-          }
-        } catch {}
-      });
+        let whitePlayer = null;
+        let previewMoves = [];
 
-      // Replay moves locally
-      previewMoves.forEach((index, i) => {
+        replies
+          .sort((a,b)=> new Date(a.created) - new Date(b.created))
+          .forEach(reply => {
 
-        const player = (i % 2 === 0)
-          ? "black"
-          : "white";
+            try {
+              const meta = JSON.parse(reply.json_metadata);
+              if (meta.app !== APP_INFO) return;
 
-        const flips = getFlipsForPreview(
-          previewBoard,
-          index,
-          player
-        );
+              // Detect join
+              if (
+                meta.action === "join" &&
+                !whitePlayer &&
+                reply.author !== blackPlayer
+              ) {
+                whitePlayer = reply.author;
+              }
 
-        previewBoard[index] = player;
-        flips.forEach(f => previewBoard[f] = player);
-      });
+              // Detect move
+              if (meta.action === "move") {
+                previewMoves.push({
+                  index: meta.index,
+                  author: reply.author
+                });
+              }
 
-      // Render mini board
-      drawMiniBoard(previewBoard, container);
-    }
-  );
+            } catch {}
+          });
+
+        // Deterministic replay
+        const previewBoard = Array(64).fill(null);
+        previewBoard[27] = "white";
+        previewBoard[28] = "black";
+        previewBoard[35] = "black";
+        previewBoard[36] = "white";
+
+        let validMoveCount = 0;
+
+        previewMoves.forEach(move => {
+
+          const player =
+            (validMoveCount % 2 === 0) ? "black" : "white";
+
+          const expectedAuthor =
+            player === "black"
+              ? blackPlayer
+              : whitePlayer;
+
+          // Author validation
+          if (move.author !== expectedAuthor) return;
+
+          const flips = getFlipsForPreviewSafe(
+            previewBoard,
+            move.index,
+            player
+          );
+
+          if (flips.length === 0) return;
+
+          previewBoard[move.index] = player;
+          flips.forEach(f => previewBoard[f] = player);
+
+          validMoveCount++;
+        });
+
+        drawMiniBoard(previewBoard, container);
+      }
+    );
+  });
 }
 
 function getFlipsForPreview(boardState, index, player) {
