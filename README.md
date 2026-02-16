@@ -1,24 +1,27 @@
 
 # Reversteem – Reversi on Steem
 
-A fully client-side, decentralized Reversi (Othello) game built on top of the Steem blockchain.
+A fully client-side, deterministic Reversi (Othello) game built on top of the Steem blockchain.
 
-Reversteem demonstrates how a complete turn-based multiplayer game can run on Steem using only posts and replies as an immutable game log — without smart contracts and without any backend server.
+Reversteem demonstrates how a complete turn-based multiplayer game can run on Steem using only posts and replies as an immutable event log — without smart contracts and without any backend server.
+
+This project is both a playable game and a protocol experiment.
 
 ---
 
-## ✨ Key Features
+## ✨ Core Properties
 
 * 100% static frontend (GitHub Pages compatible)
-* No backend or centralized server
+* No backend server
+* No database
+* No smart contracts
 * Deterministic board reconstruction from blockchain history
+* Username-based turn enforcement
+* JSON metadata protocol filtering
 * URL hash-based routing
-* User profile integration (cover, avatar, display name, bio)
-* Featured current game view
-* Open games list
-* Spectator mode (read-only without Keychain)
-* Explicit on-chain join protocol
-* Fully open-source and forkable
+* Read-only spectator mode
+* Profile integration from on-chain metadata
+* Featured game + mini-board previews
 
 ---
 
@@ -26,13 +29,13 @@ Reversteem demonstrates how a complete turn-based multiplayer game can run on St
 
 Reversteem uses client-side hash routing:
 
-| Route                    | Description                           |
-| ------------------------ | ------------------------------------- |
-| `#/`                     | Homepage (featured game + open games) |
-| `#/@username`            | User profile page + user games        |
-| `#/game/author/permlink` | Specific game page                    |
+| Route                    | Description                             |
+| ------------------------ | --------------------------------------- |
+| `#/`                     | Homepage (featured game + recent games) |
+| `#/@username`            | User profile page + games by that user  |
+| `#/game/author/permlink` | Specific game page                      |
 
-Navigation does not reload the site — the entire app is static.
+Navigation does not reload the page — everything runs as a single-page app.
 
 ---
 
@@ -45,28 +48,38 @@ There is:
 * No backend
 * No server authority
 * No centralized state
-* No smart contracts
+* No off-chain game storage
 
 Everything is derived from the Steem blockchain.
+
+The blockchain acts as a deterministic event log.
 
 ---
 
 ## 🔗 On-Chain Game Model
 
-| Entity        | Meaning                          |
-| ------------- | -------------------------------- |
-| Root Post     | Represents a game (Black player) |
-| Join Comment  | Registers the White player       |
-| Move Comment  | Represents a move                |
-| Comment Order | Determines turn order            |
+| Blockchain Object | Meaning                          |
+| ----------------- | -------------------------------- |
+| Root Post         | Represents a game (Black player) |
+| Join Comment      | Registers the White player       |
+| Move Comment      | Represents one move              |
+| Comment Order     | Determines turn order            |
 
-The blockchain itself acts as a deterministic event log.
+Only comments containing valid JSON metadata for the `reversteem/x.y` app are considered.
+
+All other comments are ignored.
 
 ---
 
 ## ♟ Turn Model
 
-Moves alternate automatically based on reply order.
+Turn order is derived from valid move count:
+
+```
+currentPlayer = (validMoveCount % 2 === 0)
+  ? "black"
+  : "white";
+```
 
 | Move # | Player |
 | ------ | ------ |
@@ -76,22 +89,24 @@ Moves alternate automatically based on reply order.
 | 3      | White  |
 | ...    | ...    |
 
-Turn calculation:
-
-```
-currentPlayer = (moves.length % 2 === 0)
-  ? "black"
-  : "white";
-```
-
 * Black = Root post author
-* White = First valid `join` comment
+* White = First valid `join` comment author
+* Only the expected player may make the next valid move
+* Invalid moves are ignored during replay
 
 ---
 
 ## 📜 Metadata Protocol
 
-Reversteem uses JSON metadata to identify valid actions.
+Reversteem filters strictly by `app` field:
+
+```
+meta.app?.startsWith("reversteem/")
+```
+
+Only matching metadata is processed.
+
+---
 
 ### Root Post (Game Creation)
 
@@ -105,6 +120,8 @@ Reversteem uses JSON metadata to identify valid actions.
 }
 ```
 
+Black is defined in metadata.
+
 ---
 
 ### Join Comment
@@ -115,6 +132,10 @@ Reversteem uses JSON metadata to identify valid actions.
   "action": "join"
 }
 ```
+
+The first valid `join` comment assigns White.
+
+Subsequent join attempts are ignored.
 
 ---
 
@@ -128,60 +149,14 @@ Reversteem uses JSON metadata to identify valid actions.
 }
 ```
 
-Only comments with matching `app` metadata are considered valid.
+Validation rules during replay:
 
----
+* Author must match expected player
+* Index must be between 0–63
+* Move must flip at least one opponent piece
+* Move must be legal on reconstructed board
 
-## 🖥 User Profiles Integration
-
-After login, Reversteem fetches user profile data directly from Steem:
-
-* Cover image
-* Profile image
-* Display name
-* Biography
-
-These are rendered dynamically in the profile header.
-
-No additional storage is used — profile data is read directly from on-chain account metadata.
-
----
-
-## 🏠 Homepage Layout
-
-The homepage now displays:
-
-### 🎯 Featured Game
-
-* The most recent game
-* Full board rendered
-* View / Join controls
-
-### 📋 Other Games
-
-* Title only
-* View (spectate)
-* Join (if open)
-
-This keeps the interface clean while still highlighting active gameplay.
-
----
-
-## 👤 User Page
-
-Visiting:
-
-```
-#/@username
-```
-
-Shows:
-
-* Profile header
-* Featured current game (if any)
-* List of that user’s games
-
-Same logic as homepage, scoped to one user.
+Invalid moves are ignored.
 
 ---
 
@@ -189,20 +164,58 @@ Same logic as homepage, scoped to one user.
 
 When loading a game:
 
-1. Root post defines Black
-2. Replies are scanned in chronological order
-3. First valid `join` assigns White
-4. All valid `move` comments are replayed
-5. Board is reconstructed locally
+1. Fetch root post
+2. Fetch all replies
+3. Sort replies chronologically
+4. Extract Black from root metadata
+5. Detect first valid `join` as White
+6. Replay all valid `move` comments
+7. Reconstruct board locally
 
-Nothing is trusted.
-Everything is derived from chain history.
+The board state is never stored anywhere off-chain.
+
+Every client reconstructs it independently.
 
 This makes the game:
 
-* Auditable
+* Fully verifiable
 * Tamper-resistant
-* Fully verifiable by spectators
+* Auditable by spectators
+
+---
+
+## 🖼 Board Rendering
+
+Two rendering modes exist:
+
+### Main Game Board
+
+* Interactive
+* Enforces turn logic
+* Client-side validation before posting
+
+### Mini Board Preview
+
+* Read-only
+* Rendered in Featured Game section
+* Derived using the same deterministic engine
+
+No duplicated game logic is used.
+
+---
+
+## 🧑 User Profile Integration
+
+After login, Reversteem reads account metadata from Steem:
+
+* Display name
+* Profile image
+* Cover image
+* Biography
+
+Profile data is rendered dynamically.
+
+No user data is stored locally (except logged-in username).
 
 ---
 
@@ -210,84 +223,144 @@ This makes the game:
 
 If Steem Keychain is not installed:
 
-* Login & play buttons are disabled
-* App switches to read-only mode
-* Games can still be viewed and verified
+* Login button is disabled
+* Start Game is disabled
+* Join buttons hidden
+* App runs in read-only mode
 
-Reversteem works as a blockchain game explorer even without authentication.
+Games can still be loaded and verified.
 
----
-
-## 🧠 Board Engine
-
-The Reversi logic is fully client-side:
-
-* Valid move detection
-* Flip calculation
-* Turn enforcement
-* Board rendering
-* Replay reconstruction
-
-The blockchain stores events — the browser computes the state.
+Reversteem functions as a blockchain game explorer even without authentication.
 
 ---
 
 ## 🔐 Security Model
 
-* Turn enforcement is username-based
-* Only Black and White can move
-* Invalid moves rejected client-side
-* Full replay verification
-* Spectators can independently verify the game
+Reversteem enforces:
 
-Because the game is deterministic, malicious clients cannot fake outcomes.
+* Username-based turn validation
+* Legal move validation
+* Deterministic replay
+* Metadata filtering by app name
+* Ignoring malformed JSON
+* Ignoring invalid indices
+* Ignoring moves by wrong author
+
+Because the state is derived from chain history,
+malicious clients cannot forge valid game outcomes.
+
+Every spectator replays the same deterministic logic.
+
+---
+
+## 🏠 Homepage Layout
+
+### 🎯 Featured Game
+
+* Most recent game
+* Mini board preview
+* Status display
+* View button
+* Join button (if open and eligible)
+
+### 📋 Other Games
+
+* Title
+* Status
+* View button
+* Join button (if open)
+
+Games are sorted by creation time (newest first).
+
+---
+
+## ⚙ RPC Usage
+
+Reversteem uses the public Steem RPC:
+
+```
+https://api.steemit.com
+```
+
+All blockchain reads are done via `steem-js`.
+
+No custom backend proxy is used.
+
+---
+
+## 🧠 Board Engine Details
+
+Fully client-side:
+
+* 8×8 board array (length 64)
+* Directional scan model (8 directions)
+* Flip collection per direction
+* Deterministic move replay
+* Turn derived from valid move count
+
+The blockchain stores events.
+The browser computes the state.
+
+---
+
+## ⚠ Current Limitations
+
+The current implementation intentionally keeps the protocol minimal.
+
+Not yet implemented:
+
+* Automatic pass rule (when a player has no valid moves)
+* End-of-game detection
+* Winner calculation
+* Game finalization metadata update
+* Multi-RPC failover
+
+These can be added in future versions without breaking protocol compatibility.
 
 ---
 
 ## 🚀 Running Locally
 
-Just open:
+Open:
 
 ```
 index.html
 ```
 
-in a browser with Steem Keychain installed.
+In a browser with Steem Keychain installed.
 
-No build step.
+No build step required.
 No npm.
 No bundler.
 
-Pure static HTML + JS.
+Pure static HTML + JavaScript.
 
 ---
 
 ## 🌍 Deployment
 
-Reversteem can be deployed using:
+Can be deployed via:
 
 * GitHub Pages
 * Any static hosting provider
-* IPFS (optional future improvement)
+* IPFS (optional future enhancement)
 
 No backend required.
 
 ---
 
-## 🎯 Vision
+## 🎯 Design Philosophy
 
-Reversteem explores how traditional board games can be implemented
-as blockchain-native social protocols.
-
-It demonstrates:
+Reversteem demonstrates that:
 
 * Smart contracts are not required for turn-based games
-* Comment trees can act as deterministic event logs
-* Social blockchains can host fully verifiable multiplayer games
-* Frontend-only dApps are viable for turn-based logic
+* Comment trees can function as deterministic event logs
+* Social blockchains can host verifiable multiplayer games
+* Fully frontend-only dApps are viable
 
-Reversteem is not just a game —
-it is a protocol experiment.
+Reversteem is not merely a game.
+
+It is a demonstration of how conversation threads can become state machines.
 
 ---
 
