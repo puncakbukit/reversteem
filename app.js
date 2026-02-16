@@ -543,6 +543,11 @@ if (!hasAnyValidMove(board, currentPlayer)) {
   alert("No valid moves. Turn passes automatically.");
   return;
 }
+  
+if (currentPlayer === null) {
+  alert("Game finished");
+  return;
+}
 
   const expected =
     currentPlayer === "black" ? blackPlayer : whitePlayer;
