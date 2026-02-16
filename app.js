@@ -947,13 +947,17 @@ function parseGames(posts) {
     };
   });
 }
-
-// Init route
-function initRoute() {
-  // 🔥 Clear previous UI
+  
+// 🔥 Clear previous UI
+function clearUI() {
   featuredGameDiv.innerHTML = "";
   gameListDiv.innerHTML = "";
   boardDiv.innerHTML = "";
+}
+  
+// Init route
+function initRoute() {
+  clearUI();
   
   const profileUser = getProfileFromURL();
   const gameFromURL = getGameFromURL();
