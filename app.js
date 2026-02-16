@@ -373,13 +373,25 @@ const whiteHasMove = hasAnyValidMove(board, "white");
 
 const finished = !blackHasMove && !whiteHasMove;
 
+let winner = null;
+
+if (finished) {
+  const { black, white } = countDiscs(board);
+
+  if (black > white) winner = "black";
+  else if (white > black) winner = "white";
+  else winner = "draw";
+}
+
   return {
     blackPlayer,
     whitePlayer,
     board,
     currentPlayer,
     appliedMoves,
-    moves
+    moves,
+    finished,
+    winner
   };
 }
 
