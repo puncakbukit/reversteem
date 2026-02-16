@@ -328,8 +328,6 @@ let turn = "black";
 
 for (const move of moves) {
 
-  if (finished) break;
-
   // pass logic
   if (!hasAnyValidMove(board, turn)) {
     const opponent = (turn === "black") ? "white" : "black";
