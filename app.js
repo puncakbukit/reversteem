@@ -84,6 +84,8 @@ let currentGame  = JSON.parse(localStorage.getItem("current_game") || "null");
 
 let blackPlayer = null;
 let whitePlayer = null;
+let finished = false;
+let winner = null;
 
 let moves        = [];
 let currentPlayer = "black";
