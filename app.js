@@ -525,6 +525,7 @@ function makeMove(index) {
   renderBoard();
 
   postMove(index);
+  currentPlayer = currentPlayer === "black" ? "white" : "black";
 }
 
 
