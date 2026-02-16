@@ -288,7 +288,7 @@ function deriveGameState(rootPost, replies) {
   replies.forEach(reply => {
     try {
       const meta = JSON.parse(reply.json_metadata);
-      if (meta.app?.startsWith(APP_NAME)) return;
+      if (!meta.app?.startsWith(APP_NAME + "/")) return;
 
       // Detect white join
       if (
@@ -374,7 +374,7 @@ async function loadOpenGames() {
         try {
           const meta = JSON.parse(post.json_metadata);
           return (
-            meta.app === APP_INFO &&
+            meta.app?.startsWith(APP_NAME + "/") &&
             meta.type === "game_start"
           );
         } catch {
@@ -425,7 +425,7 @@ function deriveWhitePlayer(post) {
                 const rmeta = JSON.parse(reply.json_metadata);
 
                 if (
-                  rmeta.app === APP_INFO &&
+                  rmeta.app?.startsWith(APP_NAME + "/") &&
                   rmeta.action === "join" &&
                   reply.author !== blackPlayer
                 ) {
@@ -741,7 +741,7 @@ function loadGamesByUser(user) {
         try {
           const meta = JSON.parse(post.json_metadata);
           return (
-            meta.app === APP_INFO &&
+            meta.app?.startsWith(APP_NAME + "/") &&
             meta.type === "game_start"
           );
         } catch {
