@@ -459,7 +459,6 @@ async function loadMovesFromSteem() {
 
   return new Promise((resolve, reject) => {
 
-    // Load root post (black player)
     steem.api.getContent(
       currentGame.author,
       currentGame.permlink,
@@ -467,25 +466,28 @@ async function loadMovesFromSteem() {
 
         if (err) return reject(err);
 
-        try {
-          const meta = JSON.parse(root.json_metadata);
-          blackPlayer = meta.black;
-        } catch {}
+        steem.api.getContentReplies(
+          currentGame.author,
+          currentGame.permlink,
+          (err2, replies) => {
 
-        const state = deriveGameState(root, replies);
+            if (err2) return reject(err2);
 
-        blackPlayer = state.blackPlayer;
-        whitePlayer = state.whitePlayer;
-        board = state.board;
-        currentPlayer = state.currentPlayer;
-        moves = state.moves;
+            const state = deriveGameState(root, replies);
 
-        renderBoard();
+            blackPlayer   = state.blackPlayer;
+            whitePlayer   = state.whitePlayer;
+            board         = state.board;
+            currentPlayer = state.currentPlayer;
+            moves         = state.moves;
+
+            renderBoard();
             resolve();
           }
         );
       }
     );
+  });
 }
 
 // ============================================================
