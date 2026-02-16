@@ -325,39 +325,37 @@ function deriveGameState(rootPost, replies) {
   let appliedMoves = 0;
 let turn = "black";
 
-moves.forEach(move => {
+for (const move of moves) {
 
-  // 🔁 Automatic pass BEFORE validating move
-if (!hasAnyValidMove(board, turn)) {
-  const opponent = (turn === "black") ? "white" : "black";
+  if (finished) break;
 
-  if (hasAnyValidMove(board, opponent)) {
-    turn = opponent; // single pass
-  } else {
-    return; // game ended — stop replaying further moves
+  // pass logic
+  if (!hasAnyValidMove(board, turn)) {
+    const opponent = (turn === "black") ? "white" : "black";
+
+    if (hasAnyValidMove(board, opponent)) {
+      turn = opponent;
+    } else {
+      break; // 🔥 GAME ENDS HERE
+    }
   }
-}
 
   const expectedAuthor =
-    turn === "black"
-      ? blackPlayer
-      : whitePlayer;
+    turn === "black" ? blackPlayer : whitePlayer;
 
-  if (move.author !== expectedAuthor) return;
-  if (!blackPlayer || !whitePlayer) return;
+  if (move.author !== expectedAuthor) continue;
 
   const flips = getFlipsForBoard(board, move.index, turn);
-  if (flips.length === 0) return;
+  if (flips.length === 0) continue;
 
   board[move.index] = turn;
   flips.forEach(f => board[f] = turn);
 
   appliedMoves++;
-
-  // Switch turn after successful move
+  
   turn = (turn === "black") ? "white" : "black";
-});
-
+}
+  
 if (!hasAnyValidMove(board, turn)) {
   const opponent = (turn === "black") ? "white" : "black";
 
