@@ -344,6 +344,7 @@ if (!hasAnyValidMove(board, turn)) {
       : whitePlayer;
 
   if (move.author !== expectedAuthor) return;
+  if (!blackPlayer || !whitePlayer) return;
 
   const flips = getFlipsForBoard(board, move.index, turn);
   if (flips.length === 0) return;
