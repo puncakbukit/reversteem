@@ -537,6 +537,11 @@ function makeMove(index) {
     return;
   }
 
+if (currentPlayer === null) {
+  alert("Game finished");
+  return;
+}
+  
   if (currentPlayer === "white" && !whitePlayer) {
     alert("No opponent yet");
     return;
@@ -544,11 +549,6 @@ function makeMove(index) {
   
 if (!hasAnyValidMove(board, currentPlayer)) {
   alert("No valid moves. Turn passes automatically.");
-  return;
-}
-  
-if (currentPlayer === null) {
-  alert("Game finished");
   return;
 }
 
