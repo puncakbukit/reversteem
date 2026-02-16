@@ -351,8 +351,15 @@ moves.forEach(move => {
   turn = (turn === "black") ? "white" : "black";
 });
 
-  const currentPlayer =
-    (validMoveCount % 2 === 0) ? "black" : "white";
+if (!hasAnyValidMove(board, turn)) {
+  const opponent = (turn === "black") ? "white" : "black";
+
+  if (hasAnyValidMove(board, opponent)) {
+    turn = opponent;
+  }
+}
+
+  const currentPlayer = turn;
 
   return {
     blackPlayer,
