@@ -539,6 +539,9 @@ function startGame() {
     return;
   }
 
+  // ✅ Initialize fresh board for new game
+  resetBoard();
+  
   const permlink = `${APP_NAME}-${Date.now()}`;
 
   const meta = {
