@@ -550,7 +550,8 @@ function makeMove(index) {
     return;
   }
 
-  const flips = getFlips(index, currentPlayer);
+  const flips = getFlipsForBoard(boardState, index, player);
+
   if (flips.length === 0) {
     alert("Invalid move");
     return;
