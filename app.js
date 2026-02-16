@@ -364,7 +364,7 @@ if (!hasAnyValidMove(board, turn)) {
   }
 }
 
-let currentPlayer = turn;
+const currentPlayer = turn;
   
 const blackHasMove = hasAnyValidMove(board, "black");
 const whiteHasMove = hasAnyValidMove(board, "white");
@@ -374,7 +374,6 @@ const finished = !blackHasMove && !whiteHasMove;
 let winner = null;
 
 if (finished) {
-  currentPlayer = null;
   const { black, white } = countDiscs(board);
 
   if (black > white) winner = "black";
@@ -386,11 +385,11 @@ if (finished) {
     blackPlayer,
     whitePlayer,
     board,
-    currentPlayer,
+    currentPlayer: finished ? null : turn,
     appliedMoves,
-    moves,
     finished,
-    winner
+    winner,
+    moves
   };
 }
 
