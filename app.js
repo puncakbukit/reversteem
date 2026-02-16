@@ -472,59 +472,20 @@ async function loadMovesFromSteem() {
           blackPlayer = meta.black;
         } catch {}
 
-        // Load replies (join + moves)
-        steem.api.getContentReplies(
-          currentGame.author,
-          currentGame.permlink,
-          (err2, replies) => {
+        const state = deriveGameState(root, replies);
 
-            if (err2) return reject(err2);
+        blackPlayer = state.blackPlayer;
+        whitePlayer = state.whitePlayer;
+        board = state.board;
+        currentPlayer = state.currentPlayer;
+        moves = state.moves;
 
-            moves = [];
-            whitePlayer = null;
-
-            replies.sort((a,b)=> new Date(a.created) - new Date(b.created));
-
-            replies.forEach(reply => {
-              try {
-                const meta = JSON.parse(reply.json_metadata);
-                if (meta.app !== APP_INFO) return;
-
-                // Join detection
-                if (
-                  meta.action === "join" &&
-                  !whitePlayer &&
-                  reply.author !== blackPlayer
-                ) {
-                  whitePlayer = reply.author;
-                }
-
-                // Move detection
-                if (meta.action === "move") {
-                  moves.push({
-                    index: meta.index,
-                    author: reply.author
-                  });
-                }
-
-              } catch {}
-            });
-
-const state = deriveGameState(root, replies);
-
-blackPlayer = state.blackPlayer;
-whitePlayer = state.whitePlayer;
-board = state.board;
-currentPlayer = state.currentPlayer;
-moves = state.moves;
-
-renderBoard();
+        renderBoard();
             resolve();
           }
         );
       }
     );
-  });
 }
 
 // ============================================================
