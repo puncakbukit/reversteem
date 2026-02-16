@@ -328,9 +328,15 @@ let turn = "black";
 moves.forEach(move => {
 
   // 🔁 Automatic pass BEFORE validating move
-  if (!hasAnyValidMove(board, turn)) {
-    turn = (turn === "black") ? "white" : "black";
+if (!hasAnyValidMove(board, turn)) {
+  const opponent = (turn === "black") ? "white" : "black";
+
+  if (hasAnyValidMove(board, opponent)) {
+    turn = opponent; // single pass
+  } else {
+    return; // game ended — stop replaying further moves
   }
+}
 
   const expectedAuthor =
     turn === "black"
