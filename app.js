@@ -122,7 +122,6 @@ window.addEventListener("load", () => {
     loadOpenGames();
   }
 
-  resetBoard();
 });
 
 // ============================================================
