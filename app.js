@@ -1028,68 +1028,6 @@ function renderBoardPreview(game, container) {
   });
 }
 
-function getFlipsForPreviewSafe(boardState, index, player) {
-
-  if (boardState[index]) return [];
-
-  let all = [];
-
-  for (const dir of DIRECTIONS) {
-    all = all.concat(
-      collectFlipsPreviewSafe(boardState, index, dir, player)
-    );
-  }
-
-  return all;
-}
-
-function collectFlipsPreviewSafe(boardState, start, dir, player) {
-
-  const opponent = player === "black" ? "white" : "black";
-  const flips = [];
-
-  let current = start + dir;
-
-  while (
-    isOnBoardPreview(start, current, dir) &&
-    boardState[current] === opponent
-  ) {
-    flips.push(current);
-    current += dir;
-  }
-
-  if (
-    isOnBoardPreview(start, current, dir) &&
-    boardState[current] === player
-  ) {
-    return flips;
-  }
-
-  return [];
-}
-
-function isOnBoardPreview(from, to, dir) {
-
-  if (to < 0 || to >= 64) return false;
-
-  const row = i => Math.floor(i / 8);
-  const col = i => i % 8;
-
-  if (dir === -1 || dir === 1) {
-    return row(from) === row(to);
-  }
-
-  if (dir === -9 || dir === 7) {
-    return col(to) < col(from);
-  }
-
-  if (dir === -7 || dir === 9) {
-    return col(to) > col(from);
-  }
-
-  return true;
-}
-
 function drawMiniBoard(boardState, container) {
 
   container.innerHTML = "";
