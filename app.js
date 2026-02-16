@@ -1059,3 +1059,13 @@ function drawMiniBoard(boardState, container) {
   container.appendChild(miniBoard);
 }
 
+// Detect Legal Move
+function hasAnyValidMove(boardState, player) {
+  for (let i = 0; i < 64; i++) {
+    if (getFlipsForBoard(boardState, i, player).length > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
