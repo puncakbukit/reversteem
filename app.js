@@ -1097,3 +1097,16 @@ function hasAnyValidMove(boardState, player) {
   return false;
 }
 
+// Count Discs Deterministically
+function countDiscs(boardState) {
+  let black = 0;
+  let white = 0;
+
+  boardState.forEach(cell => {
+    if (cell === "black") black++;
+    if (cell === "white") white++;
+  });
+
+  return { black, white };
+}
+
