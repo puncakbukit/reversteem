@@ -917,6 +917,7 @@ joinBtn.onclick = () => {
   window.location.hash = `#/game/${game.author}/${game.permlink}`;
   postJoin();
 };
+}
 
 // Unified Dashboard Renderer
 function renderDashboard(games) {
