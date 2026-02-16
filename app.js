@@ -515,6 +515,8 @@ async function loadMovesFromSteem() {
             board         = state.board;
             currentPlayer = state.currentPlayer;
             moves         = state.moves;
+            finished      = state.finished;
+            winner        = state.winner;
 
             renderBoard();
             resolve();
