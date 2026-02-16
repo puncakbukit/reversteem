@@ -516,6 +516,11 @@ function makeMove(index) {
     alert("No opponent yet");
     return;
   }
+  
+if (!hasAnyValidMove(board, currentPlayer)) {
+  alert("No valid moves. Turn passes automatically.");
+  return;
+}
 
   const expected =
     currentPlayer === "black" ? blackPlayer : whitePlayer;
