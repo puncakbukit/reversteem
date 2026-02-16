@@ -322,7 +322,7 @@ function deriveGameState(rootPost, replies) {
   board[35] = "black";
   board[36] = "white";
 
-  let validMoveCount = 0;
+  let appliedMoves = 0;
 let turn = "black";
 
 moves.forEach(move => {
@@ -352,7 +352,7 @@ if (!hasAnyValidMove(board, turn)) {
   board[move.index] = turn;
   flips.forEach(f => board[f] = turn);
 
-  validMoveCount++;
+  appliedMoves++;
 
   // Switch turn after successful move
   turn = (turn === "black") ? "white" : "black";
@@ -373,7 +373,7 @@ if (!hasAnyValidMove(board, turn)) {
     whitePlayer,
     board,
     currentPlayer,
-    validMoveCount,
+    appliedMoves,
     moves
   };
 }
