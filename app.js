@@ -69,7 +69,7 @@ const logoutBtn    = document.getElementById("logoutBtn");
 const startGameBtn = document.getElementById("startGameBtn");
 const boardDiv     = document.getElementById("board");
 const gameListDiv  = document.getElementById("gameList");
-const containerDiv = document.getElementById("profileHeader");
+const profileHeaderDiv = document.getElementById("profileHeader");
 const featuredGameDiv = document.getElementById("featuredGame");
 
 // ============================================================
@@ -845,13 +845,13 @@ function loadUserProfile(username) {
     });
   });
   } else {
-   containerDiv.innerHTML = '';
+   profileHeaderDiv.innerHTML = '';
   }
 }
 
 // Render Profile UI
 function renderUserProfile(data) {
-  containerDiv.innerHTML = `
+  profileHeaderDiv.innerHTML = `
     <div class="cover" style="
       background-image:url('${data.coverImage}');
       background-size:cover;
