@@ -950,6 +950,11 @@ function parseGames(posts) {
 
 // Init route
 function initRoute() {
+  // 🔥 Clear previous UI
+  featuredGameDiv.innerHTML = "";
+  gameListDiv.innerHTML = "";
+  boardDiv.innerHTML = "";
+  
   const profileUser = getProfileFromURL();
   const gameFromURL = getGameFromURL();
 
