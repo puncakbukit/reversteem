@@ -390,6 +390,7 @@ if (finished) {
     appliedMoves,
     finished,
     winner,
+    score: countDiscs(board),
     moves
   };
 }
