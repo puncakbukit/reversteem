@@ -1011,12 +1011,6 @@ function renderBoardPreview(game, container) {
 
     if (err) return;
 
-    let blackPlayer = null;
-    try {
-      const meta = JSON.parse(root.json_metadata);
-      blackPlayer = meta.black;
-    } catch {}
-
     steem.api.getContentReplies(
       game.author,
       game.permlink,
@@ -1024,74 +1018,10 @@ function renderBoardPreview(game, container) {
 
         if (err2) return;
 
-        let whitePlayer = null;
-        let previewMoves = [];
+        // 🔥 Single canonical deterministic engine call
+        const state = deriveGameState(root, replies);
 
-        replies
-          .sort((a,b)=> new Date(a.created) - new Date(b.created))
-          .forEach(reply => {
-
-            try {
-              const meta = JSON.parse(reply.json_metadata);
-              if (meta.app !== APP_INFO) return;
-
-              // Detect join
-              if (
-                meta.action === "join" &&
-                !whitePlayer &&
-                reply.author !== blackPlayer
-              ) {
-                whitePlayer = reply.author;
-              }
-
-              // Detect move
-              if (meta.action === "move") {
-                previewMoves.push({
-                  index: meta.index,
-                  author: reply.author
-                });
-              }
-
-            } catch {}
-          });
-
-        // Deterministic replay
-        const previewBoard = Array(64).fill(null);
-        previewBoard[27] = "white";
-        previewBoard[28] = "black";
-        previewBoard[35] = "black";
-        previewBoard[36] = "white";
-
-        let validMoveCount = 0;
-
-        previewMoves.forEach(move => {
-
-          const player =
-            (validMoveCount % 2 === 0) ? "black" : "white";
-
-          const expectedAuthor =
-            player === "black"
-              ? blackPlayer
-              : whitePlayer;
-
-          // Author validation
-          if (move.author !== expectedAuthor) return;
-
-          const flips = getFlipsForPreviewSafe(
-            previewBoard,
-            move.index,
-            player
-          );
-
-          if (flips.length === 0) return;
-
-          previewBoard[move.index] = player;
-          flips.forEach(f => previewBoard[f] = player);
-
-          validMoveCount++;
-        });
-
-        drawMiniBoard(previewBoard, container);
+        drawMiniBoard(state.board, container);
       }
     );
   });
