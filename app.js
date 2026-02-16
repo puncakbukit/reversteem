@@ -323,27 +323,33 @@ function deriveGameState(rootPost, replies) {
   board[36] = "white";
 
   let validMoveCount = 0;
+let turn = "black";
 
-  moves.forEach(move => {
+moves.forEach(move => {
 
-    const player =
-      (validMoveCount % 2 === 0) ? "black" : "white";
+  // 🔁 Automatic pass BEFORE validating move
+  if (!hasAnyValidMove(board, turn)) {
+    turn = (turn === "black") ? "white" : "black";
+  }
 
-    const expectedAuthor =
-      player === "black"
-        ? blackPlayer
-        : whitePlayer;
+  const expectedAuthor =
+    turn === "black"
+      ? blackPlayer
+      : whitePlayer;
 
-    if (move.author !== expectedAuthor) return;
+  if (move.author !== expectedAuthor) return;
 
-    const flips = getFlipsForBoard(board, move.index, player);
-    if (flips.length === 0) return;
+  const flips = getFlipsForBoard(board, move.index, turn);
+  if (flips.length === 0) return;
 
-    board[move.index] = player;
-    flips.forEach(f => board[f] = player);
+  board[move.index] = turn;
+  flips.forEach(f => board[f] = turn);
 
-    validMoveCount++;
-  });
+  validMoveCount++;
+
+  // Switch turn after successful move
+  turn = (turn === "black") ? "white" : "black";
+});
 
   const currentPlayer =
     (validMoveCount % 2 === 0) ? "black" : "white";
