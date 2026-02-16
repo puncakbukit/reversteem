@@ -510,7 +510,15 @@ async function loadMovesFromSteem() {
               } catch {}
             });
 
-            replayMoves();
+const state = deriveGameState(root, replies);
+
+blackPlayer = state.blackPlayer;
+whitePlayer = state.whitePlayer;
+board = state.board;
+currentPlayer = state.currentPlayer;
+moves = state.moves;
+
+renderBoard();
             resolve();
           }
         );
