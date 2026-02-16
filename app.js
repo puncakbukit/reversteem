@@ -288,7 +288,7 @@ function deriveGameState(rootPost, replies) {
   replies.forEach(reply => {
     try {
       const meta = JSON.parse(reply.json_metadata);
-      if (meta.app !== APP_INFO) return;
+      if (meta.app?.startsWith(APP_NAME)) return;
 
       // Detect white join
       if (
