@@ -527,36 +527,6 @@ renderBoard();
   });
 }
 
-
-// ============================================================
-// GAME REPLAY (DETERMINISTIC)
-// ============================================================
-
-function replayMoves() {
-  resetBoard();
-
-  let validMoveCount = 0;
-
-  moves.forEach(move => {
-    const player = (validMoveCount % 2 === 0) ? "black" : "white";
-    const expectedAuthor = player === "black" ? blackPlayer : whitePlayer;
-
-    // Author validation
-    if (move.author !== expectedAuthor) return;
-
-    const flips = getFlips(move.index, player);
-    if (flips.length === 0) return;
-
-    board[move.index] = player;
-    flips.forEach(f => board[f] = player);
-
-    validMoveCount++;
-  });
-
-  currentPlayer = (validMoveCount % 2 === 0) ? "black" : "white";
-  renderBoard();
-}
-
 // ============================================================
 // GAME ACTIONS
 // ============================================================
