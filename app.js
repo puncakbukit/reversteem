@@ -263,7 +263,8 @@ function renderBoard() {
       cell.appendChild(disk);
     }
 
-    cell.onclick = () => makeMove(i);
+    cell.onclick = finished ? null : () => makeMove(i);
+
     boardDiv.appendChild(cell);
   }
 }
