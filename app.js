@@ -54,6 +54,13 @@ const APP_INFO = `${APP_NAME}/${APP_VER}`;
 
 const DIRECTIONS = [-8, 8, -1, 1, -9, -7, 7, 9];
 
+// ============================================================
+// ELO CONFIGURATION
+// ============================================================
+
+const ELO_BASE = 1200;
+const ELO_K = 32;
+const ELO_CACHE_KEY = "reversteem_elo_cache";
 
 // ============================================================
 // DOM REFERENCES
