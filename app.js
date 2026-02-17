@@ -82,6 +82,7 @@ let blackPlayer = null;
 let whitePlayer = null;
 let finished = false;
 let winner = null;
+let currentAppliedMoves = 0;
 
 let moves = [];
 let currentPlayer = "black";
@@ -596,6 +597,7 @@ async function loadMovesFromSteem() {
             moves = state.moves;
             finished = state.finished;
             winner = state.winner;
+            currentAppliedMoves = state.appliedMoves;
 
             renderBoard();
             resolve();
@@ -733,7 +735,7 @@ function postMove(index) {
     app: APP_INFO,
     action: "move",
     index,
-    moveNumber: currentState.appliedMoves
+    moveNumber: currentAppliedMoves
   };
 
   const body =
