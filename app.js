@@ -421,10 +421,12 @@ function hasAnyValidMove(boardState, player) {
 // ============================================================
 
 async function loadOpenGames() {
-  steem.api.getDiscussionsByCreated({
+  callWithFallback(
+    steem.api.getDiscussionsByCreated,
+    [{
       tag: APP_NAME,
       limit: 20
-    },
+    }],
     async (err, posts) => {
 
       if (err) return;
