@@ -1287,7 +1287,16 @@ function renderBoardPreview(game, container) {
         // 🔥 Single canonical deterministic engine call
         const state = deriveGameState(root, replies);
 
-        drawMiniBoard(state.board, container);
+        container.innerHTML = "";
+        const playerBar = document.createElement("div");
+        container.appendChild(playerBar);
+        
+        renderPlayerBar(playerBar, state.blackPlayer, state.whitePlayer);
+
+        const boardContainer = document.createElement("div");
+        container.appendChild(boardContainer);
+        
+        drawMiniBoard(state.board, boardContainer);
       }
     );
   });
