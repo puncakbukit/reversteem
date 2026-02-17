@@ -271,7 +271,7 @@ function renderBoard() {
   }
 }
 
-function deriveGameState(rootPost, replies) {
+function deriveGameStateFull(rootPost, replies) {
 
   let blackPlayer = null;
   let whitePlayer = null;
@@ -388,6 +388,56 @@ function deriveGameState(rootPost, replies) {
     score,
     moves
   };
+}
+
+// Wrapper with cache
+function deriveGameState(rootPost, replies) {
+  if (!rootPost) {
+    return deriveGameStateFull(rootPost, replies);
+  }
+
+  const cacheKey = `reversteem_cache_${rootPost.author}_${rootPost.permlink}`;
+
+  let cache = null;
+
+  try {
+    cache = JSON.parse(localStorage.getItem(cacheKey));
+  } catch {}
+
+  // Always sort same way before comparing
+  replies.sort((a, b) => new Date(a.created) - new Date(b.created));
+
+  const latestBlock =
+    replies.length > 0
+      ? replies[replies.length - 1].block
+      : 0;
+
+  // ---- Validate Cache ----
+  if (
+    cache &&
+    cache.lastBlock === latestBlock &&
+    cache.replyCount === replies.length
+  ) {
+    // Cache is still valid
+    return cache.state;
+  }
+
+  // ---- Fallback to Full Replay ----
+  const state = deriveGameStateFull(rootPost, replies);
+
+  // ---- Store Updated Cache ----
+  try {
+    localStorage.setItem(
+      cacheKey,
+      JSON.stringify({
+        lastBlock: latestBlock,
+        replyCount: replies.length,
+        state
+      })
+    );
+  } catch {}
+
+  return state;
 }
 
 // Count Discs Deterministically
