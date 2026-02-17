@@ -729,7 +729,8 @@ function postMove(index) {
   const meta = {
     app: APP_INFO,
     action: "move",
-    index
+    index,
+    moveNumber: currentState.appliedMoves
   };
 
   const body =
