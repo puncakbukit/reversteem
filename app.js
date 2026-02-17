@@ -1358,3 +1358,42 @@ function callWithFallback(apiCall, args, callback, attempt = 0) {
     callWithFallback(apiCall, args, callback, attempt + 1);
   });
 }
+
+// Fetch user's Steem account 
+function fetchAccount(username) {
+  return new Promise(resolve => {
+
+    if (!username) return resolve(null);
+
+    if (accountCache[username]) {
+      return resolve(accountCache[username]);
+    }
+
+    steem.api.getAccounts([username], (err, result) => {
+
+      if (err || !result || !result.length) {
+        return resolve(null);
+      }
+
+      const account = result[0];
+      let profile = {};
+
+      try {
+        const metadata =
+          account.posting_json_metadata || account.json_metadata;
+
+        profile = JSON.parse(metadata).profile || {};
+      } catch {}
+
+      const data = {
+        username: account.name,
+        profileImage: profile.profile_image || "",
+        displayName: profile.name || account.name
+      };
+
+      accountCache[username] = data;
+      resolve(data);
+    });
+
+  });
+}
