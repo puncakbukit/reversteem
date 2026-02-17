@@ -1397,3 +1397,58 @@ function fetchAccount(username) {
 
   });
 }
+
+// Render player bar
+async function renderPlayerBar(container, black, white) {
+
+  container.innerHTML = "";
+
+  const wrapper = document.createElement("div");
+  wrapper.style.display = "flex";
+  wrapper.style.justifyContent = "space-between";
+  wrapper.style.alignItems = "center";
+  wrapper.style.margin = "15px 0";
+
+  const whiteData = await fetchAccount(white);
+  const blackData = await fetchAccount(black);
+
+  const whiteDiv = createPlayerCard(whiteData, "white");
+  const blackDiv = createPlayerCard(blackData, "black");
+
+  wrapper.appendChild(whiteDiv);
+  wrapper.appendChild(blackDiv);
+
+  container.appendChild(wrapper);
+}
+
+// Create player card
+function createPlayerCard(data, color) {
+
+  const div = document.createElement("div");
+  div.style.display = "flex";
+  div.style.alignItems = "center";
+  div.style.gap = "10px";
+
+  if (!data) {
+    div.innerHTML = `<span style="color:#888;">Waiting...</span>`;
+    return div;
+  }
+
+  const img = document.createElement("img");
+  img.src = data.profileImage || "https://via.placeholder.com/40";
+  img.style.width = "40px";
+  img.style.height = "40px";
+  img.style.borderRadius = "50%";
+  img.style.border = `3px solid ${color === "black" ? "black" : "#ccc"}`;
+
+  const name = document.createElement("div");
+  name.innerHTML = `
+    <strong>@${data.username}</strong><br>
+    <small>ELO: ${getUserRating(data.username)}</small>
+  `;
+
+  div.appendChild(img);
+  div.appendChild(name);
+
+  return div;
+}
