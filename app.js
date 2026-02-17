@@ -365,7 +365,6 @@ if (!hasAnyValidMove(board, turn)) {
   }
 }
 
-const currentPlayer = turn;
 const blackHasMove = hasAnyValidMove(board, "black");
 const whiteHasMove = hasAnyValidMove(board, "white");
 const finished = !blackHasMove && !whiteHasMove;
