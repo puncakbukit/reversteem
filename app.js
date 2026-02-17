@@ -332,6 +332,8 @@ function deriveGameStateFull(rootPost, replies) {
 
   for (const move of moves) {
 
+    if (move.moveNumber !== appliedMoves) continue;
+    
     // pass logic
     if (!hasAnyValidMove(board, turn)) {
       const opponent = (turn === "black") ? "white" : "black";
