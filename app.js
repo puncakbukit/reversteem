@@ -74,7 +74,8 @@ const boardDiv = document.getElementById("board");
 const gameListDiv = document.getElementById("gameList");
 const profileHeaderDiv = document.getElementById("profileHeader");
 const featuredGameDiv = document.getElementById("featuredGame");
-
+const playerBarDiv = document.getElementById("playerBar");
+ 
 // ============================================================
 // STATE
 // ============================================================
@@ -733,9 +734,7 @@ async function loadMovesFromSteem() {
             currentAppliedMoves = state.appliedMoves;
 
             renderBoard();
-            const playerBar = document.createElement("div");
-            boardDiv.parentNode.insertBefore(playerBar, boardDiv);
-            renderPlayerBar(playerBar, blackPlayer, whitePlayer);
+            renderPlayerBar(playerBarDiv, blackPlayer, whitePlayer);
 
             resolve();
           }
