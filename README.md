@@ -16,8 +16,13 @@ This project is both a playable game and a protocol experiment.
 * No database
 * No smart contracts
 * Deterministic board reconstruction from blockchain history
+* Automatic pass rule enforcement
+* End-of-game detection + winner calculation
+* Move sequence indexing (`moveNumber`) validation
+* Replay caching for fast reloads
+* Multi-RPC fallback
 * Username-based turn enforcement
-* JSON metadata protocol filtering
+* Strict JSON metadata protocol filtering
 * URL hash-based routing
 * Read-only spectator mode
 * Profile integration from on-chain metadata
@@ -58,47 +63,30 @@ The blockchain acts as a deterministic event log.
 
 ## 🔗 On-Chain Game Model
 
-| Blockchain Object | Meaning                          |
-| ----------------- | -------------------------------- |
-| Root Post         | Represents a game (Black player) |
-| Join Comment      | Registers the White player       |
-| Move Comment      | Represents one move              |
-| Comment Order     | Determines turn order            |
+| Blockchain Object | Meaning                            |
+| ----------------- | ---------------------------------- |
+| Root Post         | Represents a game (Black player)   |
+| Join Comment      | Registers the White player         |
+| Move Comment      | Represents one move                |
+| Comment Order     | Defines deterministic replay order |
 
-Only comments containing valid JSON metadata for the `reversteem/x.y` app are considered.
+Only comments containing valid JSON metadata for the `reversteem/x.y` app are processed.
 
 All other comments are ignored.
 
 ---
 
-## ♟ Turn Model
+## ♟ Player Model
 
-Turn order is derived from valid move count:
-
-```
-currentPlayer = (validMoveCount % 2 === 0)
-  ? "black"
-  : "white";
-```
-
-| Move # | Player |
-| ------ | ------ |
-| 0      | Black  |
-| 1      | White  |
-| 2      | Black  |
-| 3      | White  |
-| ...    | ...    |
-
-* Black = Root post author
-* White = First valid `join` comment author
-* Only the expected player may make the next valid move
-* Invalid moves are ignored during replay
+* **Black** = defined in root post metadata
+* **White** = first valid `join` comment author
+* Subsequent join attempts are ignored
 
 ---
 
 ## 📜 Metadata Protocol
 
-Reversteem filters strictly by `app` field:
+All metadata must include:
 
 ```
 meta.app?.startsWith("reversteem/")
@@ -120,8 +108,6 @@ Only matching metadata is processed.
 }
 ```
 
-Black is defined in metadata.
-
 ---
 
 ### Join Comment
@@ -133,9 +119,7 @@ Black is defined in metadata.
 }
 ```
 
-The first valid `join` comment assigns White.
-
-Subsequent join attempts are ignored.
+The first valid `join` assigns White.
 
 ---
 
@@ -145,18 +129,118 @@ Subsequent join attempts are ignored.
 {
   "app": "reversteem/0.1",
   "action": "move",
-  "index": 27
+  "index": 27,
+  "moveNumber": 12
 }
 ```
 
-Validation rules during replay:
+`moveNumber` is required.
 
+It must equal the number of already-applied valid moves during replay.
+
+---
+
+## 🔢 Move Validation Rules
+
+During deterministic replay:
+
+* `moveNumber` must equal `appliedMoves`
 * Author must match expected player
-* Index must be between 0–63
+* Index must be between `0–63`
 * Move must flip at least one opponent piece
-* Move must be legal on reconstructed board
+* Turn must be correct
+* Pass logic is enforced automatically
 
 Invalid moves are ignored.
+
+This makes replay:
+
+* Deterministic
+* Tamper-resistant
+* Order-safe
+* Race-condition safe
+
+---
+
+## 🔄 Automatic Pass Rule
+
+If a player has no valid moves:
+
+* Turn automatically passes to opponent
+* If both players have no valid moves → game ends
+
+Pass logic is enforced during replay.
+
+No manual pass transaction is required.
+
+---
+
+## 🏁 End-of-Game Detection
+
+A game is finished when:
+
+```
+!blackHasMove && !whiteHasMove
+```
+
+When finished:
+
+* `currentPlayer` becomes `null`
+* Further moves are ignored
+* Winner is computed
+
+---
+
+## 🏆 Winner Calculation
+
+After replay:
+
+```
+score.black > score.white → Black wins
+score.white > score.black → White wins
+equal → draw
+```
+
+Winner is derived entirely from board reconstruction.
+
+---
+
+## ⚡ Replay Caching
+
+To improve performance:
+
+* Derived game state is cached in `localStorage`
+* Cache key includes `author` + `permlink`
+* Cache invalidates if:
+
+  * Latest block changes
+  * Reply count changes
+
+If cache is valid, replay is skipped.
+
+If invalid, full deterministic replay runs again.
+
+Cache is optional optimization — state is always derivable from chain.
+
+---
+
+## 🌐 Multi-RPC Fallback
+
+Reversteem automatically rotates between public RPC nodes:
+
+```
+https://api.steemit.com
+https://api.justyy.com
+https://api.steem.house
+https://rpc.buildteam.io
+```
+
+If one RPC fails:
+
+* Client switches to next RPC
+* Retries automatically
+
+This improves availability without requiring a backend proxy.
 
 ---
 
@@ -169,53 +253,34 @@ When loading a game:
 3. Sort replies chronologically
 4. Extract Black from root metadata
 5. Detect first valid `join` as White
-6. Replay all valid `move` comments
-7. Reconstruct board locally
+6. Extract valid `move` comments
+7. Enforce moveNumber ordering
+8. Enforce pass logic
+9. Replay moves deterministically
+10. Detect game end + winner
 
-The board state is never stored anywhere off-chain.
+Board state is never stored on-chain.
 
-Every client reconstructs it independently.
-
-This makes the game:
-
-* Fully verifiable
-* Tamper-resistant
-* Auditable by spectators
+It is computed locally by every client.
 
 ---
 
 ## 🖼 Board Rendering
 
-Two rendering modes exist:
-
-### Main Game Board
+### Main Board
 
 * Interactive
-* Enforces turn logic
-* Client-side validation before posting
+* Enforces turn rules
+* Validates move before posting
+* Frozen after game end
 
 ### Mini Board Preview
 
 * Read-only
-* Rendered in Featured Game section
-* Derived using the same deterministic engine
+* Used in homepage featured section
+* Uses same deterministic engine
 
-No duplicated game logic is used.
-
----
-
-## 🧑 User Profile Integration
-
-After login, Reversteem reads account metadata from Steem:
-
-* Display name
-* Profile image
-* Cover image
-* Biography
-
-Profile data is rendered dynamically.
-
-No user data is stored locally (except logged-in username).
+There is only one canonical replay engine.
 
 ---
 
@@ -223,14 +288,14 @@ No user data is stored locally (except logged-in username).
 
 If Steem Keychain is not installed:
 
-* Login button is disabled
-* Start Game is disabled
+* Login disabled
+* Start Game disabled
 * Join buttons hidden
 * App runs in read-only mode
 
-Games can still be loaded and verified.
+Games can still be verified.
 
-Reversteem functions as a blockchain game explorer even without authentication.
+Reversteem functions as a blockchain game explorer.
 
 ---
 
@@ -238,53 +303,22 @@ Reversteem functions as a blockchain game explorer even without authentication.
 
 Reversteem enforces:
 
-* Username-based turn validation
-* Legal move validation
+* Strict metadata filtering
+* Move sequence validation (`moveNumber`)
+* Author turn validation
+* Legal flip validation
+* Automatic pass logic
 * Deterministic replay
-* Metadata filtering by app name
-* Ignoring malformed JSON
-* Ignoring invalid indices
-* Ignoring moves by wrong author
+* End-state freeze
+* Winner calculation
+* Replay cache validation
+* RPC failover resilience
 
-Because the state is derived from chain history,
-malicious clients cannot forge valid game outcomes.
+Because state is derived from immutable history:
 
-Every spectator replays the same deterministic logic.
+Malicious clients cannot forge outcomes.
 
----
-
-## 🏠 Homepage Layout
-
-### 🎯 Featured Game
-
-* Most recent game
-* Mini board preview
-* Status display
-* View button
-* Join button (if open and eligible)
-
-### 📋 Other Games
-
-* Title
-* Status
-* View button
-* Join button (if open)
-
-Games are sorted by creation time (newest first).
-
----
-
-## ⚙ RPC Usage
-
-Reversteem uses the public Steem RPC:
-
-```
-https://api.steemit.com
-```
-
-All blockchain reads are done via `steem-js`.
-
-No custom backend proxy is used.
+Every spectator independently verifies the game.
 
 ---
 
@@ -292,30 +326,39 @@ No custom backend proxy is used.
 
 Fully client-side:
 
-* 8×8 board array (length 64)
-* Directional scan model (8 directions)
+* 8×8 array (length 64)
+* 8-direction scanning model
 * Flip collection per direction
 * Deterministic move replay
-* Turn derived from valid move count
+* Automatic pass handling
+* End detection + winner calculation
 
 The blockchain stores events.
 The browser computes the state.
 
 ---
 
-## ⚠ Current Limitations
+## ⚠ Protocol Characteristics
 
-The current implementation intentionally keeps the protocol minimal.
+Reversteem intentionally avoids:
 
-Not yet implemented:
+* Smart contracts
+* Token staking logic
+* On-chain state mutation
+* Backend arbitration
 
-* Automatic pass rule (when a player has no valid moves)
-* End-of-game detection
-* Winner calculation
-* Game finalization metadata update
-* Multi-RPC failover
+This keeps the protocol:
 
-These can be added in future versions without breaking protocol compatibility.
+* Simple
+* Auditable
+* Upgradeable
+* Frontend-only deployable
+
+Future upgrades (optional):
+
+* Board hash chaining
+* Fork-detection verification
+* On-chain finalization markers
 
 ---
 
@@ -343,7 +386,7 @@ Can be deployed via:
 
 * GitHub Pages
 * Any static hosting provider
-* IPFS (optional future enhancement)
+* IPFS
 
 No backend required.
 
@@ -351,16 +394,17 @@ No backend required.
 
 ## 🎯 Design Philosophy
 
-Reversteem demonstrates that:
+Reversteem demonstrates:
 
-* Smart contracts are not required for turn-based games
+* Turn-based games do not require smart contracts
 * Comment trees can function as deterministic event logs
 * Social blockchains can host verifiable multiplayer games
 * Fully frontend-only dApps are viable
+* Consensus logic can live entirely in the browser
 
 Reversteem is not merely a game.
 
-It is a demonstration of how conversation threads can become state machines.
+It is a demonstration that conversation threads can become deterministic state machines.
 
 ---
 
@@ -373,3 +417,4 @@ MIT
 ## 🌐 Live Demo
 
 [https://puncakbukit.github.io/reversteem/](https://puncakbukit.github.io/reversteem/)
+
