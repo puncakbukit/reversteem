@@ -1029,7 +1029,8 @@ function loadGamesByUser(user) {
           return false;
         }
       });
-
+      
+      updateEloRatingsFromGames(games);
       renderDashboard(parseGames(games));
     }
   );
