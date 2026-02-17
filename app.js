@@ -36,7 +36,14 @@ Game:
 // CONFIGURATION
 // ============================================================
 
-const RPC = "https://api.steemit.com";
+const RPC_NODES = [
+  "https://api.steemit.com",
+  "https://api.justyy.com",
+  "https://api.steem.house",
+  "https://rpc.buildteam.io"
+];
+let currentRPCIndex = 0;
+
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
 const LOGIN_REJECTED = "Login rejected";
 const LIVE_DEMO = "https://puncakbukit.github.io/reversteem/";
@@ -88,6 +95,7 @@ let board = Array(64).fill(null);
 window.addEventListener("hashchange", initRoute);
 
 window.addEventListener("load", () => {
+  setRPC(0);
   let attempts = 0;
 
   const interval = setInterval(() => {
@@ -511,10 +519,9 @@ async function loadMovesFromSteem() {
   if (!currentGame) return;
 
   return new Promise((resolve, reject) => {
-
-    steem.api.getContent(
-      currentGame.author,
-      currentGame.permlink,
+    callWithFallback(
+      steem.api.getContent,
+      [currentGame.author, currentGame.permlink],
       (err, root) => {
 
         if (err) return reject(err);
@@ -1121,4 +1128,34 @@ function drawMiniBoard(boardState, container) {
   }
 
   container.appendChild(miniBoard);
+}
+
+// RPC Switcher
+function setRPC(index) {
+  currentRPCIndex = index;
+  steem.api.setOptions({ url: RPC_NODES[index] });
+  console.log("Switched RPC to:", RPC_NODES[index]);
+}
+
+// Safe API Wrapper
+function callWithFallback(apiCall, args, callback, attempt = 0) {
+
+  apiCall(...args, (err, result) => {
+
+    if (!err) {
+      return callback(null, result);
+    }
+
+    console.warn("RPC error on", RPC_NODES[currentRPCIndex]);
+
+    const nextIndex = currentRPCIndex + 1;
+
+    if (nextIndex >= RPC_NODES.length) {
+      return callback(err, null); // all failed
+    }
+
+    setRPC(nextIndex);
+
+    callWithFallback(apiCall, args, callback, attempt + 1);
+  });
 }
