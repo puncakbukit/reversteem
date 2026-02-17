@@ -308,8 +308,7 @@ function deriveGameStateFull(rootPost, replies) {
         meta.index >= 0 &&
         meta.index < 64 &&
         typeof meta.moveNumber === "number"
-      )
-      {
+      ) {
         moves.push({
           index: meta.index,
           author: reply.author,
@@ -333,7 +332,7 @@ function deriveGameStateFull(rootPost, replies) {
   for (const move of moves) {
 
     if (move.moveNumber !== appliedMoves) continue;
-    
+
     // pass logic
     if (!hasAnyValidMove(board, turn)) {
       const opponent = (turn === "black") ? "white" : "black";
@@ -412,9 +411,9 @@ function deriveGameState(rootPost, replies) {
   replies.sort((a, b) => new Date(a.created) - new Date(b.created));
 
   const latestBlock =
-    replies.length > 0
-      ? replies[replies.length - 1].block
-      : 0;
+    replies.length > 0 ?
+    replies[replies.length - 1].block :
+    0;
 
   // ---- Validate Cache ----
   if (
@@ -1189,7 +1188,9 @@ function drawMiniBoard(boardState, container) {
 // RPC Switcher
 function setRPC(index) {
   currentRPCIndex = index;
-  steem.api.setOptions({ url: RPC_NODES[index] });
+  steem.api.setOptions({
+    url: RPC_NODES[index]
+  });
   console.log("Switched RPC to:", RPC_NODES[index]);
 }
 
