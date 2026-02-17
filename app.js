@@ -21,17 +21,6 @@ No backend.
 No trusted server.
 Game state is derived entirely from blockchain history.
 
-Turn Model:
----------------------------------
-Move #   Player
-0        Black
-1        White
-2        Black
-3        White
-...
-
-currentPlayer = (moves.length % 2 === 0) ? "black" : "white"
-
 URL Structure
 Homepage:
 #/
