@@ -628,6 +628,8 @@ async function loadOpenGames() {
       });
 
       const enriched = await enrichGamesWithWhitePlayer(games);
+      await updateEloRatingsFromGames(enriched);
+
       renderDashboard(enriched);
     }
   );
