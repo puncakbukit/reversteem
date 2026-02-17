@@ -1454,6 +1454,10 @@ function createPlayerCard(data, color) {
   img.style.borderRadius = "50%";
   img.style.border = `3px solid ${color === "black" ? "black" : "#ccc"}`;
 
+  if (!finished && currentPlayer === color) {
+    img.style.boxShadow = "0 0 10px gold";
+  }
+  
   const name = document.createElement("div");
   name.innerHTML = `
     <strong>@${data.username}</strong><br>
