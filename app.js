@@ -733,6 +733,10 @@ async function loadMovesFromSteem() {
             currentAppliedMoves = state.appliedMoves;
 
             renderBoard();
+            const playerBar = document.createElement("div");
+            boardDiv.parentNode.insertBefore(playerBar, boardDiv);
+            renderPlayerBar(playerBar, blackPlayer, whitePlayer);
+
             resolve();
           }
         );
