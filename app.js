@@ -42,7 +42,7 @@ const LOGIN_REJECTED = "Login rejected";
 const LIVE_DEMO = "https://puncakbukit.github.io/reversteem/";
 
 const APP_NAME = "reversteem";
-const APP_VER  = "0.1";
+const APP_VER = "0.1";
 const APP_INFO = `${APP_NAME}/${APP_VER}`;
 
 const DIRECTIONS = [-8, 8, -1, 1, -9, -7, 7, 9];
@@ -52,12 +52,12 @@ const DIRECTIONS = [-8, 8, -1, 1, -9, -7, 7, 9];
 // DOM REFERENCES
 // ============================================================
 
-const userP        = document.getElementById("user");
-const loginBtn     = document.getElementById("loginBtn");
-const logoutBtn    = document.getElementById("logoutBtn");
+const userP = document.getElementById("user");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 const startGameBtn = document.getElementById("startGameBtn");
-const boardDiv     = document.getElementById("board");
-const gameListDiv  = document.getElementById("gameList");
+const boardDiv = document.getElementById("board");
+const gameListDiv = document.getElementById("gameList");
 const profileHeaderDiv = document.getElementById("profileHeader");
 const featuredGameDiv = document.getElementById("featuredGame");
 
@@ -68,15 +68,15 @@ const featuredGameDiv = document.getElementById("featuredGame");
 const profileUser = getProfileFromURL();
 const gameFromURL = getGameFromURL();
 
-let username     = localStorage.getItem("steem_user") || "";
-let currentGame  = JSON.parse(localStorage.getItem("current_game") || "null");
+let username = localStorage.getItem("steem_user") || "";
+let currentGame = JSON.parse(localStorage.getItem("current_game") || "null");
 
 let blackPlayer = null;
 let whitePlayer = null;
 let finished = false;
 let winner = null;
 
-let moves        = [];
+let moves = [];
 let currentPlayer = "black";
 
 let board = Array(64).fill(null);
@@ -98,18 +98,16 @@ window.addEventListener("load", () => {
       checkKeychain();
     }
   }, 100);
-  
+
   if (username) showLoggedIn(username);
 
   if (gameFromURL) {
     currentGame = gameFromURL;
     loadMovesFromSteem();
-  }
-  else if (profileUser) {
+  } else if (profileUser) {
     document.title = `Reversteem – @${profileUser}`;
     loadGamesByUser(profileUser);
-  }
-  else {
+  } else {
     loadOpenGames();
   }
 
@@ -133,7 +131,7 @@ function showLoggedOut() {
   loginBtn.style.display = "inline-block";
   logoutBtn.style.display = "none";
   startGameBtn.style.display = "none";
-  
+
   loadUserProfile(null);
 }
 
@@ -182,8 +180,13 @@ function resetBoard() {
   board[36] = "white";
 }
 
-function row(i) { return Math.floor(i / 8); }
-function col(i) { return i % 8; }
+function row(i) {
+  return Math.floor(i / 8);
+}
+
+function col(i) {
+  return i % 8;
+}
 
 function isOnBoardGeneric(from, to, dir) {
   if (to < 0 || to >= 64) return false;
@@ -273,7 +276,7 @@ function deriveGameState(rootPost, replies) {
   } catch {}
 
   // ---- Sort replies chronologically ----
-  replies.sort((a,b)=> new Date(a.created) - new Date(b.created));
+  replies.sort((a, b) => new Date(a.created) - new Date(b.created));
 
   // ---- Extract join + moves ----
   replies.forEach(reply => {
@@ -315,56 +318,56 @@ function deriveGameState(rootPost, replies) {
   board[36] = "white";
 
   let appliedMoves = 0;
-let turn = "black";
+  let turn = "black";
 
-for (const move of moves) {
+  for (const move of moves) {
 
-  // pass logic
+    // pass logic
+    if (!hasAnyValidMove(board, turn)) {
+      const opponent = (turn === "black") ? "white" : "black";
+
+      if (hasAnyValidMove(board, opponent)) {
+        turn = opponent;
+      } else {
+        break; // 🔥 GAME ENDS HERE
+      }
+    }
+
+    const expectedAuthor =
+      turn === "black" ? blackPlayer : whitePlayer;
+
+    if (move.author !== expectedAuthor) continue;
+
+    const flips = getFlipsForBoard(board, move.index, turn);
+    if (flips.length === 0) continue;
+
+    board[move.index] = turn;
+    flips.forEach(f => board[f] = turn);
+
+    appliedMoves++;
+
+    turn = (turn === "black") ? "white" : "black";
+  }
+
   if (!hasAnyValidMove(board, turn)) {
     const opponent = (turn === "black") ? "white" : "black";
 
     if (hasAnyValidMove(board, opponent)) {
       turn = opponent;
-    } else {
-      break; // 🔥 GAME ENDS HERE
     }
   }
 
-  const expectedAuthor =
-    turn === "black" ? blackPlayer : whitePlayer;
+  const blackHasMove = hasAnyValidMove(board, "black");
+  const whiteHasMove = hasAnyValidMove(board, "white");
+  const finished = !blackHasMove && !whiteHasMove;
+  const score = countDiscs(board);
+  let winner = null;
 
-  if (move.author !== expectedAuthor) continue;
-
-  const flips = getFlipsForBoard(board, move.index, turn);
-  if (flips.length === 0) continue;
-
-  board[move.index] = turn;
-  flips.forEach(f => board[f] = turn);
-
-  appliedMoves++;
-  
-  turn = (turn === "black") ? "white" : "black";
-}
-  
-if (!hasAnyValidMove(board, turn)) {
-  const opponent = (turn === "black") ? "white" : "black";
-
-  if (hasAnyValidMove(board, opponent)) {
-    turn = opponent;
+  if (finished) {
+    if (score.black > score.white) winner = "black";
+    else if (score.white > score.black) winner = "white";
+    else winner = "draw";
   }
-}
-
-const blackHasMove = hasAnyValidMove(board, "black");
-const whiteHasMove = hasAnyValidMove(board, "white");
-const finished = !blackHasMove && !whiteHasMove;
-const score = countDiscs(board);
-let winner = null;
-
-if (finished) {
-  if (score.black > score.white) winner = "black";
-  else if (score.white > score.black) winner = "white";
-  else winner = "draw";
-}
 
   return {
     blackPlayer,
@@ -379,13 +382,31 @@ if (finished) {
   };
 }
 
+// Count Discs Deterministically
+function countDiscs(boardState) {
+  let black = 0;
+  let white = 0;
+
+  boardState.forEach(cell => {
+    if (cell === "black") black++;
+    if (cell === "white") white++;
+  });
+
+  return {
+    black,
+    white
+  };
+}
+
 // ============================================================
 // GAME DISCOVERY
 // ============================================================
 
 async function loadOpenGames() {
-  steem.api.getDiscussionsByCreated(
-    { tag: APP_NAME, limit: 20 },
+  steem.api.getDiscussionsByCreated({
+      tag: APP_NAME,
+      limit: 20
+    },
     async (err, posts) => {
 
       if (err) return;
@@ -422,7 +443,9 @@ function deriveWhitePlayer(post) {
   return new Promise(resolve => {
 
     let meta = {};
-    try { meta = JSON.parse(post.json_metadata); } catch {}
+    try {
+      meta = JSON.parse(post.json_metadata);
+    } catch {}
 
     const blackPlayer = meta.black;
 
@@ -436,7 +459,7 @@ function deriveWhitePlayer(post) {
         if (!err && replies) {
 
           replies
-            .sort((a,b)=> new Date(a.created) - new Date(b.created))
+            .sort((a, b) => new Date(a.created) - new Date(b.created))
             .forEach(reply => {
 
               if (whitePlayer) return;
@@ -495,13 +518,13 @@ async function loadMovesFromSteem() {
 
             const state = deriveGameState(root, replies);
 
-            blackPlayer   = state.blackPlayer;
-            whitePlayer   = state.whitePlayer;
-            board         = state.board;
+            blackPlayer = state.blackPlayer;
+            whitePlayer = state.whitePlayer;
+            board = state.board;
             currentPlayer = state.currentPlayer;
-            moves         = state.moves;
-            finished      = state.finished;
-            winner        = state.winner;
+            moves = state.moves;
+            finished = state.finished;
+            winner = state.winner;
 
             renderBoard();
             resolve();
@@ -522,20 +545,20 @@ function makeMove(index) {
     return;
   }
 
-if (currentPlayer === null) {
-  alert("Game finished");
-  return;
-}
-  
+  if (currentPlayer === null) {
+    alert("Game finished");
+    return;
+  }
+
   if (currentPlayer === "white" && !whitePlayer) {
     alert("No opponent yet");
     return;
   }
-  
-if (!hasAnyValidMove(board, currentPlayer)) {
-  alert("No valid moves. Turn passes automatically.");
-  return;
-}
+
+  if (!hasAnyValidMove(board, currentPlayer)) {
+    alert("No valid moves. Turn passes automatically.");
+    return;
+  }
 
   const expected =
     currentPlayer === "black" ? blackPlayer : whitePlayer;
@@ -572,7 +595,7 @@ function startGame() {
 
   // ✅ Initialize fresh board for new game
   resetBoard();
-  
+
   const permlink = `${APP_NAME}-${Date.now()}`;
 
   const meta = {
@@ -583,12 +606,12 @@ function startGame() {
     status: "open"
   };
 
-const body =
-  `## New Reversteem Game\n\n` +
-  `Black: @${username}\n\n` +
-  boardToMarkdown(board) +
-  `\n\n---\nMove by commenting via [Reversteem](${LIVE_DEMO}).`;
-  
+  const body =
+    `## New Reversteem Game\n\n` +
+    `Black: @${username}\n\n` +
+    boardToMarkdown(board) +
+    `\n\n---\nMove by commenting via [Reversteem](${LIVE_DEMO}).`;
+
   steem_keychain.requestPost(
     username,
     "Reversteem Game Started",
@@ -601,7 +624,10 @@ const body =
     (res) => {
       if (!res.success) return;
 
-      currentGame = { author: username, permlink };
+      currentGame = {
+        author: username,
+        permlink
+      };
       localStorage.setItem("current_game", JSON.stringify(currentGame));
       alert("Game created!");
     }
@@ -609,12 +635,15 @@ const body =
 }
 
 function postJoin() {
-  const meta = { app: APP_INFO, action: "join" };
+  const meta = {
+    app: APP_INFO,
+    action: "join"
+  };
 
-const body =
-  `## @${username} joined as White\n\n` +
-  boardToMarkdown(board);
-  
+  const body =
+    `## @${username} joined as White\n\n` +
+    boardToMarkdown(board);
+
   steem_keychain.requestPost(
     username,
     "Join Game",
@@ -635,11 +664,11 @@ function postMove(index) {
     index
   };
 
-const body =
-  `## Move by @${username}\n\n` +
-  `Played at index ${indexToCoord(index)}\n\n` +
-  boardToMarkdown(board);
-  
+  const body =
+    `## Move by @${username}\n\n` +
+    `Played at index ${indexToCoord(index)}\n\n` +
+    boardToMarkdown(board);
+
   steem_keychain.requestPost(
     username,
     "Reversi Move",
@@ -658,7 +687,7 @@ function boardToMarkdown(boardArray) {
   const symbols = {
     black: "⚫",
     white: "⚪",
-    null:  "·"
+    null: "·"
   };
 
   let md = "### Current Board\n\n";
@@ -695,7 +724,10 @@ function joinGame(author, permlink) {
   window.location.hash = `#/game/${author}/${permlink}`;
 
   // Set current game
-  currentGame = { author, permlink };
+  currentGame = {
+    author,
+    permlink
+  };
   localStorage.setItem("current_game", JSON.stringify(currentGame));
 
   loadMovesFromSteem().then(() => {
@@ -765,8 +797,10 @@ function getGameFromURL() {
 
 // Load Games By User
 function loadGamesByUser(user) {
-  steem.api.getDiscussionsByBlog(
-    { tag: user, limit: 50 },
+  steem.api.getDiscussionsByBlog({
+      tag: user,
+      limit: 50
+    },
     (err, posts) => {
 
       if (err) {
@@ -822,29 +856,29 @@ function renderUserGameList(user, games) {
 // Fetch Account Data
 function loadUserProfile(username) {
   if (username) {
-  steem.api.getAccounts([username], function(err, result) {
-    if (err || !result || !result.length) return;
+    steem.api.getAccounts([username], function(err, result) {
+      if (err || !result || !result.length) return;
 
-    const account = result[0];
-    let profile = {};
+      const account = result[0];
+      let profile = {};
 
-    try {
-      const metadata = account.posting_json_metadata || account.json_metadata;
-      profile = JSON.parse(metadata).profile || {};
-    } catch (e) {
-      profile = {};
-    }
+      try {
+        const metadata = account.posting_json_metadata || account.json_metadata;
+        profile = JSON.parse(metadata).profile || {};
+      } catch (e) {
+        profile = {};
+      }
 
-    renderUserProfile({
-      username: account.name,
-      displayName: profile.name || account.name,
-      about: profile.about || "",
-      profileImage: profile.profile_image || "",
-      coverImage: profile.cover_image || ""
+      renderUserProfile({
+        username: account.name,
+        displayName: profile.name || account.name,
+        about: profile.about || "",
+        profileImage: profile.profile_image || "",
+        coverImage: profile.cover_image || ""
+      });
     });
-  });
   } else {
-   profileHeaderDiv.innerHTML = '';
+    profileHeaderDiv.innerHTML = '';
   }
 }
 
@@ -946,12 +980,12 @@ function attachJoinHandler(div, game) {
   const joinBtn = div.querySelector(".joinBtn");
   if (!joinBtn) return;
 
-joinBtn.onclick = () => {
-  currentGame = game;
-  localStorage.setItem("current_game", JSON.stringify(game));
-  window.location.hash = `#/game/${game.author}/${game.permlink}`;
-  postJoin();
-};
+  joinBtn.onclick = () => {
+    currentGame = game;
+    localStorage.setItem("current_game", JSON.stringify(game));
+    window.location.hash = `#/game/${game.author}/${game.permlink}`;
+    postJoin();
+  };
 }
 
 // Unified Dashboard Renderer
@@ -972,7 +1006,9 @@ function renderDashboard(games) {
 function parseGames(posts) {
   return posts.map(post => {
     let meta = {};
-    try { meta = JSON.parse(post.json_metadata); } catch {}
+    try {
+      meta = JSON.parse(post.json_metadata);
+    } catch {}
 
     return {
       author: post.author,
@@ -985,18 +1021,18 @@ function parseGames(posts) {
     };
   });
 }
-  
+
 // 🔥 Clear previous UI
 function clearUI() {
   featuredGameDiv.innerHTML = "";
   gameListDiv.innerHTML = "";
   boardDiv.innerHTML = "";
 }
-  
+
 // Init route
 function initRoute() {
   clearUI();
-  
+
   const profileUser = getProfileFromURL();
   const gameFromURL = getGameFromURL();
 
@@ -1061,9 +1097,9 @@ function drawMiniBoard(boardState, container) {
       disk.style.borderRadius = "50%";
       disk.style.margin = "2px";
       disk.style.background =
-        boardState[i] === "black"
-          ? "black"
-          : "white";
+        boardState[i] === "black" ?
+        "black" :
+        "white";
 
       cell.appendChild(disk);
     }
@@ -1083,17 +1119,3 @@ function hasAnyValidMove(boardState, player) {
   }
   return false;
 }
-
-// Count Discs Deterministically
-function countDiscs(boardState) {
-  let black = 0;
-  let white = 0;
-
-  boardState.forEach(cell => {
-    if (cell === "black") black++;
-    if (cell === "white") white++;
-  });
-
-  return { black, white };
-}
-
