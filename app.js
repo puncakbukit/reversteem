@@ -1411,7 +1411,7 @@ function fetchAccount(username) {
 }
 
 // Render player bar
-async function renderPlayerBar(container, black, white) {
+async function renderPlayerBar(container, black, white, state = null)
 
   container.innerHTML = "";
 
