@@ -466,10 +466,9 @@ function deriveWhitePlayer(post) {
     } catch {}
 
     const blackPlayer = meta.black;
-
-    steem.api.getContentReplies(
-      post.author,
-      post.permlink,
+    callWithFallback(
+      steem.api.getContentReplies,
+      [post.author, post.permlink],
       (err, replies) => {
 
         let whitePlayer = null;
