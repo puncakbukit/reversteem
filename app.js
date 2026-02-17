@@ -81,6 +81,7 @@ const featuredGameDiv = document.getElementById("featuredGame");
 
 const profileUser = getProfileFromURL();
 const gameFromURL = getGameFromURL();
+const accountCache = {};
 
 let username = localStorage.getItem("steem_user") || "";
 let currentGame = JSON.parse(localStorage.getItem("current_game") || "null");
