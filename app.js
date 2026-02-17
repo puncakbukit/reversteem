@@ -564,8 +564,8 @@ async function updateEloRatingsFromGames(posts) {
     const deltaBlack = calculateEloDelta(rBlack, rWhite, scoreBlack);
     const deltaWhite = calculateEloDelta(rWhite, rBlack, scoreWhite);
 
-    ratings[black] = rBlack + deltaBlack;
-    ratings[white] = rWhite + deltaWhite;
+    ratings[black] = Math.round(rBlack + deltaBlack);
+    ratings[white] = Math.round(rWhite + deltaWhite);
 
     cache.lastProcessed = post.created;
   }
