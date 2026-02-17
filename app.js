@@ -1109,7 +1109,13 @@ function renderUserProfile(data) {
            style="width:80px; height:80px; border-radius:50%; border:3px solid white; background:white;">
       
       <div style="margin-left:15px;">
-        <h2 style="margin:0;">${data.displayName}</h2>
+        <h2 style="margin:0;">
+  ${data.displayName}
+  <span style="font-size:14px; color:#666;">
+    (ELO: ${getUserRating(data.username)})
+  </span>
+</h2>
+
         <small>@${data.username}</small>
         <p style="margin:5px 0;">${data.about}</p>
       </div>
