@@ -366,19 +366,15 @@ if (!hasAnyValidMove(board, turn)) {
 }
 
 const currentPlayer = turn;
-  
 const blackHasMove = hasAnyValidMove(board, "black");
 const whiteHasMove = hasAnyValidMove(board, "white");
-
 const finished = !blackHasMove && !whiteHasMove;
-
+const score = countDiscs(board);
 let winner = null;
 
 if (finished) {
-  const { black, white } = countDiscs(board);
-
-  if (black > white) winner = "black";
-  else if (white > black) winner = "white";
+  if (score.black > score.white) winner = "black";
+  else if (score.white > score.black) winner = "white";
   else winner = "draw";
 }
 
@@ -390,7 +386,7 @@ if (finished) {
     appliedMoves,
     finished,
     winner,
-    score: countDiscs(board),
+    score,
     moves
   };
 }
