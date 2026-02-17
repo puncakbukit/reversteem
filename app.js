@@ -1411,8 +1411,7 @@ function fetchAccount(username) {
 }
 
 // Render player bar
-async function renderPlayerBar(container, black, white, state = null)
-
+async function renderPlayerBar(container, black, white, state = null){
   container.innerHTML = "";
 
   const wrapper = document.createElement("div");
@@ -1452,8 +1451,10 @@ function createPlayerCard(data, color) {
   img.style.height = "40px";
   img.style.borderRadius = "50%";
   img.style.border = `3px solid ${color === "black" ? "black" : "#ccc"}`;
-
-  if (!finished && currentPlayer === color) {
+  
+  const isFinished = state ? state.finished : finished;
+  const turn = state ? state.currentPlayer : currentPlayer;
+  if (!isFinished && turn === color) {
     img.style.boxShadow = "0 0 10px gold";
   }
   
