@@ -306,14 +306,16 @@ function deriveGameStateFull(rootPost, replies) {
         meta.action === "move" &&
         typeof meta.index === "number" &&
         meta.index >= 0 &&
-        meta.index < 64
-      ) {
+        meta.index < 64 &&
+        typeof meta.moveNumber === "number"
+      )
+      {
         moves.push({
           index: meta.index,
-          author: reply.author
+          author: reply.author,
+          moveNumber: meta.moveNumber
         });
       }
-
     } catch {}
   });
 
