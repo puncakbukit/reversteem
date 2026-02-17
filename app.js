@@ -38,9 +38,7 @@ Game:
 
 const RPC_NODES = [
   "https://api.steemit.com",
-  "https://api.justyy.com",
-  "https://api.steem.house",
-  "https://rpc.buildteam.io"
+  "https://api.justyy.com"
 ];
 let currentRPCIndex = 0;
 
