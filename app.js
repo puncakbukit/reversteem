@@ -1290,7 +1290,7 @@ function renderBoardPreview(game, container) {
         const playerBar = document.createElement("div");
         container.appendChild(playerBar);
         
-        renderPlayerBar(playerBar, state.blackPlayer, state.whitePlayer);
+        renderPlayerBar(playerBar, state.blackPlayer, state.whitePlayer, state);
 
         const boardContainer = document.createElement("div");
         container.appendChild(boardContainer);
