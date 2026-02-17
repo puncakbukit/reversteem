@@ -778,6 +778,10 @@ function checkKeychain() {
   }
 }
 
+// ============================================================
+// DASHBOARD FEATURES 
+// ============================================================
+
 // Parse Username from URL
 function getProfileFromURL() {
   const hash = window.location.hash;
@@ -915,7 +919,6 @@ function renderUserProfile(data) {
     </div>
   `;
 }
-
 
 // Status Resolver
 function getGameStatus(game) {
