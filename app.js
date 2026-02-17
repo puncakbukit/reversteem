@@ -478,6 +478,129 @@ function hasAnyValidMove(boardState, player) {
 }
 
 // ============================================================
+// ELO RATING ENGINE (Deterministic + Cached)
+// ============================================================
+
+function getEloCache() {
+  try {
+    return JSON.parse(localStorage.getItem(ELO_CACHE_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function setEloCache(cache) {
+  try {
+    localStorage.setItem(ELO_CACHE_KEY, JSON.stringify(cache));
+  } catch {}
+}
+
+function getRating(ratings, user) {
+  if (!ratings[user]) ratings[user] = ELO_BASE;
+  return ratings[user];
+}
+
+function calculateEloDelta(rA, rB, scoreA) {
+  const expectedA = 1 / (1 + Math.pow(10, (rB - rA) / 400));
+  return ELO_K * (scoreA - expectedA);
+}
+
+// Core incremental updater
+async function updateEloRatingsFromGames(posts) {
+
+  if (!posts || posts.length === 0) return;
+
+  // Sort chronologically (oldest first)
+  posts.sort((a, b) => new Date(a.created) - new Date(b.created));
+
+  let cache = getEloCache();
+
+  if (!cache) {
+    cache = {
+      lastProcessed: null,
+      ratings: {}
+    };
+  }
+
+  const ratings = cache.ratings;
+
+  for (const post of posts) {
+
+    // Skip already processed games
+    if (
+      cache.lastProcessed &&
+      new Date(post.created) <= new Date(cache.lastProcessed)
+    ) {
+      continue;
+    }
+
+    const gameState = await deriveGameForElo(post);
+
+    if (!gameState.finished) continue;
+    if (!gameState.blackPlayer || !gameState.whitePlayer) continue;
+
+    const black = gameState.blackPlayer;
+    const white = gameState.whitePlayer;
+
+    const rBlack = getRating(ratings, black);
+    const rWhite = getRating(ratings, white);
+
+    let scoreBlack;
+    let scoreWhite;
+
+    if (gameState.winner === "black") {
+      scoreBlack = 1;
+      scoreWhite = 0;
+    } else if (gameState.winner === "white") {
+      scoreBlack = 0;
+      scoreWhite = 1;
+    } else {
+      scoreBlack = 0.5;
+      scoreWhite = 0.5;
+    }
+
+    const deltaBlack = calculateEloDelta(rBlack, rWhite, scoreBlack);
+    const deltaWhite = calculateEloDelta(rWhite, rBlack, scoreWhite);
+
+    ratings[black] = rBlack + deltaBlack;
+    ratings[white] = rWhite + deltaWhite;
+
+    cache.lastProcessed = post.created;
+  }
+
+  setEloCache(cache);
+}
+
+// Helper: fully derive one game deterministically
+function deriveGameForElo(post) {
+  return new Promise((resolve) => {
+
+    steem.api.getContent(post.author, post.permlink, (err, root) => {
+      if (err) return resolve({ finished: false });
+
+      steem.api.getContentReplies(
+        post.author,
+        post.permlink,
+        (err2, replies) => {
+
+          if (err2) return resolve({ finished: false });
+
+          const state = deriveGameState(root, replies);
+          resolve(state);
+        }
+      );
+    });
+
+  });
+}
+
+function getUserRating(username) {
+  const cache = getEloCache();
+  if (!cache || !cache.ratings[username]) return ELO_BASE;
+  return Math.round(cache.ratings[username]);
+}
+
+// ============================================================
 // GAME DISCOVERY
 // ============================================================
 
