@@ -294,25 +294,6 @@ function deriveGameStateFull(rootPost, replies) {
   let whitePlayer = null;
   let moves = [];
   let timeoutMinutes = DEFAULT_TIMEOUT_MINUTES;
-
-  // ---- Extract black from root ----
-  try {
-    const meta = JSON.parse(rootPost.json_metadata);
-    blackPlayer = meta.black;
-    if (typeof meta.timeoutMinutes === "number") {
-      timeoutMinutes = Math.max(meta.timeoutMinutes, MIN_TIMEOUT_MINUTES);
-    }
-
-    if (meta.action === "timeout_claim") {
-      timeoutClaims.push({
-        author: reply.author,
-        claimAgainst: meta.claimAgainst,
-        moveNumber: meta.moveNumber,
-        created: reply.created
-      });
-    }
-  } catch {}
-
   let timeoutClaims = [];
 
   // ---- Sort replies chronologically ----
@@ -324,6 +305,9 @@ function deriveGameStateFull(rootPost, replies) {
       const meta = JSON.parse(reply.json_metadata);
       if (!meta.app?.startsWith(APP_NAME + "/")) return;
 
+      // ---- Extract black from root ----
+      blackPlayer = meta.black;
+      
       // Detect white join
       if (
         meta.action === "join" &&
@@ -332,6 +316,9 @@ function deriveGameStateFull(rootPost, replies) {
       ) {
         whitePlayer = reply.author;
       }
+     if (typeof meta.timeoutMinutes === "number") {
+      timeoutMinutes = Math.max(meta.timeoutMinutes, MIN_TIMEOUT_MINUTES);
+    }     
       if (meta.action === "timeout_claim") {
         timeoutClaims.push({
           author: reply.author,
