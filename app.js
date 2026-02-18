@@ -293,14 +293,14 @@ function deriveGameStateFull(rootPost, replies) {
   let blackPlayer = null;
   let whitePlayer = null;
   let moves = [];
+  let timeoutMinutes = DEFAULT_TIMEOUT_MINUTES;
 
   // ---- Extract black from root ----
   try {
     const meta = JSON.parse(rootPost.json_metadata);
     blackPlayer = meta.black;
-    let timeoutMinutes = 1440; // default 24h
     if (typeof meta.timeoutMinutes === "number") {
-      timeoutMinutes = Math.max(meta.timeoutMinutes, 1);
+      timeoutMinutes = Math.max(meta.timeoutMinutes, MIN_TIMEOUT_MINUTES);
     }
 
     if (meta.action === "timeout_claim") {
@@ -413,8 +413,8 @@ function deriveGameStateFull(rootPost, replies) {
 
   const blackHasMove = hasAnyValidMove(board, "black");
   const whiteHasMove = hasAnyValidMove(board, "white");
-  const finished = !blackHasMove && !whiteHasMove;
   const score = countDiscs(board);
+  let finished = !blackHasMove && !whiteHasMove;
   let winner = null;
 
   if (finished) {
@@ -446,11 +446,10 @@ function deriveGameStateFull(rootPost, replies) {
     const minutesPassed =
       (claimDate - lastMoveDate) / (1000 * 60);
 
-    // If timeout claim is valid:
-    timeoutMinutes = Math.max(meta.timeoutMinutes, MIN_TIMEOUT_MINUTES);
     if (minutesPassed >= timeoutMinutes) {
       finished = true;
       winner = turn === "black" ? "white" : "black";
+      break;
     }
   }
 
