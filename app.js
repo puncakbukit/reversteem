@@ -297,11 +297,11 @@ function deriveGameStateFull(rootPost, replies) {
   let timeoutClaims = [];
 
   // ---- Extract black from root ----
-try {
-  const rootMeta = JSON.parse(rootPost.json_metadata);
-  blackPlayer = rootMeta.black;
-  timeoutMinutes = rootMeta.timeoutMinutes || DEFAULT_TIMEOUT_MINUTES;
-} catch {}
+  try {
+    const rootMeta = JSON.parse(rootPost.json_metadata);
+    blackPlayer = rootMeta.black;
+    timeoutMinutes = rootMeta.timeoutMinutes || DEFAULT_TIMEOUT_MINUTES;
+  } catch {}
 
   // ---- Sort replies chronologically ----
   replies.sort((a, b) => new Date(a.created) - new Date(b.created));
@@ -311,7 +311,7 @@ try {
     try {
       const meta = JSON.parse(reply.json_metadata);
       if (!meta.app?.startsWith(APP_NAME + "/")) return;
-      
+
       // Detect white join
       if (
         meta.action === "join" &&
@@ -793,6 +793,10 @@ async function loadMovesFromSteem() {
 
             renderBoard();
             renderPlayerBar(playerBarDiv, blackPlayer, whitePlayer);
+
+            if (!finished && isTimeoutClaimable()) {
+              renderClaimButton();
+            }
 
             resolve();
           }
@@ -1495,8 +1499,8 @@ async function renderPlayerBar(container, black, white, state = null) {
   const whiteData = await fetchAccount(white);
   const blackData = await fetchAccount(black);
 
-  const whiteDiv = createPlayerCard(whiteData, "white");
-  const blackDiv = createPlayerCard(blackData, "black");
+  const whiteDiv = createPlayerCard(whiteData, "white", state);
+  const blackDiv = createPlayerCard(blackData, "black", state);
 
   wrapper.appendChild(whiteDiv);
   wrapper.appendChild(blackDiv);
@@ -1505,7 +1509,7 @@ async function renderPlayerBar(container, black, white, state = null) {
 }
 
 // Create player card
-function createPlayerCard(data, color) {
+function createPlayerCard(data, color, state) {
 
   const div = document.createElement("div");
   div.style.display = "flex";
