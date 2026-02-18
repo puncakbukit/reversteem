@@ -19,14 +19,15 @@ This project is both a playable game and a protocol experiment.
 * Automatic pass rule enforcement
 * End-of-game detection + winner calculation
 * Move sequence indexing (`moveNumber`) validation
-* Replay caching for fast reloads
-* Multi-RPC fallback
 * Username-based turn enforcement
 * Strict JSON metadata protocol filtering
 * URL hash-based routing
 * Read-only spectator mode
 * Profile integration from on-chain metadata
 * Featured game + mini-board previews
+* Replay caching for fast reloads
+* Multi-RPC automatic fallback
+* Markdown board export for native Steemit viewing
 
 ---
 
@@ -81,6 +82,7 @@ All other comments are ignored.
 * **Black** = defined in root post metadata
 * **White** = first valid `join` comment author
 * Subsequent join attempts are ignored
+* Only Black and White can submit valid moves
 
 ---
 
@@ -149,7 +151,8 @@ During deterministic replay:
 * Index must be between `0–63`
 * Move must flip at least one opponent piece
 * Turn must be correct
-* Pass logic is enforced automatically
+* No moves allowed after game end
+* Automatic pass logic enforced
 
 Invalid moves are ignored.
 
@@ -159,6 +162,8 @@ This makes replay:
 * Tamper-resistant
 * Order-safe
 * Race-condition safe
+
+Even if two users try to post at the same time, only the correctly indexed move survives replay validation.
 
 ---
 
@@ -188,6 +193,7 @@ When finished:
 * `currentPlayer` becomes `null`
 * Further moves are ignored
 * Winner is computed
+* Board becomes frozen (UI-level enforcement)
 
 ---
 
@@ -202,6 +208,8 @@ equal → draw
 ```
 
 Winner is derived entirely from board reconstruction.
+
+Nothing is stored on-chain except move events.
 
 ---
 
@@ -263,6 +271,8 @@ Board state is never stored on-chain.
 
 It is computed locally by every client.
 
+Every viewer independently verifies the same final state.
+
 ---
 
 ## 🖼 Board Rendering
@@ -281,6 +291,40 @@ It is computed locally by every client.
 * Uses same deterministic engine
 
 There is only one canonical replay engine.
+
+---
+
+## 📝 `boardToMarkdown` – Native Steemit Compatibility
+
+Reversteem includes a `boardToMarkdown(board)` function.
+
+### Purpose
+
+Steemit’s default interface does not execute JavaScript.
+
+Therefore, users browsing a game directly on Steemit would otherwise only see raw JSON move comments.
+
+`boardToMarkdown` converts the current board state into a Markdown-rendered visual grid.
+
+This allows:
+
+* Non-Reversteem users to follow the game
+* Spectators using the default Steemit UI to see the board
+* Moves to include a human-readable snapshot of the game
+
+### Why This Matters
+
+Reversteem is not just a frontend — it is a protocol layered on top of a social blockchain.
+
+`boardToMarkdown` bridges:
+
+Deterministic replay logic
+⬇
+Human-readable blockchain content
+
+It ensures the game remains understandable even outside the dApp interface.
+
+This improves transparency and accessibility.
 
 ---
 
@@ -332,6 +376,7 @@ Fully client-side:
 * Deterministic move replay
 * Automatic pass handling
 * End detection + winner calculation
+* Markdown export support
 
 The blockchain stores events.
 The browser computes the state.
