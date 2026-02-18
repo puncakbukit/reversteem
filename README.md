@@ -357,3 +357,17 @@ Reversteem demonstrates:
 Reversteem is not merely a game.
 
 It is a deterministic state machine embedded in a social blockchain.
+
+---
+
+## 📄 License
+
+MIT
+
+---
+
+## 🌐 Live Demo
+
+[https://puncakbukit.github.io/reversteem/](https://puncakbukit.github.io/reversteem/)
+
+
