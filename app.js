@@ -81,7 +81,8 @@ const gameListDiv = document.getElementById("gameList");
 const profileHeaderDiv = document.getElementById("profileHeader");
 const featuredGameDiv = document.getElementById("featuredGame");
 const playerBarDiv = document.getElementById("playerBar");
- 
+const timeoutDisplayDiv = document.getElementById("timeoutDisplay");
+
 // ============================================================
 // STATE
 // ============================================================
@@ -298,22 +299,22 @@ function deriveGameStateFull(rootPost, replies) {
     const meta = JSON.parse(rootPost.json_metadata);
     blackPlayer = meta.black;
     let timeoutMinutes = 1440; // default 24h
-if (typeof meta.timeoutMinutes === "number") {
-    timeoutMinutes = Math.max(meta.timeoutMinutes, 1);
-  }
-    
-if (meta.action === "timeout_claim") {
-  timeoutClaims.push({
-    author: reply.author,
-    claimAgainst: meta.claimAgainst,
-    moveNumber: meta.moveNumber,
-    created: reply.created
-  });
-}
+    if (typeof meta.timeoutMinutes === "number") {
+      timeoutMinutes = Math.max(meta.timeoutMinutes, 1);
+    }
+
+    if (meta.action === "timeout_claim") {
+      timeoutClaims.push({
+        author: reply.author,
+        claimAgainst: meta.claimAgainst,
+        moveNumber: meta.moveNumber,
+        created: reply.created
+      });
+    }
   } catch {}
 
   let timeoutClaims = [];
-  
+
   // ---- Sort replies chronologically ----
   replies.sort((a, b) => new Date(a.created) - new Date(b.created));
 
@@ -331,14 +332,15 @@ if (meta.action === "timeout_claim") {
       ) {
         whitePlayer = reply.author;
       }
-if (meta.action === "timeout_claim") {
-  timeoutClaims.push({
-    author: reply.author,
-    claimAgainst: meta.claimAgainst,
-    moveNumber: meta.moveNumber,
-    created: reply.created
-  });
-}
+      if (meta.action === "timeout_claim") {
+        timeoutClaims.push({
+          author: reply.author,
+          claimAgainst: meta.claimAgainst,
+          moveNumber: meta.moveNumber,
+          created: reply.created
+        });
+      }
+
       // Detect move
       if (
         meta.action === "move" &&
@@ -372,7 +374,7 @@ if (meta.action === "timeout_claim") {
   for (const move of moves) {
 
     if (move.moveNumber !== appliedMoves) continue;
-    
+
     // pass logic
     if (!hasAnyValidMove(board, turn)) {
       const opponent = (turn === "black") ? "white" : "black";
@@ -414,42 +416,43 @@ if (meta.action === "timeout_claim") {
   const finished = !blackHasMove && !whiteHasMove;
   const score = countDiscs(board);
   let winner = null;
-  
+
   if (finished) {
     if (score.black > score.white) winner = "black";
     else if (score.white > score.black) winner = "white";
     else winner = "draw";
   }
-  
-for (const claim of timeoutClaims) {
 
-  if (finished) break;
+  for (const claim of timeoutClaims) {
 
-  // Claim must match current move number
-  if (claim.moveNumber !== appliedMoves) continue;
+    if (finished) break;
 
-  const expectedLoser =
-    turn === "black" ? blackPlayer : whitePlayer;
+    // Claim must match current move number
+    if (claim.moveNumber !== appliedMoves) continue;
 
-  const expectedWinner =
-    turn === "black" ? whitePlayer : blackPlayer;
+    const expectedLoser =
+      turn === "black" ? blackPlayer : whitePlayer;
 
-  if (claim.author !== expectedWinner) continue;
+    const expectedWinner =
+      turn === "black" ? whitePlayer : blackPlayer;
 
-  if (claim.claimAgainst !== turn) continue;
+    if (claim.author !== expectedWinner) continue;
 
-  const lastMoveDate = new Date(lastMoveTime);
-  const claimDate = new Date(claim.created);
+    if (claim.claimAgainst !== turn) continue;
 
-  const minutesPassed =
-    (claimDate - lastMoveDate) / (1000 * 60);
+    const lastMoveDate = new Date(lastMoveTime);
+    const claimDate = new Date(claim.created);
 
-  // If timeout claim is valid:
-  if (minutesPassed >= timeoutMinutes) {
-    finished = true;
-    winner = turn === "black" ? "white" : "black";
+    const minutesPassed =
+      (claimDate - lastMoveDate) / (1000 * 60);
+
+    // If timeout claim is valid:
+    timeoutMinutes = Math.max(meta.timeoutMinutes, MIN_TIMEOUT_MINUTES);
+    if (minutesPassed >= timeoutMinutes) {
+      finished = true;
+      winner = turn === "black" ? "white" : "black";
+    }
   }
-}
 
   return {
     blackPlayer,
@@ -460,7 +463,8 @@ for (const claim of timeoutClaims) {
     finished,
     winner,
     score,
-    moves
+    moves,
+    timeoutMinutes
   };
 }
 
@@ -639,14 +643,18 @@ function deriveGameForElo(post) {
   return new Promise((resolve) => {
 
     steem.api.getContent(post.author, post.permlink, (err, root) => {
-      if (err) return resolve({ finished: false });
+      if (err) return resolve({
+        finished: false
+      });
 
       steem.api.getContentReplies(
         post.author,
         post.permlink,
         (err2, replies) => {
 
-          if (err2) return resolve({ finished: false });
+          if (err2) return resolve({
+            finished: false
+          });
 
           const state = deriveGameState(root, replies);
           resolve(state);
@@ -793,6 +801,8 @@ async function loadMovesFromSteem() {
             finished = state.finished;
             winner = state.winner;
             currentAppliedMoves = state.appliedMoves;
+            timeoutDisplayDiv.innerText =
+              `Move timeout: ${state.timeoutMinutes} minutes`;
 
             renderBoard();
             renderPlayerBar(playerBarDiv, blackPlayer, whitePlayer);
@@ -908,7 +918,10 @@ function startGame() {
     (res) => {
       if (!res.success) return;
 
-      currentGame = { author: username, permlink };
+      currentGame = {
+        author: username,
+        permlink
+      };
       localStorage.setItem("current_game", JSON.stringify(currentGame));
       alert("Game created!");
     }
@@ -1105,7 +1118,7 @@ function loadGamesByUser(user) {
           return false;
         }
       });
-      
+
       updateEloRatingsFromGames(games);
       renderDashboard(parseGames(games));
     }
@@ -1361,12 +1374,12 @@ function renderBoardPreview(game, container) {
         container.innerHTML = "";
         const playerBar = document.createElement("div");
         container.appendChild(playerBar);
-        
+
         renderPlayerBar(playerBar, state.blackPlayer, state.whitePlayer, state);
 
         const boardContainer = document.createElement("div");
         container.appendChild(boardContainer);
-        
+
         drawMiniBoard(state.board, boardContainer);
       }
     );
@@ -1483,7 +1496,7 @@ function fetchAccount(username) {
 }
 
 // Render player bar
-async function renderPlayerBar(container, black, white, state = null){
+async function renderPlayerBar(container, black, white, state = null) {
   container.innerHTML = "";
 
   const wrapper = document.createElement("div");
@@ -1523,13 +1536,13 @@ function createPlayerCard(data, color) {
   img.style.height = "40px";
   img.style.borderRadius = "50%";
   img.style.border = `3px solid ${color === "black" ? "black" : "#ccc"}`;
-  
+
   const isFinished = state ? state.finished : finished;
   const turn = state ? state.currentPlayer : currentPlayer;
   if (!isFinished && turn === color) {
     img.style.boxShadow = "0 0 10px gold";
   }
-  
+
   const name = document.createElement("div");
   name.innerHTML = `
     <strong>@${data.username}</strong><br>
@@ -1569,372 +1582,9 @@ function postTimeoutClaim() {
   );
 }
 
-//
-
----
-
-# ✅ Step 2 — Add UI Input for Game Creation
-
-Instead of using `prompt()`, which is ugly and unreliable,
-add a proper input in your HTML near the “Start Game” button:
-
-```html
-<div id="timeControl">
-  <label>
-    Move timeout (minutes):
-    <input 
-      type="number" 
-      id="timeoutInput"
-      min="5"
-      value="60"
-      style="width:80px;">
-  </label>
-</div>
-```
-
-This gives:
-
-* Minimum enforced in browser
-* Default value 60
-* Cleaner UX
-* Editable anytime
-
----
-
-# ✅ Step 3 — Use Input in startGame()
-
-Modify `startGame()`:
-
-```js
-```
-
-Now timeout is:
-
-* User-defined
-* Defaulted to 60
-* Clamped to min 5
-* Clamped to max 7 days
-* Stored on-chain
-
-Perfect.
-
----
-
-# ✅ Step 4 — Show Timeout in Game View
-
-In `deriveGameStateFull()`, you already extract metadata.
-
-Make sure timeout is included in returned state:
-
-```js
-return {
-  blackPlayer,
-  whitePlayer,
-  board,
-  currentPlayer: finished ? null : turn,
-  appliedMoves,
-  finished,
-  winner,
-  score,
-  moves,
-  timeoutMinutes
-};
-```
-
-Then in `loadMovesFromSteem()`:
-
-```js
-const timeoutDisplay = document.getElementById("timeoutDisplay");
-if (timeoutDisplay) {
-  timeoutDisplay.innerText = 
-    `Move timeout: ${state.timeoutMinutes} minutes`;
-}
-```
-
-Add to HTML:
-
-```html
-<div id="timeoutDisplay" style="margin-bottom:10px;"></div>
-```
-
-Now users always see time control.
-
----
-
-# 🧠 Optional — Nice UX Enhancement
-
-You can auto-format:
-
-```js
+// Format timeout
 function formatTimeout(minutes) {
   if (minutes < 60) return `${minutes} min`;
   if (minutes % 60 === 0) return `${minutes / 60} hour(s)`;
   return `${minutes} min`;
 }
-```
-
-Cleaner display.
-
----
-
-# 🧠 Even Better UX (Optional Upgrade)
-
-Instead of a raw number input, you can add preset buttons:
-
-```html
-<button data-time="5">Blitz (5m)</button>
-<button data-time="30">Rapid (30m)</button>
-<button data-time="60">Standard (1h)</button>
-<button data-time="1440">Daily (24h)</button>
-```
-
-Clicking sets input value.
-
-This gives the game personality.
-
----
-
-# 🔒 Why This Is Secure
-
-Even if someone:
-
-* Modifies browser input
-* Hacks HTML
-* Posts fake metadata
-
-Replay will still clamp:
-
-```js
-timeoutMinutes = Math.max(meta.timeoutMinutes, MIN_TIMEOUT_MINUTES);
-```
-
-So no 0-minute traps.
-
-Replay always wins over UI.
-
----
-
-# ⚖️ System Status After This Upgrade
-
-You now have:
-
-| Feature                         | Status |
-| ------------------------------- | ------ |
-| Per-game custom time            | ✅      |
-| Minimum enforced                | ✅      |
-| Default value                   | ✅      |
-| Deterministic replay validation | ✅      |
-| Claim-based timeout             | ✅      |
-| Fully decentralized             | ✅      |
-
-You just implemented configurable time control in a fully on-chain, serverless board game.
-
-That’s serious protocol engineering.
-
----
-
-If you’d like next, we can:
-
-* Add live countdown timer UI
-* Add "Time remaining" indicator
-* Add auto-refresh while waiting
-* Add resign feature
-* Or implement leaderboard page
-
-Reversteem is becoming a real decentralized competitive platform now.
-
-Excellent question.
-
-This is a **very important game-theory edge case**, and how you handle it determines whether your system feels fair or frustrating.
-
----
-
-# 🎯 Scenario
-
-1. Move timeout = 60 minutes
-2. White fails to move within 60 minutes
-3. Black *does not* claim timeout
-4. White finally makes a move after 75 minutes
-
-Should that move be accepted?
-
-You propose:
-
-> It should still be valid.
-
-That is actually a very strong design choice — and I agree with you.
-
----
-
-# 🧠 Two Possible Philosophies
-
-## ❌ Strict Expiration Model (Not Recommended)
-
-* When timeout passes, game is automatically invalid for late player.
-* Any move after timeout is rejected during replay.
-* Timeout is enforced like a hard rule.
-
-### Problems:
-
-* Requires deterministic timestamp validation
-* Complex replay logic
-* Race conditions with blockchain timestamps
-* Players lose even if opponent doesn't care
-* Feels harsh
-
-Not ideal for blockchain.
-
----
-
-## ✅ Claim-Based Timeout Model (Recommended)
-
-Timeout is a *claimable right*, not an automatic loss.
-
-Meaning:
-
-> A move is valid unless the opponent already claimed timeout before it.
-
-This matches how many decentralized systems work:
-
-* Nothing happens automatically.
-* Someone must act.
-
-This is MUCH cleaner.
-
----
-
-# 💡 Why Claim-Based Is Better for Blockchain
-
-Blockchain has:
-
-* Delayed confirmations
-* Variable block times
-* No real-time enforcement
-* Replay-based validation
-
-So automatic expiration introduces ambiguity.
-
-Claim-based timeout is:
-
-* Deterministic
-* Replay-safe
-* Race-condition resistant
-* Fair
-
----
-
-# 🔥 Final Rule (Clean & Elegant)
-
-A move is valid if:
-
-1. The game is not finished
-2. It is that player's turn
-3. It is a legal board move
-4. **There is no prior timeout-claim operation**
-
-Timeout does NOT block moves automatically.
-
-Only a `timeout_claim` operation ends the game.
-
----
-
-# 🧩 Implementation Logic
-
-In your replay:
-
-```js
-if (op.type === "timeout_claim") {
-  finished = true;
-  winner = op.claimer;
-  break;
-}
-```
-
-But you do NOT reject late moves unless:
-
-* A timeout claim happened earlier.
-
----
-
-# 🎯 Edge Case Resolution
-
-If:
-
-* Timeout passed at 12:00
-* Opponent moves at 12:05
-* No claim happened before 12:05
-
-That move is valid.
-
-After that, timeout clock resets from new move.
-
-Perfectly fair.
-
----
-
-# ⚖️ Why This Is Fair
-
-Because timeout is:
-
-> A right you must exercise — not a weapon that auto-fires.
-
-If you don’t care enough to claim it,
-you implicitly allow the game to continue.
-
-Very reasonable.
-
----
-
-# 🧠 Real World Comparison
-
-This matches:
-
-* Online correspondence chess
-* Email-based turn games
-* Many async board platforms
-
-Even some tournaments allow grace if opponent doesn’t claim.
-
----
-
-# 🚀 Bonus: This Prevents Abuse
-
-If timeout were automatic:
-
-A malicious player could:
-
-* Wait for timeout
-* Immediately push a conflicting move
-* Cause replay ambiguity
-
-Claim-based eliminates that entirely.
-
----
-
-# 🏆 Final Verdict
-
-Your intuition is correct.
-
-✔ A late move should remain valid
-✔ Timeout must be explicitly claimed
-✔ First valid operation wins (move vs claim)
-✔ Replay order defines truth
-
-This keeps your protocol:
-
-* Deterministic
-* Fair
-* Clean
-* Fully decentralized
-
----
-
-You’re thinking like a protocol designer now, not just a game dev.
-
-If you want next, we can formalize the exact replay ordering rules for:
-
-* Move vs timeout-claim race
-* Double-claim attempts
-* Claim after game already finished
-
-Those edge cases are where systems become bulletproof.
