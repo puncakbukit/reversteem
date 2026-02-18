@@ -4,191 +4,179 @@
   https://github.com/puncakbukit/reversteem
   Licensed under the MIT License
 -->
-
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Reversteem - Reversi on Steem</title>
-
-  <!-- Steem JS Library -->
-  <!-- Used to communicate with the Steem blockchain -->
-  <script src="https://cdn.jsdelivr.net/npm/@steemit/steem-js@0.7.1/dist/steem.min.js"></script>
-
-  <style>
-    /* =========================
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reversteem - Reversi on Steem</title>
+    <!-- Steem JS Library -->
+    <!-- Used to communicate with the Steem blockchain -->
+    <script src="https://cdn.jsdelivr.net/npm/@steemit/steem-js@0.7.1/dist/steem.min.js"></script>
+    <style>
+      /* =========================
        Global Layout
        ========================= */
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-      background-color: #f5f5f5;
-    }
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 0;
+        padding: 0;
+        text-align: center;
+        background-color: #f5f5f5;
+      }
 
-    h1 {
-      margin-top: 20px;
-    }
+      h1 {
+        margin-top: 20px;
+      }
 
-    button {
-      padding: 8px 14px;
-      margin: 5px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      background-color: #2e7d32;
-      color: white;
-      font-size: 14px;
-    }
+      button {
+        padding: 8px 14px;
+        margin: 5px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        background-color: #2e7d32;
+        color: white;
+        font-size: 14px;
+      }
 
-    button:hover {
-      opacity: 0.9;
-    }
+      button:hover {
+        opacity: 0.9;
+      }
 
-    hr {
-      margin: 30px 0;
-      border: none;
-      border-top: 1px solid #ddd;
-    }
+      hr {
+        margin: 30px 0;
+        border: none;
+        border-top: 1px solid #ddd;
+      }
 
-    /* =========================
+      /* =========================
        Profile Header
        ========================= */
-    #profileHeader {
-      margin-bottom: 20px;
-    }
+      #profileHeader {
+        margin-bottom: 20px;
+      }
 
-    /* =========================
+      /* =========================
        Game Board
        ========================= */
-    #board {
-      display: grid;
-      grid-template-columns: repeat(8, 40px);
-      gap: 4px;
-      justify-content: center;
-      margin-top: 20px;
-    }
+      #board {
+        display: grid;
+        grid-template-columns: repeat(8, 40px);
+        gap: 4px;
+        justify-content: center;
+        margin-top: 20px;
+      }
 
-    .cell {
-      width: 40px;
-      height: 40px;
-      background: #2e7d32;
-      border-radius: 4px;
-      cursor: pointer;
+      .cell {
+        width: 40px;
+        height: 40px;
+        background: #2e7d32;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+      .black,
+      .white {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+      }
 
-    .black,
-    .white {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-    }
+      .black {
+        background: black;
+      }
 
-    .black {
-      background: black;
-    }
+      .white {
+        background: white;
+      }
 
-    .white {
-      background: white;
-    }
-
-    /* =========================
+      /* =========================
        Keychain Notice
        ========================= */
-    #keychainNotice {
-      display: none;
-      margin: 10px auto;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background: #fff8e1;
-      max-width: 600px;
-    }
+      #keychainNotice {
+        display: none;
+        margin: 10px auto;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: #fff8e1;
+        max-width: 600px;
+      }
 
-    /* =========================
+      /* =========================
        Dashboard Sections
        ========================= */
-    #featuredGame {
-      margin-top: 20px;
-    }
+      #featuredGame {
+        margin-top: 20px;
+      }
 
-    #gameList {
-      margin-bottom: 40px;
-    }
-  </style>
-</head>
-
-<body>
-
-  <!-- =========================
+      #gameList {
+        margin-bottom: 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- =========================
        User Profile Header
        Filled dynamically after login
        ========================= -->
-  <div id="profileHeader"></div>
-
-  <!-- =========================
+    <div id="profileHeader"></div>
+    <!-- =========================
        App Title
        ========================= -->
-  <h1>Reversteem - Reversi on Steem</h1>
-
-  <!-- =========================
+    <h1>Reversteem - Reversi on Steem</h1>
+    <!-- =========================
        Authentication Controls
        ========================= -->
-  <div>
-    <button id="loginBtn" onclick="login()">Login with Steem</button>
-    <button id="logoutBtn" onclick="logout()" style="display: none;">
-      Logout
-    </button>
-    <button id="startGameBtn" onclick="startGame()" style="display: none;">
-      Start New Game
-    </button>
-  </div>
-
-  <!-- Logged-in Username Display -->
-  <p id="user"></p>
-
-  <!-- =========================
+    <div>
+      <button id="loginBtn" onclick="login()">Login with Steem</button>
+      <button id="logoutBtn" onclick="logout()" style="display: none;"> Logout </button>
+      <button id="startGameBtn" onclick="startGame()" style="display: none;"> Start New Game </button>
+      <div id="timeControl">
+        <label> Move timeout (minutes): <input type="number" id="timeoutInput" min="5" value="60" style="width:80px;">
+        </label>
+      </div>
+      <button data-time="5">Blitz (5m)</button>
+      <button data-time="30">Rapid (30m)</button>
+      <button data-time="60">Standard (1h)</button>
+      <button data-time="1440">Daily (24h)</button>
+    </div>
+    <!-- Logged-in Username Display -->
+    <p id="user"></p>
+    <!-- =========================
        Steem Keychain Notice
        Displayed when extension is missing
        ========================= -->
-  <div id="keychainNotice"></div>
-
-  <!-- =========================
+    <div id="keychainNotice"></div>
+    <!-- =========================
        Player Bar
        Show users' profile image along the board 
        ========================= -->
-  <div id="playerBar"></div>
-  
-  <!-- =========================
+    <div id="playerBar"></div>
+    <!-- =========================
        Active Game Board
        Used when viewing a specific game
        ========================= -->
-  <div id="board"></div>
-
-  <!-- =========================
+    <div id="board"></div>
+    <div id="timeoutDisplay" style="margin-bottom:10px;"></div>
+    <!-- =========================
        Featured Game Section
        Shows latest / active game with board preview
        ========================= -->
-  <div id="featuredGame"></div>
-
-  <hr />
-
-  <!-- =========================
+    <div id="featuredGame"></div>
+    <hr />
+    <!-- =========================
        Game List Section
        Shows other games without board preview
        ========================= -->
-  <div id="gameList"></div>
-
-  <!-- =========================
+    <div id="gameList"></div>
+    <!-- =========================
        Main Application Logic
        ========================= -->
-  <script src="app.js"></script>
-
-</body>
+    <script src="app.js"></script>
+  </body>
 </html>
