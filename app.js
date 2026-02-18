@@ -44,6 +44,13 @@ const RPC_NODES = [
 ];
 let currentRPCIndex = 0;
 
+const TIME_PRESETS = {
+  blitz: 5,        // 5 minutes
+  rapid: 15,       // 15 minutes
+  standard: 60,    // 1 hour
+  daily: 1440      // 24 hours
+};
+
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
 const LOGIN_REJECTED = "Login rejected";
 const LIVE_DEMO = "https://puncakbukit.github.io/reversteem/";
@@ -82,6 +89,7 @@ const profileHeaderDiv = document.getElementById("profileHeader");
 const featuredGameDiv = document.getElementById("featuredGame");
 const playerBarDiv = document.getElementById("playerBar");
 const timeoutDisplayDiv = document.getElementById("timeoutDisplay");
+  const timeoutInput = document.getElementById("timeout-input");
 
 // ============================================================
 // STATE
@@ -124,6 +132,7 @@ window.addEventListener("load", () => {
     }
   }, 100);
 
+  initTimeControls();
   if (username) showLoggedIn(username);
 
   if (gameFromURL) {
@@ -868,9 +877,7 @@ function startGame() {
 
   resetBoard();
 
-  const input = document.getElementById("timeoutInput");
-
-  let timeoutMinutes = parseInt(input?.value);
+  let timeoutMinutes = parseInt(timeoutInput?.value);
 
   if (isNaN(timeoutMinutes)) {
     timeoutMinutes = DEFAULT_TIMEOUT_MINUTES;
@@ -1643,4 +1650,45 @@ function postTimeoutClaim(state) {
       }
     }
   );
+}
+
+// Init Time Controls
+function initTimeControls() {
+  const buttons = document.querySelectorAll("#time-controls button");
+ 
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const mode = btn.dataset.mode;
+      const minutes = TIME_PRESETS[mode];
+
+      timeoutInput.value = minutes;
+
+      highlightSelectedMode(mode);
+    });
+  });
+
+  // Manual input clears preset highlight
+  timeoutInput.addEventListener("input", () => {
+    clearPresetHighlight();
+  });
+
+  // Set default highlight (Standard)
+  highlightSelectedMode("standard");
+}
+
+function highlightSelectedMode(mode) {
+  const buttons = document.querySelectorAll("#time-controls button");
+
+  buttons.forEach(btn => {
+    if (btn.dataset.mode === mode) {
+      btn.classList.add("active-time");
+    } else {
+      btn.classList.remove("active-time");
+    }
+  });
+}
+
+function clearPresetHighlight() {
+  const buttons = document.querySelectorAll("#time-controls button");
+  buttons.forEach(btn => btn.classList.remove("active-time"));
 }
