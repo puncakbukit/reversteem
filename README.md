@@ -28,20 +28,8 @@ This project is both a playable game and a protocol experiment.
 * Replay caching for fast reloads
 * Multi-RPC automatic fallback
 * Markdown board export for native Steemit viewing
-
----
-
-## 🧭 Routing System
-
-Reversteem uses client-side hash routing:
-
-| Route                    | Description                             |
-| ------------------------ | --------------------------------------- |
-| `#/`                     | Homepage (featured game + recent games) |
-| `#/@username`            | User profile page + games by that user  |
-| `#/game/author/permlink` | Specific game page                      |
-
-Navigation does not reload the page — everything runs as a single-page app.
+* Deterministic time-limit enforcement
+* On-chain derived ELO rating system
 
 ---
 
@@ -60,9 +48,11 @@ Everything is derived from the Steem blockchain.
 
 The blockchain acts as a deterministic event log.
 
+All game state, ratings, and timers are computed locally by replaying immutable history.
+
 ---
 
-## 🔗 On-Chain Game Model
+# 🔗 On-Chain Game Model
 
 | Blockchain Object | Meaning                            |
 | ----------------- | ---------------------------------- |
@@ -77,28 +67,11 @@ All other comments are ignored.
 
 ---
 
-## ♟ Player Model
+# ⏳ Time Limit System
 
-* **Black** = defined in root post metadata
-* **White** = first valid `join` comment author
-* Subsequent join attempts are ignored
-* Only Black and White can submit valid moves
+Reversteem supports deterministic per-move time limits.
 
----
-
-## 📜 Metadata Protocol
-
-All metadata must include:
-
-```
-meta.app?.startsWith("reversteem/")
-```
-
-Only matching metadata is processed.
-
----
-
-### Root Post (Game Creation)
+## Game Creation Metadata (with time limit)
 
 ```json
 {
@@ -106,43 +79,127 @@ Only matching metadata is processed.
   "type": "game_start",
   "black": "username",
   "white": null,
-  "status": "open"
+  "status": "open",
+  "timeLimitSeconds": 86400
 }
 ```
 
+`timeLimitSeconds` defines how long a player has to make a move.
+
+Example:
+
+* `86400` = 24 hours per move
+
 ---
 
-### Join Comment
+## 🕒 How Timeout Works
 
-```json
-{
-  "app": "reversteem/0.1",
-  "action": "join"
-}
+Timeout is derived from blockchain timestamps:
+
+1. Determine the last valid move timestamp
+2. Determine whose turn it is
+3. Compare:
+
+```
+currentBlockTime - lastMoveTime > timeLimitSeconds
 ```
 
-The first valid `join` assigns White.
+If true:
+
+* Current player loses on time
+* Opponent wins by timeout
 
 ---
 
-### Move Comment
+## ⚖ Timeout Edge Case Handling
 
-```json
-{
-  "app": "reversteem/0.1",
-  "action": "move",
-  "index": 27,
-  "moveNumber": 12
-}
+If timeout has technically occurred but:
+
+* The opponent has not claimed victory
+* The timed-out player posts a move afterward
+
+Replay logic determines validity strictly by timestamps.
+
+If the move timestamp is after the timeout threshold:
+
+→ It is ignored during deterministic replay.
+
+This ensures:
+
+* No race-condition ambiguity
+* No manual timeout transaction required
+* Fully deterministic outcome
+
+Timeout enforcement is computed during replay — not triggered by UI actions.
+
+---
+
+# 🏆 ELO Rating System
+
+Reversteem includes a fully deterministic, client-derived ELO rating system.
+
+There is:
+
+* No on-chain rating storage
+* No backend leaderboard database
+* No rating authority
+
+Ratings are computed by replaying completed games.
+
+---
+
+## 📊 How Ratings Are Calculated
+
+For each finished game:
+
+1. Determine winner (board or timeout)
+2. Load both players’ previous ratings
+3. Apply standard ELO formula:
+
+```
+R' = R + K × (S - E)
 ```
 
-`moveNumber` is required.
+Where:
 
-It must equal the number of already-applied valid moves during replay.
+* `R` = current rating
+* `R'` = new rating
+* `K` = configurable factor (e.g. 32)
+* `S` = actual score (1 win, 0 loss, 0.5 draw)
+* `E` = expected score
 
 ---
 
-## 🔢 Move Validation Rules
+## 🔄 Deterministic Rating Reconstruction
+
+Ratings are derived by:
+
+1. Fetching all finished games
+2. Sorting chronologically
+3. Replaying them
+4. Applying ELO updates in order
+
+Because game outcomes are deterministic:
+
+→ Ratings are deterministic.
+
+Any client reconstructing the same history will compute identical ratings.
+
+---
+
+## 📈 Rating Properties
+
+* No centralized leaderboard
+* No authority can modify ratings
+* No rating manipulation possible without altering history
+* Ratings auto-update when new games are discovered
+* Timeout wins count as normal wins
+
+Ratings are emergent properties of blockchain history.
+
+---
+
+# 🔢 Move Validation Rules
 
 During deterministic replay:
 
@@ -153,6 +210,7 @@ During deterministic replay:
 * Turn must be correct
 * No moves allowed after game end
 * Automatic pass logic enforced
+* Moves after timeout threshold are ignored
 
 Invalid moves are ignored.
 
@@ -163,11 +221,9 @@ This makes replay:
 * Order-safe
 * Race-condition safe
 
-Even if two users try to post at the same time, only the correctly indexed move survives replay validation.
-
 ---
 
-## 🔄 Automatic Pass Rule
+# 🔄 Automatic Pass Rule
 
 If a player has no valid moves:
 
@@ -180,13 +236,17 @@ No manual pass transaction is required.
 
 ---
 
-## 🏁 End-of-Game Detection
+# 🏁 End-of-Game Detection
 
 A game is finished when:
 
 ```
 !blackHasMove && !whiteHasMove
 ```
+
+OR
+
+* A timeout condition is met
 
 When finished:
 
@@ -197,23 +257,29 @@ When finished:
 
 ---
 
-## 🏆 Winner Calculation
+# 📝 `boardToMarkdown` – Native Steemit Compatibility
 
-After replay:
+Reversteem includes a `boardToMarkdown(board)` function.
 
-```
-score.black > score.white → Black wins
-score.white > score.black → White wins
-equal → draw
-```
+## Purpose
 
-Winner is derived entirely from board reconstruction.
+Steemit’s default interface does not execute JavaScript.
 
-Nothing is stored on-chain except move events.
+Therefore, users browsing a game directly on Steemit would otherwise only see raw JSON move comments.
+
+`boardToMarkdown` converts the current board state into a Markdown-rendered visual grid.
+
+This allows:
+
+* Non-Reversteem users to follow the game
+* Spectators using the default Steemit UI to see the board
+* Moves to include a human-readable snapshot of the game
+
+This keeps the protocol understandable even outside the dApp.
 
 ---
 
-## ⚡ Replay Caching
+# ⚡ Replay Caching
 
 To improve performance:
 
@@ -228,11 +294,11 @@ If cache is valid, replay is skipped.
 
 If invalid, full deterministic replay runs again.
 
-Cache is optional optimization — state is always derivable from chain.
+Cache is an optimization only — never a source of truth.
 
 ---
 
-## 🌐 Multi-RPC Fallback
+# 🌐 Multi-RPC Fallback
 
 Reversteem automatically rotates between public RPC nodes:
 
@@ -248,102 +314,11 @@ If one RPC fails:
 * Client switches to next RPC
 * Retries automatically
 
-This improves availability without requiring a backend proxy.
+No backend proxy required.
 
 ---
 
-## 🔄 Deterministic Replay Engine
-
-When loading a game:
-
-1. Fetch root post
-2. Fetch all replies
-3. Sort replies chronologically
-4. Extract Black from root metadata
-5. Detect first valid `join` as White
-6. Extract valid `move` comments
-7. Enforce moveNumber ordering
-8. Enforce pass logic
-9. Replay moves deterministically
-10. Detect game end + winner
-
-Board state is never stored on-chain.
-
-It is computed locally by every client.
-
-Every viewer independently verifies the same final state.
-
----
-
-## 🖼 Board Rendering
-
-### Main Board
-
-* Interactive
-* Enforces turn rules
-* Validates move before posting
-* Frozen after game end
-
-### Mini Board Preview
-
-* Read-only
-* Used in homepage featured section
-* Uses same deterministic engine
-
-There is only one canonical replay engine.
-
----
-
-## 📝 `boardToMarkdown` – Native Steemit Compatibility
-
-Reversteem includes a `boardToMarkdown(board)` function.
-
-### Purpose
-
-Steemit’s default interface does not execute JavaScript.
-
-Therefore, users browsing a game directly on Steemit would otherwise only see raw JSON move comments.
-
-`boardToMarkdown` converts the current board state into a Markdown-rendered visual grid.
-
-This allows:
-
-* Non-Reversteem users to follow the game
-* Spectators using the default Steemit UI to see the board
-* Moves to include a human-readable snapshot of the game
-
-### Why This Matters
-
-Reversteem is not just a frontend — it is a protocol layered on top of a social blockchain.
-
-`boardToMarkdown` bridges:
-
-Deterministic replay logic
-⬇
-Human-readable blockchain content
-
-It ensures the game remains understandable even outside the dApp interface.
-
-This improves transparency and accessibility.
-
----
-
-## 👁 Spectator Mode
-
-If Steem Keychain is not installed:
-
-* Login disabled
-* Start Game disabled
-* Join buttons hidden
-* App runs in read-only mode
-
-Games can still be verified.
-
-Reversteem functions as a blockchain game explorer.
-
----
-
-## 🔐 Security Model
+# 🔐 Security Model
 
 Reversteem enforces:
 
@@ -352,114 +327,33 @@ Reversteem enforces:
 * Author turn validation
 * Legal flip validation
 * Automatic pass logic
-* Deterministic replay
+* Deterministic timeout enforcement
 * End-state freeze
 * Winner calculation
+* Deterministic ELO reconstruction
 * Replay cache validation
 * RPC failover resilience
 
 Because state is derived from immutable history:
 
 Malicious clients cannot forge outcomes.
+Malicious users cannot manipulate ratings.
 
 Every spectator independently verifies the game.
 
 ---
 
-## 🧠 Board Engine Details
-
-Fully client-side:
-
-* 8×8 array (length 64)
-* 8-direction scanning model
-* Flip collection per direction
-* Deterministic move replay
-* Automatic pass handling
-* End detection + winner calculation
-* Markdown export support
-
-The blockchain stores events.
-The browser computes the state.
-
----
-
-## ⚠ Protocol Characteristics
-
-Reversteem intentionally avoids:
-
-* Smart contracts
-* Token staking logic
-* On-chain state mutation
-* Backend arbitration
-
-This keeps the protocol:
-
-* Simple
-* Auditable
-* Upgradeable
-* Frontend-only deployable
-
-Future upgrades (optional):
-
-* Board hash chaining
-* Fork-detection verification
-* On-chain finalization markers
-
----
-
-## 🚀 Running Locally
-
-Open:
-
-```
-index.html
-```
-
-In a browser with Steem Keychain installed.
-
-No build step required.
-No npm.
-No bundler.
-
-Pure static HTML + JavaScript.
-
----
-
-## 🌍 Deployment
-
-Can be deployed via:
-
-* GitHub Pages
-* Any static hosting provider
-* IPFS
-
-No backend required.
-
----
-
-## 🎯 Design Philosophy
+# 🎯 Design Philosophy
 
 Reversteem demonstrates:
 
 * Turn-based games do not require smart contracts
 * Comment trees can function as deterministic event logs
-* Social blockchains can host verifiable multiplayer games
+* Ratings can be derived without on-chain storage
+* Time control can be enforced without authority
 * Fully frontend-only dApps are viable
 * Consensus logic can live entirely in the browser
 
 Reversteem is not merely a game.
 
-It is a demonstration that conversation threads can become deterministic state machines.
-
----
-
-## 📄 License
-
-MIT
-
----
-
-## 🌐 Live Demo
-
-[https://puncakbukit.github.io/reversteem/](https://puncakbukit.github.io/reversteem/)
-
+It is a deterministic state machine embedded in a social blockchain.
