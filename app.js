@@ -619,7 +619,8 @@ async function updateEloRatingsFromGames(posts) {
     ratings[black] = Math.round(rBlack + deltaBlack);
     ratings[white] = Math.round(rWhite + deltaWhite);
 
-    cache.lastProcessed = post.created;
+    cache.lastProcessed = post.author + "/" + post.permlink;
+
   }
 
   setEloCache(cache);
@@ -851,8 +852,8 @@ function makeMove(index) {
   renderBoard();
 
   postMove(index);
-  loadMovesFromSteem();
 }
+
 
 // ============================================================
 // BLOCKCHAIN POSTS
@@ -876,8 +877,13 @@ function startGame() {
   }
 
   // 🔥 Clamp safely
-  timeoutMinutes = Math.max(timeoutMinutes, MIN_TIMEOUT_MINUTES);
-  timeoutMinutes = Math.min(timeoutMinutes, MAX_TIMEOUT_MINUTES);
+  timeoutMinutes = Math.max(
+    MIN_TIMEOUT_MINUTES,
+    Math.min(
+      rootMeta.timeoutMinutes || DEFAULT_TIMEOUT_MINUTES,
+      MAX_TIMEOUT_MINUTES
+    )
+  );
 
   const permlink = `${APP_NAME}-${Date.now()}`;
 
@@ -964,7 +970,9 @@ function postMove(index) {
     JSON.stringify(meta),
     `reversteem-move-${Date.now()}`,
     "",
-    () => {}
+    () => {
+      loadMovesFromSteem();
+    }
   );
 }
 
@@ -1578,4 +1586,61 @@ function formatTimeout(minutes) {
   if (minutes < 60) return `${minutes} min`;
   if (minutes % 60 === 0) return `${minutes / 60} hour(s)`;
   return `${minutes} min`;
+}
+
+function isTimeoutClaimable(state) {
+  if (!state || state.finished) return false;
+
+  if (!state.lastMoveTime) return false; // no moves yet
+
+  const now = new Date();
+  const lastMove = new Date(state.lastMoveTime);
+
+  const diffMinutes = (now - lastMove) / 60000;
+
+  return diffMinutes >= state.timeoutMinutes;
+}
+
+function renderClaimButton(state) {
+  const container = document.getElementById("timeout-controls");
+  container.innerHTML = "";
+
+  if (!isTimeoutClaimable(state)) return;
+
+  const winner = state.currentPlayer;
+  const loser = winner === "black" ? state.whitePlayer : state.blackPlayer;
+
+  const btn = document.createElement("button");
+  btn.textContent = `Claim Timeout Victory vs ${loser}`;
+  btn.onclick = () => postTimeoutClaim(state);
+
+  container.appendChild(btn);
+}
+
+function postTimeoutClaim(state) {
+  const loser = state.currentPlayer === "black" ?
+    state.whitePlayer :
+    state.blackPlayer;
+
+  const moveNumber = state.appliedMoves;
+
+  const metadata = {
+    timeoutClaim: true,
+    moveNumber,
+    claimAgainst: loser
+  };
+
+  steem_keychain.requestPost(
+    currentUser,
+    rootAuthor,
+    rootPermlink,
+    "",
+    JSON.stringify(metadata),
+    "reversteem timeout claim",
+    (response) => {
+      if (response.success) {
+        loadMovesFromSteem();
+      }
+    }
+  );
 }
