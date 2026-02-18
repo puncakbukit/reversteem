@@ -296,6 +296,13 @@ function deriveGameStateFull(rootPost, replies) {
   let timeoutMinutes = DEFAULT_TIMEOUT_MINUTES;
   let timeoutClaims = [];
 
+  // ---- Extract black from root ----
+try {
+  const rootMeta = JSON.parse(rootPost.json_metadata);
+  blackPlayer = rootMeta.black;
+  timeoutMinutes = rootMeta.timeoutMinutes || DEFAULT_TIMEOUT_MINUTES;
+} catch {}
+
   // ---- Sort replies chronologically ----
   replies.sort((a, b) => new Date(a.created) - new Date(b.created));
 
@@ -304,9 +311,6 @@ function deriveGameStateFull(rootPost, replies) {
     try {
       const meta = JSON.parse(reply.json_metadata);
       if (!meta.app?.startsWith(APP_NAME + "/")) return;
-
-      // ---- Extract black from root ----
-      blackPlayer = meta.black;
       
       // Detect white join
       if (
@@ -316,9 +320,6 @@ function deriveGameStateFull(rootPost, replies) {
       ) {
         whitePlayer = reply.author;
       }
-     if (typeof meta.timeoutMinutes === "number") {
-      timeoutMinutes = Math.max(meta.timeoutMinutes, MIN_TIMEOUT_MINUTES);
-    }     
       if (meta.action === "timeout_claim") {
         timeoutClaims.push({
           author: reply.author,
