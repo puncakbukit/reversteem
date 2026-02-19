@@ -457,18 +457,20 @@ function deriveGameStateFull(rootPost, replies) {
     }
   }
 
-  return {
-    blackPlayer,
-    whitePlayer,
-    board,
-    currentPlayer: finished ? null : turn,
-    appliedMoves,
-    finished,
-    winner,
-    score,
-    moves,
-    timeoutMinutes
-  };
+ return {
+  blackPlayer,
+  whitePlayer,
+  board,
+  currentPlayer: finished ? null : turn,
+  appliedMoves,
+  finished,
+  winner,
+  score,
+  moves,
+  timeoutMinutes,
+  gameStartTime,
+  lastMoveTime
+};
 }
 
 // Wrapper with cache
