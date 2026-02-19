@@ -112,6 +112,7 @@ let currentAppliedMoves = 0;
 
 let moves = [];
 let currentPlayer = "black";
+let isSubmittingMove = false;
 
 let board = Array(64).fill(null);
 
@@ -1693,3 +1694,30 @@ function clearPresetHighlight() {
   const buttons = document.querySelectorAll("#time-controls button");
   buttons.forEach(btn => btn.classList.remove("active-time"));
 }
+
+async function handleCellClick(row, col) {
+  if (isSubmittingMove) return;
+
+  if (!isValidMove(row, col)) return;
+
+  isSubmittingMove = true;
+  lockBoardUI();
+
+  try {
+    await broadcastMove(row, col);
+  } catch (err) {
+    console.error("Move failed:", err);
+  } finally {
+    isSubmittingMove = false;
+    unlockBoardUI();
+  }
+}
+
+function lockBoardUI() {
+  document.getElementById("board-overlay").style.display = "flex";
+}
+
+function unlockBoardUI() {
+  document.getElementById("board-overlay").style.display = "none";
+}
+
