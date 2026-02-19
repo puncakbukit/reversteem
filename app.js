@@ -116,6 +116,8 @@ let currentAppliedMoves = 0;
 let currentPlayer = "black";
 let isSubmittingMove = false;
 let gameStartTime = null;
+let timeoutMinutes = null;
+let lastMoveTime = null;
 
 let moves = [];
 let board = Array(64).fill(null);
