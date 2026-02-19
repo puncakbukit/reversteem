@@ -1616,13 +1616,9 @@ function formatTimeout(minutes) {
 function isTimeoutClaimable() {
 
   if (!timeoutMinutes) return false;
-
-  // Timeout not active until both players joined
   if (!gameStartTime) return false;
-
-  if (gameOver) return false;
-
-  if (currentPlayer !== username) return false;
+  if (finished) return false;
+  if (username !== currentPlayerPlayer()) return false;
 
   const referenceTime = new Date(
     lastMoveTime > gameStartTime
@@ -1630,13 +1626,11 @@ function isTimeoutClaimable() {
       : gameStartTime
   );
 
-if (!gameStartTime) return false; // timeout inactive
+  const now = new Date();
+  const minutesPassed = (now - referenceTime) / 60000;
 
-const referenceTime = new Date(
-  lastMoveTime > gameStartTime
-    ? lastMoveTime
-    : gameStartTime
-);
+  return minutesPassed >= timeoutMinutes;
+}
 
 const now = new Date();
 const minutesPassed = (now - referenceTime) / 60000; 
