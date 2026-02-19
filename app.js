@@ -812,7 +812,7 @@ lastMoveTime = state.lastMoveTime;
             winner = state.winner;
             currentAppliedMoves = state.appliedMoves;
             timeoutDisplayDiv.innerText =
-              `Move timeout: ${state.timeoutMinutes} minutes`;
+              `Move timeout: ${formatTimeout(state.timeoutMinutes)}`;
 
             renderBoard();
             renderPlayerBar(playerBarDiv, blackPlayer, whitePlayer);
