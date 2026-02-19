@@ -306,6 +306,7 @@ function deriveGameStateFull(rootPost, replies) {
 
   let blackPlayer = null;
   let whitePlayer = null;
+  let gameStartTime = null;
   let moves = [];
   let timeoutMinutes = DEFAULT_TIMEOUT_MINUTES;
   let timeoutClaims = [];
