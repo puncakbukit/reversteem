@@ -863,15 +863,7 @@ function makeMove(index) {
   }
 
   const flips = getFlipsForBoard(board, index, currentPlayer);
-
-  if (flips.length === 0) {
-    alert("Invalid move");
-    return;
-  }
-
-  board[index] = currentPlayer;
-  flips.forEach(i => board[i] = currentPlayer);
-  renderBoard();
+  if (flips.length === 0) return;
 
   postMove(index);
 }
