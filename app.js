@@ -1618,7 +1618,9 @@ function isTimeoutClaimable() {
   if (!timeoutMinutes) return false;
   if (!gameStartTime) return false;
   if (finished) return false;
-  if (username !== currentPlayerPlayer()) return false;
+  
+  const expected = currentPlayer === "black" ? blackPlayer : whitePlayer;
+  if (username !== expected) return false;
 
   const referenceTime = new Date(
     lastMoveTime > gameStartTime
