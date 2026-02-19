@@ -1632,7 +1632,7 @@ function renderClaimButton() {
   if (!isTimeoutClaimable()) return;
 
   const loser =
-    currentPlayer === "black" ? whitePlayer : blackPlayer;
+    currentPlayer === "black" ? blackPlayer : whitePlayer;
 
   const btn = document.createElement("button");
   btn.textContent = `Claim Timeout Victory vs ${loser}`;
