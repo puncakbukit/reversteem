@@ -1619,7 +1619,7 @@ const winner =
 if (username !== winner) return false;
 
   let referenceTime = new Date(lastMoveTime);
-  if (appliedMoves === 0)
+  if (currentAppliedMoves === 0)
     referenceTime = new Date(gameStartTime);
 
   const now = new Date();
