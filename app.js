@@ -1622,12 +1622,7 @@ function isTimeoutClaimable() {
   const expected = currentPlayer === "black" ? blackPlayer : whitePlayer;
   if (username !== expected) return false;
 
-  const referenceTime = new Date(
-    lastMoveTime > gameStartTime
-      ? lastMoveTime
-      : gameStartTime
-  );
-
+  const referenceTime = new Date(lastMoveTime);
   const now = new Date();
   const minutesPassed = (now - referenceTime) / 60000;
 
