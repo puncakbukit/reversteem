@@ -1687,21 +1687,28 @@ function clearPresetHighlight() {
   buttons.forEach(btn => btn.classList.remove("active-time"));
 }
 
-async function handleCellClick(row, col) {
+async function handleCellClick(index) {
+  if (finished) return;
   if (isSubmittingMove) return;
 
-  if (!isValidMove(row, col)) return;
+  // Only allow current player to move
+  const expected =
+    currentPlayer === "black" ? blackPlayer : whitePlayer;
 
-  isSubmittingMove = true;
-  lockBoardUI();
+  if (username !== expected) return;
+
+  // If timeout is claimable, do not allow move
+  if (isTimeoutClaimable()) return;
 
   try {
-    await broadcastMove(row, col);
-  } catch (err) {
-    console.error("Move failed:", err);
+    isSubmittingMove = true;
+    boardOverlayDiv.style.display = "flex";
+
+    await makeMove(index);
+
   } finally {
     isSubmittingMove = false;
-    unlockBoardUI();
+    boardOverlayDiv.style.display = "none";
   }
 }
 
