@@ -88,13 +88,14 @@ const gameListDiv = document.getElementById("gameList");
 const profileHeaderDiv = document.getElementById("profileHeader");
 const featuredGameDiv = document.getElementById("featuredGame");
 const playerBarDiv = document.getElementById("playerBar");
-const timeoutDisplayDiv = document.getElementById("timeoutDisplay");
-const timeControlsDiv = document.getElementById("time-controls");
-const timeoutInput = document.getElementById("timeout-input");
 const shownWhenLoggedInDiv = document.getElementById("shownWhenLoggedIn");
 const boardOverlayDiv = document.getElementById("board-overlay")
 const keychainNoticeDiv = document.getElementById("keychainNotice");
 const gameListDiv = document.getElementById("gameList");
+const timeoutControlsDiv = document.getElementById("timeout-controls");
+const timeoutDisplayDiv = document.getElementById("timeoutDisplay");
+const timeControlsDiv = document.getElementById("time-controls");
+const timeoutInput = document.getElementById("timeout-input");
 
 // ============================================================
 // STATE
@@ -1617,8 +1618,7 @@ function isTimeoutClaimable(state) {
 }
 
 function renderClaimButton(state) {
-  const container = document.getElementById("timeout-controls");
-  container.innerHTML = "";
+  timeoutControlsDiv.innerHTML = "";
 
   if (!isTimeoutClaimable(state)) return;
 
@@ -1629,7 +1629,7 @@ function renderClaimButton(state) {
   btn.textContent = `Claim Timeout Victory vs ${loser}`;
   btn.onclick = () => postTimeoutClaim(state);
 
-  container.appendChild(btn);
+  timeoutControlsDiv.appendChild(btn);
 }
 
 function postTimeoutClaim(state) {
