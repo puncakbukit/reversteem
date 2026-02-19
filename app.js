@@ -328,19 +328,14 @@ function deriveGameStateFull(rootPost, replies) {
       if (!meta.app?.startsWith(APP_NAME + "/")) return;
 
       // Detect white join
-      if (
-        meta.action === "join" &&
-        !whitePlayer &&
-        reply.author !== blackPlayer
-      ) {
-        whitePlayer = reply.author;
-      }
-       // timeout inactive
-if (meta.action === "join") {
-  if (!gameStartTime && blackPlayer && whitePlayer) {
-    gameStartTime = post.created;
-  }
-}      
+  if (
+  meta.action === "join" &&
+  !whitePlayer &&
+  reply.author !== blackPlayer
+) {
+  whitePlayer = reply.author;
+  gameStartTime = reply.created;
+}    
       if (meta.action === "timeout_claim") {
         timeoutClaims.push({
           author: reply.author,
