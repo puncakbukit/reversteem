@@ -1695,16 +1695,7 @@ async function handleCellClick(index) {
   // If timeout is claimable, do not allow move
   if (isTimeoutClaimable()) return;
 
-  try {
-    isSubmittingMove = true;
-    boardOverlayDiv.style.display = "flex";
-
-    await makeMove(index);
-
-  } finally {
-    isSubmittingMove = false;
-    boardOverlayDiv.style.display = "none";
-  }
+  makeMove(index);
 }
 
 function lockBoardUI() {
