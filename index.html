@@ -146,16 +146,16 @@
        ========================= -->
   <div>
     <button id="loginBtn" onclick="login()">Login with Steem</button>
-    <div id="shownWhenLoggedIn">
-    <button id="logoutBtn" onclick="logout()" style="display: none;"> Logout </button>      
-    <button id="startGameBtn" onclick="startGame()" style="display: none;"> Start New Game </button>
-    <div id="time-controls" style="display: none;">
+    <div id="shownWhenLoggedIn" style="display: none;">
+    <button id="logoutBtn" onclick="logout()"> Logout </button>      
+    <button id="startGameBtn" onclick="startGame()"> Start New Game </button>
+    <div id="time-controls">
       <button data-mode="blitz">Blitz</button>
       <button data-mode="rapid">Rapid</button>
       <button data-mode="standard">Standard</button>
       <button data-mode="daily">Daily</button>
     </div>
-    <input type="number" id="timeout-input" min="5" value="60" style="display: none;"/> minutes
+    <input type="number" id="timeout-input" min="5" value="60"/> minutes
     </div>
   <!-- Logged-in Username Display -->
   <p id="user"></p>    
