@@ -798,7 +798,10 @@ async function loadMovesFromSteem() {
             if (err2) return reject(err2);
 
             const state = deriveGameState(root, replies);
-
+            
+timeoutMinutes = state.timeoutMinutes;
+gameStartTime = state.gameStartTime;
+lastMoveTime = state.lastMoveTime;
             blackPlayer = state.blackPlayer;
             whitePlayer = state.whitePlayer;
             board = state.board;
