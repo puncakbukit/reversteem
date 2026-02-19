@@ -1,15 +1,15 @@
 
 # Reversteem – Reversi on Steem
 
-A fully client-side, deterministic Reversi (Othello) game built on top of the Steem blockchain.
+A fully client-side, deterministic Reversi (Othello) game built on top of the **Steem** blockchain.
 
-Reversteem demonstrates how a complete turn-based multiplayer game can run on Steem using only posts and replies as an immutable event log — without smart contracts and without any backend server.
+Reversteem demonstrates how a complete turn-based multiplayer game can run using only posts and replies as an immutable event log — without smart contracts and without any backend server.
 
 This project is both a playable game and a protocol experiment.
 
 ---
 
-## ✨ Core Properties
+# ✨ Core Properties
 
 * 100% static frontend (GitHub Pages compatible)
 * No backend server
@@ -23,17 +23,18 @@ This project is both a playable game and a protocol experiment.
 * Strict JSON metadata protocol filtering
 * URL hash-based routing
 * Read-only spectator mode
-* Profile integration from on-chain metadata
+* Profile image integration from on-chain metadata
 * Featured game + mini-board previews
 * Replay caching for fast reloads
 * Multi-RPC automatic fallback
 * Markdown board export for native Steemit viewing
-* Deterministic time-limit enforcement
+* Deterministic per-move time limit (claimable)
 * On-chain derived ELO rating system
+* Double-click / duplicate move prevention
 
 ---
 
-## 🏗 Architecture
+# 🏗 Architecture
 
 Reversteem is fully decentralized.
 
@@ -48,7 +49,7 @@ Everything is derived from the Steem blockchain.
 
 The blockchain acts as a deterministic event log.
 
-All game state, ratings, and timers are computed locally by replaying immutable history.
+All game state, ratings, timers, and outcomes are computed locally by replaying immutable history.
 
 ---
 
@@ -59,6 +60,7 @@ All game state, ratings, and timers are computed locally by replaying immutable 
 | Root Post         | Represents a game (Black player)   |
 | Join Comment      | Registers the White player         |
 | Move Comment      | Represents one move                |
+| Timeout Claim     | Claims victory after timeout       |
 | Comment Order     | Defines deterministic replay order |
 
 Only comments containing valid JSON metadata for the `reversteem/x.y` app are processed.
@@ -71,7 +73,7 @@ All other comments are ignored.
 
 Reversteem supports deterministic per-move time limits.
 
-## Game Creation Metadata (with time limit)
+## Game Creation Metadata
 
 ```json
 {
@@ -79,58 +81,104 @@ Reversteem supports deterministic per-move time limits.
   "type": "game_start",
   "black": "username",
   "white": null,
-  "status": "open",
-  "timeLimitSeconds": 86400
+  "timeoutMinutes": 60
 }
 ```
 
-`timeLimitSeconds` defines how long a player has to make a move.
+### `timeoutMinutes`
 
-Example:
+* Defines the maximum time per move
+* Minimum enforced: **5 minutes**
+* Maximum enforced: protocol-defined upper bound
+* Default: **60 minutes (1 hour)**
 
-* `86400` = 24 hours per move
+Timeout is inactive until **both players have joined**.
 
 ---
 
-## 🕒 How Timeout Works
+## 🕒 Timeout Mechanics (Claimable Model)
 
-Timeout is derived from blockchain timestamps:
+Timeout is derived from blockchain timestamps.
 
-1. Determine the last valid move timestamp
+For each move:
+
+1. Determine the timestamp of the last valid move
 2. Determine whose turn it is
 3. Compare:
 
 ```
-currentBlockTime - lastMoveTime > timeLimitSeconds
+currentTime - lastMoveTime > timeoutMinutes
 ```
 
 If true:
 
-* Current player loses on time
-* Opponent wins by timeout
+* The current player has exceeded their time
+* The opponent may post a `timeout_claim` comment
 
 ---
 
-## ⚖ Timeout Edge Case Handling
+## 🏆 Timeout Claim Metadata
 
-If timeout has technically occurred but:
+```json
+{
+  "app": "reversteem/0.1",
+  "type": "timeout_claim",
+  "moveNumber": 12,
+  "winner": "black",
+  "loser": "white"
+}
+```
 
-* The opponent has not claimed victory
-* The timed-out player posts a move afterward
+Replay validation requires:
 
-Replay logic determines validity strictly by timestamps.
+* Game not already finished
+* Both players joined
+* Timeout threshold exceeded
+* `moveNumber` matches expected move index
+* `winner` and `loser` match derived turn logic
 
-If the move timestamp is after the timeout threshold:
+If valid:
 
-→ It is ignored during deterministic replay.
+* Game ends immediately
+* Winner is set deterministically
+* Further moves are ignored
 
-This ensures:
+---
 
-* No race-condition ambiguity
-* No manual timeout transaction required
-* Fully deterministic outcome
+## ⚖ Timeout Edge Case Behavior
 
-Timeout enforcement is computed during replay — not triggered by UI actions.
+If timeout is claimable but:
+
+* The opponent has not yet claimed victory
+* The timed-out player attempts to move
+
+Replay logic ignores that move.
+
+Once timeout threshold is exceeded:
+
+→ Only a valid `timeout_claim` is accepted
+→ Further moves are rejected deterministically
+
+This prevents race-condition ambiguity.
+
+Timeout enforcement is derived during replay — not triggered by UI.
+
+---
+
+# 🎮 Time Control Presets
+
+When creating a game, users can select:
+
+| Mode     | Minutes per move |
+| -------- | ---------------- |
+| Blitz    | 5                |
+| Rapid    | 15               |
+| Standard | 60 (default)     |
+| Daily    | 1440             |
+
+Users may also enter a custom value (>= 5 minutes).
+
+Presets are UI helpers only — replay enforces actual timeout rules.
 
 ---
 
@@ -144,17 +192,13 @@ There is:
 * No backend leaderboard database
 * No rating authority
 
-Ratings are computed by replaying completed games.
+Ratings are computed locally from finished games.
 
 ---
 
-## 📊 How Ratings Are Calculated
+## 📊 Rating Formula
 
-For each finished game:
-
-1. Determine winner (board or timeout)
-2. Load both players’ previous ratings
-3. Apply standard ELO formula:
+For each completed game:
 
 ```
 R' = R + K × (S - E)
@@ -163,39 +207,29 @@ R' = R + K × (S - E)
 Where:
 
 * `R` = current rating
-* `R'` = new rating
-* `K` = configurable factor (e.g. 32)
+* `R'` = updated rating
+* `K` = rating factor (e.g., 32)
 * `S` = actual score (1 win, 0 loss, 0.5 draw)
 * `E` = expected score
 
+Timeout wins count as normal wins.
+
 ---
 
-## 🔄 Deterministic Rating Reconstruction
+## 🔄 Deterministic Reconstruction
 
-Ratings are derived by:
+Ratings are reconstructed by:
 
-1. Fetching all finished games
+1. Collecting finished games
 2. Sorting chronologically
-3. Replaying them
+3. Replaying outcomes
 4. Applying ELO updates in order
 
-Because game outcomes are deterministic:
+Because outcomes are deterministic:
 
 → Ratings are deterministic.
 
-Any client reconstructing the same history will compute identical ratings.
-
----
-
-## 📈 Rating Properties
-
-* No centralized leaderboard
-* No authority can modify ratings
-* No rating manipulation possible without altering history
-* Ratings auto-update when new games are discovered
-* Timeout wins count as normal wins
-
-Ratings are emergent properties of blockchain history.
+Any client replaying the same history computes identical ratings.
 
 ---
 
@@ -210,11 +244,12 @@ During deterministic replay:
 * Turn must be correct
 * No moves allowed after game end
 * Automatic pass logic enforced
-* Moves after timeout threshold are ignored
+* Timeout blocks further moves once claimable
+* Timeout claim must match expected winner/loser
 
 Invalid moves are ignored.
 
-This makes replay:
+Replay is:
 
 * Deterministic
 * Tamper-resistant
@@ -232,50 +267,51 @@ If a player has no valid moves:
 
 Pass logic is enforced during replay.
 
-No manual pass transaction is required.
+No manual pass transaction required.
 
 ---
 
-# 🏁 End-of-Game Detection
+# 🏁 End-of-Game Conditions
 
 A game is finished when:
 
-```
-!blackHasMove && !whiteHasMove
-```
-
-OR
-
-* A timeout condition is met
+1. Both players have no valid moves
+2. A valid timeout claim is posted
 
 When finished:
 
 * `currentPlayer` becomes `null`
 * Further moves are ignored
-* Winner is computed
+* Winner is determined
 * Board becomes frozen (UI-level enforcement)
+
+---
+
+# 🛑 Double-Click Prevention
+
+To prevent accidental duplicate moves:
+
+* UI locks during move submission
+* `moveNumber` validation rejects duplicate or reordered moves
+* Replay guarantees only one valid move per index
+
+Even if UI fails, deterministic replay enforces correctness.
 
 ---
 
 # 📝 `boardToMarkdown` – Native Steemit Compatibility
 
-Reversteem includes a `boardToMarkdown(board)` function.
-
-## Purpose
-
 Steemit’s default interface does not execute JavaScript.
 
-Therefore, users browsing a game directly on Steemit would otherwise only see raw JSON move comments.
-
-`boardToMarkdown` converts the current board state into a Markdown-rendered visual grid.
+Reversteem includes a `boardToMarkdown(board)` function to render a visual board using Markdown.
 
 This allows:
 
-* Non-Reversteem users to follow the game
-* Spectators using the default Steemit UI to see the board
-* Moves to include a human-readable snapshot of the game
+* Spectators on Steemit to view the board
+* Non-dApp users to follow the game
+* Moves to include human-readable snapshots
 
-This keeps the protocol understandable even outside the dApp.
+Protocol transparency remains intact even outside the dApp.
 
 ---
 
@@ -284,17 +320,15 @@ This keeps the protocol understandable even outside the dApp.
 To improve performance:
 
 * Derived game state is cached in `localStorage`
-* Cache key includes `author` + `permlink`
+* Cache key includes `author + permlink`
 * Cache invalidates if:
 
   * Latest block changes
   * Reply count changes
 
-If cache is valid, replay is skipped.
-
-If invalid, full deterministic replay runs again.
-
 Cache is an optimization only — never a source of truth.
+
+Replay remains authoritative.
 
 ---
 
@@ -311,8 +345,8 @@ https://rpc.buildteam.io
 
 If one RPC fails:
 
-* Client switches to next RPC
-* Retries automatically
+* Client switches automatically
+* Retries request
 
 No backend proxy required.
 
@@ -323,22 +357,22 @@ No backend proxy required.
 Reversteem enforces:
 
 * Strict metadata filtering
-* Move sequence validation (`moveNumber`)
-* Author turn validation
+* Move sequence validation
+* Turn validation
 * Legal flip validation
 * Automatic pass logic
 * Deterministic timeout enforcement
+* Claimable timeout validation
 * End-state freeze
-* Winner calculation
 * Deterministic ELO reconstruction
 * Replay cache validation
 * RPC failover resilience
+* Double-move prevention
 
 Because state is derived from immutable history:
 
 Malicious clients cannot forge outcomes.
 Malicious users cannot manipulate ratings.
-
 Every spectator independently verifies the game.
 
 ---
@@ -369,5 +403,3 @@ MIT
 ## 🌐 Live Demo
 
 [https://puncakbukit.github.io/reversteem/](https://puncakbukit.github.io/reversteem/)
-
-
