@@ -1617,6 +1617,9 @@ const winner =
 if (username !== winner) return false;
 
   const referenceTime = new Date(lastMoveTime);
+  if (appliedMoves === 0)
+    referenceTime = new Date(gameStartTime);
+
   const now = new Date();
   const minutesPassed = (now - referenceTime) / 60000;
 
