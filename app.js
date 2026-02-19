@@ -94,6 +94,7 @@ const timeoutInput = document.getElementById("timeout-input");
 const shownWhenLoggedInDiv = document.getElementById("shownWhenLoggedIn");
 const boardOverlayDiv = document.getElementById("board-overlay")
 const keychainNoticeDiv = document.getElementById("keychainNotice");
+const gameListDiv = document.getElementById("gameList");
 
 // ============================================================
 // STATE
@@ -1260,8 +1261,7 @@ function renderFeaturedGame(game) {
 
 // Render List Games
 function renderGameList(games) {
-  const container = document.getElementById("gameList");
-  container.innerHTML = "";
+  gameListDiv.innerHTML = "";
 
   games.forEach(game => {
     const div = document.createElement("div");
@@ -1279,7 +1279,7 @@ function renderGameList(games) {
 
     attachJoinHandler(div, game);
 
-    container.appendChild(div);
+    gameListDiv.appendChild(div);
   });
 }
 
