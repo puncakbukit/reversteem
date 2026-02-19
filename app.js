@@ -91,6 +91,7 @@ const playerBarDiv = document.getElementById("playerBar");
 const timeoutDisplayDiv = document.getElementById("timeoutDisplay");
 const timeControlsDiv = document.getElementById("time-controls");
 const timeoutInput = document.getElementById("timeout-input");
+const shownWhenLoggedInDiv = document.getElementById("shownWhenLoggedIn");
 
 // ============================================================
 // STATE
@@ -155,10 +156,7 @@ window.addEventListener("load", () => {
 function showLoggedIn(user) {
   userP.innerText = `Welcome @${user}`;
   loginBtn.style.display = "none";
-  logoutBtn.style.display = "inline-block";
-  startGameBtn.style.display = "inline-block";
-  timeControlsDiv.style.display = "inline-block";
-  timeoutInput.style.display = "inline-block";
+  shownWhenLoggedInDiv.style.display = "inline-block";
   
   loadUserProfile(username);
 }
@@ -166,10 +164,7 @@ function showLoggedIn(user) {
 function showLoggedOut() {
   userP.innerText = "";
   loginBtn.style.display = "inline-block";
-  logoutBtn.style.display = "none";
-  startGameBtn.style.display = "none";
-  timeControlsDiv.style.display = "none";
-  timeoutInput.style.display = "none";
+  shownWhenLoggedInDiv.style.display = "none";
 
   loadUserProfile(null);
 }
