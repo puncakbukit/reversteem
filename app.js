@@ -113,11 +113,11 @@ let whitePlayer = null;
 let finished = false;
 let winner = null;
 let currentAppliedMoves = 0;
-
-let moves = [];
 let currentPlayer = "black";
 let isSubmittingMove = false;
+let gameStartTime = null;
 
+let moves = [];
 let board = Array(64).fill(null);
 
 // ============================================================
@@ -309,7 +309,7 @@ function deriveGameStateFull(rootPost, replies) {
   let moves = [];
   let timeoutMinutes = DEFAULT_TIMEOUT_MINUTES;
   let timeoutClaims = [];
-
+  
   // ---- Extract black from root ----
   try {
     const rootMeta = JSON.parse(rootPost.json_metadata);
@@ -334,6 +334,14 @@ function deriveGameStateFull(rootPost, replies) {
       ) {
         whitePlayer = reply.author;
       }
+       // timeout inactive
+if (meta.action === "join") {
+  if (!gameStartTime && blackPlayer && whitePlayer) {
+    gameStartTime = post.created;
+  }
+}
+if (!gameStartTime) return false;
+      
       if (meta.action === "timeout_claim") {
         timeoutClaims.push({
           author: reply.author,
@@ -1602,6 +1610,29 @@ function formatTimeout(minutes) {
   if (minutes < 60) return `${minutes} min`;
   if (minutes % 60 === 0) return `${minutes / 60} hour(s)`;
   return `${minutes} min`;
+}
+
+function isTimeoutClaimable() {
+
+  if (!timeoutMinutes) return false;
+
+  // Timeout not active until both players joined
+  if (!gameStartTime) return false;
+
+  if (gameOver) return false;
+
+  if (currentPlayer !== username) return false;
+
+  const referenceTime = new Date(
+    lastMoveTime > gameStartTime
+      ? lastMoveTime
+      : gameStartTime
+  );
+
+  const now = new Date();
+  const minutesPassed = (now - referenceTime) / 60000;
+
+  return minutesPassed >= timeoutMinutes;
 }
 
 function isTimeoutClaimable(state) {
