@@ -92,6 +92,7 @@ const timeoutDisplayDiv = document.getElementById("timeoutDisplay");
 const timeControlsDiv = document.getElementById("time-controls");
 const timeoutInput = document.getElementById("timeout-input");
 const shownWhenLoggedInDiv = document.getElementById("shownWhenLoggedIn");
+const boardOverlayDiv = document.getElementById("board-overlay")
 
 // ============================================================
 // STATE
@@ -1714,10 +1715,10 @@ async function handleCellClick(row, col) {
 }
 
 function lockBoardUI() {
-  document.getElementById("board-overlay").style.display = "flex";
+  boardOverlayDiv.style.display = "flex";
 }
 
 function unlockBoardUI() {
-  document.getElementById("board-overlay").style.display = "none";
+  boardOverlayDiv.style.display = "none";
 }
 
