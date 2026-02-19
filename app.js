@@ -89,6 +89,7 @@ const profileHeaderDiv = document.getElementById("profileHeader");
 const featuredGameDiv = document.getElementById("featuredGame");
 const playerBarDiv = document.getElementById("playerBar");
 const timeoutDisplayDiv = document.getElementById("timeoutDisplay");
+const timeControlsDiv = document.getElementById("time-controls");
 const timeoutInput = document.getElementById("timeout-input");
 
 // ============================================================
@@ -156,7 +157,9 @@ function showLoggedIn(user) {
   loginBtn.style.display = "none";
   logoutBtn.style.display = "inline-block";
   startGameBtn.style.display = "inline-block";
-
+  timeControlsDiv.style.display = "inline-block";
+  timeoutInput.style.display = "inline-block";
+  
   loadUserProfile(username);
 }
 
@@ -165,6 +168,8 @@ function showLoggedOut() {
   loginBtn.style.display = "inline-block";
   logoutBtn.style.display = "none";
   startGameBtn.style.display = "none";
+  timeControlsDig.style.display = "none";
+  timeoutInput.style.display = "none";
 
   loadUserProfile(null);
 }
