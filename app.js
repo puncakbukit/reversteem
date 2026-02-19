@@ -1616,7 +1616,7 @@ const winner =
   currentPlayer === "black" ? whitePlayer : blackPlayer;
 if (username !== winner) return false;
 
-  const referenceTime = new Date(lastMoveTime);
+  let referenceTime = new Date(lastMoveTime);
   if (appliedMoves === 0)
     referenceTime = new Date(gameStartTime);
 
