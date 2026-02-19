@@ -1634,10 +1634,6 @@ function isTimeoutClaimable() {
   return minutesPassed >= timeoutMinutes;
 }
 
-const now = new Date();
-const minutesPassed = (now - referenceTime) / 60000; 
-}
-
 function renderClaimButton(state) {
   timeoutControlsDiv.innerHTML = "";
 
