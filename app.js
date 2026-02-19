@@ -1618,8 +1618,11 @@ function isTimeoutClaimable() {
   if (!gameStartTime) return false;
   if (finished) return false;
   
-  const expected = currentPlayer === "black" ? blackPlayer : whitePlayer;
-  if (username !== expected) return false;
+const loser =
+  currentPlayer === "black" ? blackPlayer : whitePlayer;
+const winner =
+  currentPlayer === "black" ? whitePlayer : blackPlayer;
+if (username !== winner) return false;
 
   const referenceTime = new Date(lastMoveTime);
   const now = new Date();
