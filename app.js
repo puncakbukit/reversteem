@@ -957,8 +957,13 @@ function postJoin() {
     () => loadMovesFromSteem()
   );
 }
-
 function postMove(index) {
+
+  if (isSubmittingMove) return;
+  isSubmittingMove = true;
+
+  boardOverlayDiv.style.display = "flex";
+
   const meta = {
     app: APP_INFO,
     action: "move",
@@ -981,6 +986,8 @@ function postMove(index) {
     `reversteem-move-${Date.now()}`,
     "",
     () => {
+      isSubmittingMove = false;
+      boardOverlayDiv.style.display = "none";
       loadMovesFromSteem();
     }
   );
