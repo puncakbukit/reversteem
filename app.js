@@ -339,9 +339,7 @@ if (meta.action === "join") {
   if (!gameStartTime && blackPlayer && whitePlayer) {
     gameStartTime = post.created;
   }
-}
-if (!gameStartTime) return false;
-      
+}      
       if (meta.action === "timeout_claim") {
         timeoutClaims.push({
           author: reply.author,
