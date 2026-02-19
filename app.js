@@ -1649,21 +1649,6 @@ function renderClaimButton() {
   timeoutControlsDiv.appendChild(btn);
 }
 
-  steem_keychain.requestPost(
-    currentUser,
-    rootAuthor,
-    rootPermlink,
-    "",
-    JSON.stringify(metadata),
-    "reversteem timeout claim",
-    (response) => {
-      if (response.success) {
-        loadMovesFromSteem();
-      }
-    }
-  );
-}
-
 // Init Time Controls
 function initTimeControls() {
   const buttons = document.querySelectorAll("#time-controls button");
