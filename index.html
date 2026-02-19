@@ -146,7 +146,8 @@
        ========================= -->
   <div>
     <button id="loginBtn" onclick="login()">Login with Steem</button>
-    <button id="logoutBtn" onclick="logout()" style="display: none;"> Logout </button>
+    <div id="shownWhenLoggedIn">
+    <button id="logoutBtn" onclick="logout()" style="display: none;"> Logout </button>      
     <button id="startGameBtn" onclick="startGame()" style="display: none;"> Start New Game </button>
     <div id="time-controls" style="display: none;">
       <button data-mode="blitz">Blitz</button>
@@ -154,11 +155,12 @@
       <button data-mode="standard">Standard</button>
       <button data-mode="daily">Daily</button>
     </div>
-    <input type="number" id="timeout-input" min="5" value="60" style="display: none;"/>
+    <input type="number" id="timeout-input" min="5" value="60" style="display: none;"/> minutes
+    </div>
+  <!-- Logged-in Username Display -->
+  <p id="user"></p>    
   </div>
 
-  <!-- Logged-in Username Display -->
-  <p id="user"></p>
   <!-- =========================
        Steem Keychain Notice
        Displayed when extension is missing
