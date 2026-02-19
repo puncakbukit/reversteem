@@ -1654,19 +1654,6 @@ function renderClaimButton(state) {
   timeoutControlsDiv.appendChild(btn);
 }
 
-function postTimeoutClaim(state) {
-  const loser = state.currentPlayer === "black" ?
-    state.whitePlayer :
-    state.blackPlayer;
-
-  const moveNumber = state.appliedMoves;
-
-  const metadata = {
-    timeoutClaim: true,
-    moveNumber,
-    claimAgainst: loser
-  };
-
   steem_keychain.requestPost(
     currentUser,
     rootAuthor,
