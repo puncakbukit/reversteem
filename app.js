@@ -1634,17 +1634,17 @@ function isTimeoutClaimable() {
   return minutesPassed >= timeoutMinutes;
 }
 
-function renderClaimButton(state) {
+function renderClaimButton() {
   timeoutControlsDiv.innerHTML = "";
 
-  if (!isTimeoutClaimable(state)) return;
+  if (!isTimeoutClaimable()) return;
 
-  const winner = state.currentPlayer;
-  const loser = winner === "black" ? state.whitePlayer : state.blackPlayer;
+  const loser =
+    currentPlayer === "black" ? whitePlayer : blackPlayer;
 
   const btn = document.createElement("button");
   btn.textContent = `Claim Timeout Victory vs ${loser}`;
-  btn.onclick = () => postTimeoutClaim(state);
+  btn.onclick = () => postTimeoutClaim();
 
   timeoutControlsDiv.appendChild(btn);
 }
