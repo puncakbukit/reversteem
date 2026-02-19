@@ -1063,7 +1063,7 @@ function waitForKeychain(callback) {
 
 function checkKeychain() {
   if (!window.steem_keychain) {
-    shownWhenLoggedInDivstyle.style.display = "none"
+    shownWhenLoggedInDiv.style.display = "none"
     keychainNoticeDiv.style.display = "block";
     keychainNoticeDiv.innerHTML = `
       <strong>Spectator Mode</strong><br><br>
@@ -1075,7 +1075,7 @@ function checkKeychain() {
     `;
   } else {
     keychainNoticeDiv.style.display = "none";
-    shownWhenLoggedInDivstyle.style.display = "block"
+    shownWhenLoggedInDiv.style.display = "block"
   }
 }
 
