@@ -168,7 +168,7 @@ function showLoggedOut() {
   loginBtn.style.display = "inline-block";
   logoutBtn.style.display = "none";
   startGameBtn.style.display = "none";
-  timeControlsDig.style.display = "none";
+  timeControlsDiv.style.display = "none";
   timeoutInput.style.display = "none";
 
   loadUserProfile(null);
