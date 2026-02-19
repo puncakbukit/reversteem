@@ -91,7 +91,6 @@ const playerBarDiv = document.getElementById("playerBar");
 const shownWhenLoggedInDiv = document.getElementById("shownWhenLoggedIn");
 const boardOverlayDiv = document.getElementById("board-overlay")
 const keychainNoticeDiv = document.getElementById("keychainNotice");
-const gameListDiv = document.getElementById("gameList");
 const timeoutControlsDiv = document.getElementById("timeout-controls");
 const timeoutDisplayDiv = document.getElementById("timeoutDisplay");
 const timeControlsDiv = document.getElementById("time-controls");
