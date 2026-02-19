@@ -316,9 +316,14 @@ function deriveGameStateFull(rootPost, replies) {
   try {
     const rootMeta = JSON.parse(rootPost.json_metadata);
     blackPlayer = rootMeta.black;
-    timeoutMinutes = Math.max(
-      MIN_TIMEOUT_MINUTES,
-      Math.min(rootMeta.timeoutMinutes, MAX_TIMEOUT_MINUTES));
+let tm = parseInt(rootMeta.timeoutMinutes);
+
+if (isNaN(tm)) tm = DEFAULT_TIMEOUT_MINUTES;
+
+timeoutMinutes = Math.max(
+  MIN_TIMEOUT_MINUTES,
+  Math.min(tm, MAX_TIMEOUT_MINUTES)
+);
   } catch {}
 
   // ---- Sort replies chronologically ----
