@@ -297,7 +297,7 @@ function renderBoard() {
       cell.appendChild(disk);
     }
 
-    cell.onclick = finished ? null : () => makeMove(i);
+    cell.onclick = () => handleCellClick(i);
 
     boardDiv.appendChild(cell);
   }
