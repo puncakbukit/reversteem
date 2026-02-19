@@ -887,14 +887,13 @@ function startGame() {
   }
 
   // 🔥 Clamp safely
-  timeoutMinutes = Math.max(
-    MIN_TIMEOUT_MINUTES,
-    Math.min(
-      rootMeta.timeoutMinutes || DEFAULT_TIMEOUT_MINUTES,
-      MAX_TIMEOUT_MINUTES
-    )
-  );
-
+timeoutMinutes = Math.max(
+  MIN_TIMEOUT_MINUTES,
+  Math.min(
+    timeoutMinutes,
+    MAX_TIMEOUT_MINUTES
+  )
+);
 
   const permlink = `${APP_NAME}-${Date.now()}`;
 
