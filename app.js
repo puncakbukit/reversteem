@@ -45,10 +45,10 @@ const RPC_NODES = [
 let currentRPCIndex = 0;
 
 const TIME_PRESETS = {
-  blitz: 5,        // 5 minutes
-  rapid: 15,       // 15 minutes
-  standard: 60,    // 1 hour
-  daily: 1440      // 24 hours
+  blitz: 5, // 5 minutes
+  rapid: 15, // 15 minutes
+  standard: 60, // 1 hour
+  daily: 1440 // 24 hours
 };
 
 const EXTENSION_NOT_INSTALLED = "Steem Keychain extension is not installed!";
@@ -89,7 +89,7 @@ const profileHeaderDiv = document.getElementById("profileHeader");
 const featuredGameDiv = document.getElementById("featuredGame");
 const playerBarDiv = document.getElementById("playerBar");
 const timeoutDisplayDiv = document.getElementById("timeoutDisplay");
-  const timeoutInput = document.getElementById("timeout-input");
+const timeoutInput = document.getElementById("timeout-input");
 
 // ============================================================
 // STATE
@@ -628,7 +628,7 @@ async function updateEloRatingsFromGames(posts) {
     ratings[black] = Math.round(rBlack + deltaBlack);
     ratings[white] = Math.round(rWhite + deltaWhite);
 
-    cache.lastProcessed = post.author + "/" + post.permlink;
+    cache.lastProcessed = post.created;
 
   }
 
@@ -891,6 +891,7 @@ function startGame() {
       MAX_TIMEOUT_MINUTES
     )
   );
+
 
   const permlink = `${APP_NAME}-${Date.now()}`;
 
@@ -1655,7 +1656,7 @@ function postTimeoutClaim(state) {
 // Init Time Controls
 function initTimeControls() {
   const buttons = document.querySelectorAll("#time-controls button");
- 
+
   buttons.forEach(btn => {
     btn.addEventListener("click", () => {
       const mode = btn.dataset.mode;
