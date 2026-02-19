@@ -93,6 +93,7 @@ const timeControlsDiv = document.getElementById("time-controls");
 const timeoutInput = document.getElementById("timeout-input");
 const shownWhenLoggedInDiv = document.getElementById("shownWhenLoggedIn");
 const boardOverlayDiv = document.getElementById("board-overlay")
+const keychainNoticeDiv = document.getElementById("keychainNotice");
 
 // ============================================================
 // STATE
@@ -1053,8 +1054,6 @@ function waitForKeychain(callback) {
 }
 
 function checkKeychain() {
-  const notice = document.getElementById("keychainNotice");
-
   if (!window.steem_keychain) {
     loginBtn.disabled = true;
     startGameBtn.disabled = true;
