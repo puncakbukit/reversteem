@@ -1627,23 +1627,16 @@ function isTimeoutClaimable() {
       : gameStartTime
   );
 
-  const now = new Date();
-  const minutesPassed = (now - referenceTime) / 60000;
+if (!gameStartTime) return false; // timeout inactive
 
-  return minutesPassed >= timeoutMinutes;
-}
+const referenceTime = new Date(
+  lastMoveTime > gameStartTime
+    ? lastMoveTime
+    : gameStartTime
+);
 
-function isTimeoutClaimable(state) {
-  if (!state || state.finished) return false;
-
-  if (!state.lastMoveTime) return false; // no moves yet
-
-  const now = new Date();
-  const lastMove = new Date(state.lastMoveTime);
-
-  const diffMinutes = (now - lastMove) / 60000;
-
-  return diffMinutes >= state.timeoutMinutes;
+const now = new Date();
+const minutesPassed = (now - referenceTime) / 60000; 
 }
 
 function renderClaimButton(state) {
