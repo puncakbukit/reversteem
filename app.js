@@ -159,7 +159,7 @@ window.addEventListener("load", () => {
 function showLoggedIn(user) {
   userP.innerText = `Welcome @${user}`;
   loginBtn.style.display = "none";
-  shownWhenLoggedInDiv.style.display = "inline-block";
+  shownWhenLoggedInDiv.style.display = "block";
   
   loadUserProfile(username);
 }
@@ -1055,10 +1055,9 @@ function waitForKeychain(callback) {
 
 function checkKeychain() {
   if (!window.steem_keychain) {
-    loginBtn.disabled = true;
-    startGameBtn.disabled = true;
-    notice.style.display = "block";
-    notice.innerHTML = `
+    shownWhenLoggedInDivstyle.style.display = "none"
+    keychainNoticeDiv.style.display = "block";
+    keychainNoticeDiv.innerHTML = `
       <strong>Spectator Mode</strong><br><br>
       You are currently viewing games in read-only mode.<br><br>
       To start or join games, please install 
@@ -1067,7 +1066,8 @@ function checkKeychain() {
       </a> browser extension.
     `;
   } else {
-    notice.style.display = "none";
+    keychainNoticeDiv.style.display = "none";
+    shownWhenLoggedInDivstyle.style.display = "block"
   }
 }
 
