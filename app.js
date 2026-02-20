@@ -944,28 +944,6 @@ timeoutMinutes = Math.max(
   );
 }
 
-function postJoin() {
-  const meta = {
-    app: APP_INFO,
-    action: "join"
-  };
-
-  const body =
-    `## @${username} joined as White\n\n` +
-    boardToMarkdown(board);
-
-  steem_keychain.requestPost(
-    username,
-    "Join Game",
-    body,
-    currentGame.permlink,
-    currentGame.author,
-    JSON.stringify(meta),
-    `reversteem-join-${Date.now()}`,
-    "",
-    () => loadMovesFromSteem()
-  );
-}
 function postMove(index) {
 
   if (isSubmittingMove) return;
