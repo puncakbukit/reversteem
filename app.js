@@ -827,7 +827,9 @@ lastMoveTime = state.lastMoveTime;
             if (!finished && isTimeoutClaimable()) {
               renderClaimButton();
             }
-
+if (!finished) {
+  setTimeout(() => loadMovesFromSteem(), 15000); // or 10-30s
+}
             resolve();
           }
         );
