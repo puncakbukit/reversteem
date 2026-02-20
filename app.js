@@ -1287,16 +1287,60 @@ console.log("JOIN CHECK:", {
   return "";
 }
 
-// And attach
 function attachJoinHandler(div, game) {
   const joinBtn = div.querySelector(".joinBtn");
   if (!joinBtn) return;
 
   joinBtn.onclick = () => {
-    currentGame = game;
-    localStorage.setItem("current_game", JSON.stringify(game));
-    window.location.hash = `#/game/${game.author}/${game.permlink}`;
-    postJoin();
+
+    if (!window.steem_keychain) return;
+    if (!username) return;
+
+    lockBoardUI();
+
+    const meta = {
+      app: APP_INFO,
+      action: "join"
+    };
+
+    const body =
+      `## @${username} joined as White\n\nJoining game.`;
+
+    steem_keychain.requestPost(
+      username,
+      "Join Game",
+      body,
+      game.permlink,
+      game.author,
+      JSON.stringify(meta),
+      `reversteem-join-${Date.now()}`,
+      "",
+      (res) => {
+
+        unlockBoardUI();
+
+        if (!res.success) return;
+
+        // 🔥 NOW navigate
+        currentGame = {
+          author: game.author,
+          permlink: game.permlink
+        };
+
+        localStorage.setItem(
+          "current_game",
+          JSON.stringify(currentGame)
+        );
+
+        window.location.hash =
+          `#/game/${game.author}/${game.permlink}`;
+
+        // small delay to allow propagation
+        setTimeout(() => {
+          loadMovesFromSteem();
+        }, 1500);
+      }
+    );
   };
 }
 
