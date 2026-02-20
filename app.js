@@ -942,6 +942,7 @@ timeoutMinutes = Math.max(
       };
       localStorage.setItem("current_game", JSON.stringify(currentGame));
       alert("Game created!");
+      window.location.hash = `#/game/${username}/${permlink}`;
     }
   );
 }
