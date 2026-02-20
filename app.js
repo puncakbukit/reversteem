@@ -1293,6 +1293,13 @@ function renderGameList(games) {
 
 // Join Button Logic
 function renderJoinButtonHTML(game) {
+console.log("JOIN CHECK:", {
+  username,
+  black: game.blackPlayer,
+  white: game.whitePlayer,
+  status: game.status
+});
+
   if (!username) return "";
 
   if (!game.whitePlayer && username !== game.blackPlayer) {
