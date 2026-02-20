@@ -1295,7 +1295,8 @@ function attachJoinHandler(div, game) {
   if (!joinBtn) return;
 
   joinBtn.onclick = () => {
-
+    console.log("Join clicked for game:", game.author, game.permlink);
+    
     if (!window.steem_keychain) return;
     if (!username) return;
 
