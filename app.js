@@ -1666,7 +1666,7 @@ function postTimeoutClaim() {
 
   steem_keychain.requestPost(
     username,
-    "Timeout Claim",
+    "",
     body,
     currentGame.permlink,
     currentGame.author,
