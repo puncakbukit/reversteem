@@ -959,7 +959,7 @@ function postMove(index) {
 
   steem_keychain.requestPost(
     username,
-    "Reversi Move",
+    "",
     body,
     currentGame.permlink,
     currentGame.author,
