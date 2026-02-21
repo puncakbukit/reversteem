@@ -1245,7 +1245,7 @@ function renderFeaturedGame(game) {
 if (username && !game.whitePlayer && username !== game.blackPlayer) {
   const joinBtn = document.createElement("button");
   joinBtn.textContent = "Join";
-  joinBtn.onclick = () => handleJoin(game);
+  joinBtn.onclick = () => submitJoin(game);
   div.appendChild(joinBtn);
 }
   
@@ -1274,7 +1274,7 @@ function renderGameList(games) {
 if (username && !game.whitePlayer && username !== game.blackPlayer) {
   const joinBtn = document.createElement("button");
   joinBtn.textContent = "Join";
-  joinBtn.onclick = () => handleJoin(game);
+  joinBtn.onclick = () => submitJoin(game);
   div.appendChild(joinBtn);
 }
     
