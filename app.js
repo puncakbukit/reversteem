@@ -305,8 +305,8 @@ function renderBoard() {
 
 function deriveGameStateFull(rootPost, replies) {
 
-  let blackPlayer = null;
-  let whitePlayer = null;
+  let _blackPlayer = null;
+  let _whitePlayer = null;
   let gameStartTime = null;
   let moves = [];
   let timeoutMinutes = DEFAULT_TIMEOUT_MINUTES;
@@ -315,7 +315,7 @@ function deriveGameStateFull(rootPost, replies) {
   // ---- Extract black from root ----
   try {
     const rootMeta = JSON.parse(rootPost.json_metadata);
-    blackPlayer = rootMeta.black;
+    _blackPlayer = rootMeta.black;
 let tm = parseInt(rootMeta.timeoutMinutes);
 
 if (isNaN(tm)) tm = DEFAULT_TIMEOUT_MINUTES;
@@ -338,10 +338,10 @@ timeoutMinutes = Math.max(
       // Detect white join
   if (
   meta.action === "join" &&
-  !whitePlayer &&
-  reply.author !== blackPlayer
+  !_whitePlayer &&
+  reply.author !== _blackPlayer
 ) {
-  whitePlayer = reply.author;
+  _whitePlayer = reply.author;
   gameStartTime = reply.created;
 }    
       if (meta.action === "timeout_claim") {
@@ -399,7 +399,7 @@ timeoutMinutes = Math.max(
     }
 
     const expectedAuthor =
-      turn === "black" ? blackPlayer : whitePlayer;
+      turn === "black" ? _blackPlayer : _whitePlayer;
 
     if (move.author !== expectedAuthor) continue;
 
@@ -443,10 +443,10 @@ timeoutMinutes = Math.max(
     if (claim.moveNumber !== appliedMoves) continue;
 
     const expectedLoser =
-      turn === "black" ? blackPlayer : whitePlayer;
+      turn === "black" ? _blackPlayer : _whitePlayer;
 
     const expectedWinner =
-      turn === "black" ? whitePlayer : blackPlayer;
+      turn === "black" ? _whitePlayer : _blackPlayer;
 
     if (claim.author !== expectedWinner) continue;
 
@@ -466,8 +466,8 @@ timeoutMinutes = Math.max(
   }
 
  return {
-  blackPlayer,
-  whitePlayer,
+  blackPlayer: _blackPlayer,
+  whitePlayer: _whitePlayer,
   board,
   currentPlayer: finished ? null : turn,
   appliedMoves,
