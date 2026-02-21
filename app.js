@@ -1253,8 +1253,6 @@ if (username && !game.whitePlayer && username !== game.blackPlayer) {
     joinGame(game.author, game.permlink);
   };
 
-  attachJoinHandler(div, game);
-
   featuredGameDiv.appendChild(div);
 
   renderBoardPreview(game, div.querySelector("#featuredBoard"));
@@ -1283,8 +1281,6 @@ if (username && !game.whitePlayer && username !== game.blackPlayer) {
     div.querySelector(".viewBtn").onclick = () => {
       joinGame(game.author, game.permlink);
     };
-
-    attachJoinHandler(div, game);
 
     gameListDiv.appendChild(div);
   });
@@ -1322,64 +1318,6 @@ function handleJoin(game) {
         `#/game/${game.author}/${game.permlink}`;
     }
   );
-}
-
-function attachJoinHandler(div, game) {
-  const joinBtn = div.querySelector(".joinBtn");
-  if (!joinBtn) return;
-
-  joinBtn.onclick = () => {
-    console.log("Join clicked for game:", game.author, game.permlink);
-    
-    if (!window.steem_keychain) return;
-    if (!username) return;
-
-    lockBoardUI();
-
-    const meta = {
-      app: APP_INFO,
-      action: "join"
-    };
-
-    const body =
-      `## @${username} joined as White\n\nJoining game.`;
-
-    steem_keychain.requestPost(
-      username,
-      "",
-      body,
-      game.permlink,
-      game.author,
-      JSON.stringify(meta),
-      `reversteem-join-${Date.now()}`,
-      "",
-      (res) => {
-
-        unlockBoardUI();
-
-        if (!res.success) return;
-
-        // 🔥 NOW navigate
-        currentGame = {
-          author: game.author,
-          permlink: game.permlink
-        };
-
-        localStorage.setItem(
-          "current_game",
-          JSON.stringify(currentGame)
-        );
-
-        window.location.hash =
-          `#/game/${game.author}/${game.permlink}`;
-
-        // small delay to allow propagation
-        setTimeout(() => {
-          loadMovesFromSteem();
-        }, 1500);
-      }
-    );
-  };
 }
 
 // Unified Dashboard Renderer
