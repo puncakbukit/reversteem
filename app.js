@@ -684,7 +684,7 @@ async function loadOpenGames() {
       limit: 20
     }],
     async (err, posts) => {
-alert("RAW POSTS:", posts);
+alert("RAW POSTS:" + posts);
       if (err) return;
 
       const games = posts.filter(post => {
