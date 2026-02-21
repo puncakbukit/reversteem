@@ -1314,7 +1314,7 @@ function handleJoin(game) {
     `reversteem-join-${Date.now()}`,
     "",
     (res) => {
-      alert("res: " + JSON.stringify(res));
+      console.log("res: " + JSON.stringify(res));
       unlockBoardUI();
       if (!res.success) return;
 
