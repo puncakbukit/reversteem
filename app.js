@@ -1290,6 +1290,38 @@ if (username && !game.whitePlayer && username !== game.blackPlayer) {
   });
 }
 
+function handleJoin(game) {
+  console.log("Join clicked", game);
+
+  if (!window.steem_keychain) return;
+  if (!username) return;
+
+  lockBoardUI();
+
+  const meta = {
+    app: APP_INFO,
+    action: "join"
+  };
+
+  steem_keychain.requestPost(
+    username,
+    "Join Game",
+    `## @${username} joined as White`,
+    game.permlink,
+    game.author,
+    JSON.stringify(meta),
+    `reversteem-join-${Date.now()}`,
+    "",
+    (res) => {
+      unlockBoardUI();
+      if (!res.success) return;
+
+      window.location.hash =
+        `#/game/${game.author}/${game.permlink}`;
+    }
+  );
+}
+
 function attachJoinHandler(div, game) {
   const joinBtn = div.querySelector(".joinBtn");
   if (!joinBtn) return;
