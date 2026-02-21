@@ -1397,6 +1397,10 @@ if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
 
 // Init route
 function initRoute() {
+  if (!location.hash || location.hash === "#") {
+    location.hash = "#/";
+    return;
+  }
   clearUI();
 
   const profileUser = getProfileFromURL();
