@@ -183,7 +183,7 @@ function login() {
   const input = prompt("Enter your Steem username");
   if (!input) return;
 
-  username = input.trim();
+  username = input.trim().toLowerCase();
 
   steem_keychain.requestSignBuffer(username, "Login to Reversteem", "Posting", (res) => {
 if (!res.success) return;
