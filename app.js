@@ -1286,12 +1286,22 @@ if (username && !game.whitePlayer && username !== game.blackPlayer) {
   });
 }
 
-function handleJoin(game) {
-  alert("Join clicked: " + JSON.stringify(game));
-  alert("username: " + username);
+function submitJoin(game) {
 
-  if (!window.steem_keychain) return;
-  if (!username) return;
+  if (!window.steem_keychain) {
+    alert("Steem Keychain not installed");
+    return;
+  }
+
+  if (!username) {
+    alert("Login first");
+    return;
+  }
+
+  if (username === game.blackPlayer) {
+    alert("You cannot join your own game.");
+    return;
+  }
 
   lockBoardUI();
 
@@ -1299,23 +1309,45 @@ function handleJoin(game) {
     app: APP_INFO,
     action: "join"
   };
-  alert("meta: " + JSON.stringify(meta));
+
+  const body =
+    `## @${username} joined as White\n\n` +
+    `Game link: ${LIVE_DEMO}#/game/${game.author}/${game.permlink}`;
+
   steem_keychain.requestPost(
     username,
     "",
-    `## @${username} joined as White`,
-    game.permlink,
-    game.author,
+    body,
+    game.author,              // ✅ CORRECT ORDER
+    game.permlink,            // ✅ CORRECT ORDER
     JSON.stringify(meta),
     `reversteem-join-${Date.now()}`,
-    "",
+    ""
     (res) => {
-      console.log("res: " + JSON.stringify(res));
+
       unlockBoardUI();
-      if (!res.success) return;
+
+      if (!res.success) {
+        console.log("Join rejected:", res);
+        return;
+      }
+
+      // Save & navigate
+      currentGame = {
+        author: game.author,
+        permlink: game.permlink
+      };
+
+      localStorage.setItem(
+        "current_game",
+        JSON.stringify(currentGame)
+      );
 
       window.location.hash =
         `#/game/${game.author}/${game.permlink}`;
+
+      // slight delay for RPC propagation
+      setTimeout(loadMovesFromSteem, 1500);
     }
   );
 }
