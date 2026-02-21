@@ -1291,7 +1291,7 @@ if (username && !game.whitePlayer && username !== game.blackPlayer) {
 }
 
 function handleJoin(game) {
-  console.log("Join clicked", game);
+  alert("Join clicked: " + JSON.stringify(game));
 
   if (!window.steem_keychain) return;
   if (!username) return;
