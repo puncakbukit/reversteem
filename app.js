@@ -1186,11 +1186,24 @@ function loadUserProfile(username) {
   }
 }
 
+// Sanitize user data 
+function esc(str) {
+const d = document.createElement('div');
+d.textContent = str ?? '';
+return d.innerHTML;
+}
+function safeUrl(url) {
+try {
+const u = new URL(url);
+return (u.protocol === 'https:') ? url : '';
+} catch { return ''; }
+}
+
 // Render Profile UI
 function renderUserProfile(data) {
   profileHeaderDiv.innerHTML = `
     <div class="cover" style="
-      background-image:url('${data.coverImage}');
+      background-image:url('${safeUrl(data.coverImage)}');
       background-size:cover;
       background-position:center;
       height:150px;
@@ -1198,19 +1211,19 @@ function renderUserProfile(data) {
     "></div>
 
     <div style="display:flex; align-items:center; margin-top:-40px; padding:10px;">
-      <img src="${data.profileImage}" 
+      <img src="${safeUrl(data.profileImage)}" 
            style="width:80px; height:80px; border-radius:50%; border:3px solid white; background:white;">
       
       <div style="margin-left:15px;">
         <h2 style="margin:0;">
-  ${data.displayName}
+  ${esc(data.displayName)}
   <span style="font-size:14px; color:#666;">
     (ELO: ${getUserRating(data.username)})
   </span>
 </h2>
 
-        <small>@${data.username}</small>
-        <p style="margin:5px 0;">${data.about}</p>
+        <small>@${esc(data.username)}</small>
+        <p style="margin:5px 0;">${esc(data.about)}</p>
       </div>
     </div>
   `;
