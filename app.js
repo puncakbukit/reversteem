@@ -1306,7 +1306,7 @@ function handleJoin(game) {
   alert("meta: " + JSON.stringify(meta));
   steem_keychain.requestPost(
     username,
-    "Join Game",
+    "",
     `## @${username} joined as White`,
     game.permlink,
     game.author,
