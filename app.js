@@ -117,6 +117,7 @@ let isSubmittingMove = false;
 let gameStartTime = null;
 let timeoutMinutes = null;
 let lastMoveTime = null;
+let pollTimer = null;
 
 let moves = [];
 let board = Array(64).fill(null);
@@ -790,6 +791,10 @@ function deriveWhitePlayer(post) {
 async function loadMovesFromSteem() {
   if (!currentGame) return;
 
+// inside loadMovesFromSteem, replace setTimeout with:
+
+
+// inside clearUI() / initRoute():
   return new Promise((resolve, reject) => {
     callWithFallback(
       steem.api.getContent,
@@ -828,7 +833,7 @@ lastMoveTime = state.lastMoveTime;
               renderClaimButton();
             }
 if (!finished) {
-  setTimeout(() => loadMovesFromSteem(), 15000); // or 10-30s
+pollTimer = setTimeout(() => loadMovesFromSteem(), 15000);
 }
             resolve();
           }
@@ -1400,6 +1405,8 @@ function clearUI() {
   featuredGameDiv.innerHTML = "";
   gameListDiv.innerHTML = "";
   boardDiv.innerHTML = "";
+
+if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
 }
 
 // Init route
