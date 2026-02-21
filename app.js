@@ -100,8 +100,6 @@ const timeoutInput = document.getElementById("timeout-input");
 // STATE
 // ============================================================
 
-const profileUser = getProfileFromURL();
-const gameFromURL = getGameFromURL();
 const accountCache = {};
 
 let username = localStorage.getItem("steem_user") || "";
