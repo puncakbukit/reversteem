@@ -187,20 +187,17 @@ function login() {
 
   username = input.trim();
 
-  steem_keychain.requestSignBuffer(
-    username,
-    "Login to Reversteem",
-    "Posting",
-    (res) => {
-      if (!res.success) {
-        alert(LOGIN_REJECTED);
-        return;
-      }
+  steem_keychain.requestSignBuffer(username, "Login to Reversteem", "Posting", (res) => {
+if (!res.success) return;
+const verified = res.data?.username || res.username;
+if (verified !== username.toLowerCase()) {
+alert("Signed account does not match entered username.");
+return;
+}
+localStorage.setItem("steem_user", username);
+showLoggedIn(username);
+});
 
-      localStorage.setItem("steem_user", username);
-      showLoggedIn(username);
-    }
-  );
 }
 
 function logout() {
