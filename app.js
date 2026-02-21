@@ -693,7 +693,7 @@ async function loadOpenGames() {
       limit: 20
     }],
     async (err, posts) => {
-
+console.log("RAW POSTS:", posts);
       if (err) return;
 
       const games = posts.filter(post => {
