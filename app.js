@@ -1662,6 +1662,7 @@ function isTimeoutClaimable() {
   if (!timeoutMinutes) return false;
   if (!gameStartTime) return false;
   if (finished) return false;
+  if (!whitePlayer) return false;
   
 const loser =
   currentPlayer === "black" ? blackPlayer : whitePlayer;
