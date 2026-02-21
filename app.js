@@ -1240,9 +1240,15 @@ function renderFeaturedGame(game) {
     <div id="featuredBoard"></div>
     <p>Status: ${getGameStatus(game)}</p>
     <button class="viewBtn">View</button>
-    ${renderJoinButtonHTML(game)}
   `;
-
+  
+if (username && !game.whitePlayer && username !== game.blackPlayer) {
+  const joinBtn = document.createElement("button");
+  joinBtn.textContent = "Join";
+  joinBtn.onclick = () => handleJoin(game);
+  div.appendChild(joinBtn);
+}
+  
   div.querySelector(".viewBtn").onclick = () => {
     joinGame(game.author, game.permlink);
   };
@@ -1265,9 +1271,15 @@ function renderGameList(games) {
       <strong>${esc(game.title)}</strong>
       <p>Status: ${getGameStatus(game)}</p>
       <button class="viewBtn">View</button>
-      ${renderJoinButtonHTML(game)}
     `;
 
+if (username && !game.whitePlayer && username !== game.blackPlayer) {
+  const joinBtn = document.createElement("button");
+  joinBtn.textContent = "Join";
+  joinBtn.onclick = () => handleJoin(game);
+  div.appendChild(joinBtn);
+}
+    
     div.querySelector(".viewBtn").onclick = () => {
       joinGame(game.author, game.permlink);
     };
@@ -1276,24 +1288,6 @@ function renderGameList(games) {
 
     gameListDiv.appendChild(div);
   });
-}
-
-// Join Button Logic
-function renderJoinButtonHTML(game) {
-console.log("JOIN CHECK:", {
-  username,
-  black: game.blackPlayer,
-  white: game.whitePlayer,
-  status: game.status
-});
-
-  if (!username) return "";
-
-  if (!game.whitePlayer && username !== game.blackPlayer) {
-    return `<button class="joinBtn">Join</button>`;
-  }
-
-  return "";
 }
 
 function attachJoinHandler(div, game) {
