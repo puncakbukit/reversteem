@@ -1243,7 +1243,7 @@ function renderFeaturedGame(game) {
   const div = document.createElement("div");
 
   div.innerHTML = `
-    <h2>${rsc(game.title)}</h2>
+    <h2>${esc(game.title)}</h2>
     <div id="featuredBoard"></div>
     <p>Status: ${getGameStatus(game)}</p>
     <button class="viewBtn">View</button>
