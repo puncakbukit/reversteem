@@ -142,16 +142,7 @@ window.addEventListener("load", () => {
   initTimeControls();
   if (username) showLoggedIn(username);
 
-  if (gameFromURL) {
-    currentGame = gameFromURL;
-    loadMovesFromSteem();
-  } else if (profileUser) {
-    document.title = `Reversteem – @${profileUser}`;
-    loadGamesByUser(profileUser);
-  } else {
-    loadOpenGames();
-  }
-
+  initRoute();
 });
 
 // ============================================================
