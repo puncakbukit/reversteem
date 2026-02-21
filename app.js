@@ -1292,6 +1292,7 @@ if (username && !game.whitePlayer && username !== game.blackPlayer) {
 
 function handleJoin(game) {
   alert("Join clicked: " + JSON.stringify(game));
+  alert("username: " + username);
 
   if (!window.steem_keychain) return;
   if (!username) return;
@@ -1302,7 +1303,7 @@ function handleJoin(game) {
     app: APP_INFO,
     action: "join"
   };
-
+  alert("meta: " + JSON.stringify(meta));
   steem_keychain.requestPost(
     username,
     "Join Game",
@@ -1313,6 +1314,7 @@ function handleJoin(game) {
     `reversteem-join-${Date.now()}`,
     "",
     (res) => {
+      alert("res: " + JSON.stringify(res));
       unlockBoardUI();
       if (!res.success) return;
 
