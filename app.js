@@ -1010,8 +1010,8 @@ function indexToCoord(index) {
 // ============================================================
 
 function joinGame(author, permlink) {
-  console.log("author", author);
-  console.log("permlink", permlink);
+  alert("author", author);
+  alert("permlink", permlink);
   // Update URL hash
   window.location.hash = `#/game/${author}/${permlink}`;
 
