@@ -1243,7 +1243,7 @@ function renderFeaturedGame(game) {
   const div = document.createElement("div");
 
   div.innerHTML = `
-    <h2>${game.title}</h2>
+    <h2>${rsc(game.title)}</h2>
     <div id="featuredBoard"></div>
     <p>Status: ${getGameStatus(game)}</p>
     <button class="viewBtn">View</button>
@@ -1269,7 +1269,7 @@ function renderGameList(games) {
     const div = document.createElement("div");
 
     div.innerHTML = `
-      <strong>${game.title}</strong>
+      <strong>${esc(game.title)}</strong>
       <p>Status: ${getGameStatus(game)}</p>
       <button class="viewBtn">View</button>
       ${renderJoinButtonHTML(game)}
