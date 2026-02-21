@@ -1346,7 +1346,7 @@ function attachJoinHandler(div, game) {
 
     steem_keychain.requestPost(
       username,
-      "Join Game",
+      "",
       body,
       game.permlink,
       game.author,
