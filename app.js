@@ -1113,9 +1113,11 @@ function loadGamesByUser(user) {
           return false;
         }
       });
-
-      updateEloRatingsFromGames(games);
-      renderDashboard(parseGames(games));
+(async () => {
+  const enriched = await enrichGamesWithWhitePlayer(games);
+  await updateEloRatingsFromGames(enriched);
+  renderDashboard(enriched);
+})();
     }
   );
 }
