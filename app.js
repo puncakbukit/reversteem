@@ -308,7 +308,7 @@ function updateTurnIndicator() {
   const colorLabel =
     currentPlayer === "black" ? "Black ⚫" : "White ⚪";
 
-  if (isGameOver) {
+  if (state.finished) {
     el.innerHTML = "🏁 Game Over";
     return;
   }
@@ -844,7 +844,7 @@ async function loadMovesFromSteem() {
 
             renderBoard();
             renderPlayerBar(playerBarDiv, blackPlayer, whitePlayer);
-            updateTurnIndicator();
+            updateTurnIndicator(state);
             renderClaimButton();
             if (!finished) {
               pollTimer = setTimeout(() => loadMovesFromSteem(), 15000);
