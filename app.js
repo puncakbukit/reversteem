@@ -827,62 +827,57 @@ function renderSpectatorConsole(replies) {
     return;
   }
 
-  const APP_PREFIX = APP_NAME + "/"; // e.g., "reversteem/"
-
-  // --- Build move map (permlink => move index) dynamically ---
+  // Build a lookup for move comments by permlink
   const moveCommentMap = {};
   const replyLookup = {};
 
+  // store all replies in a lookup for easy parent traversal
   replies.forEach(reply => {
-	console.log("reply.permlink: ", reply.permlink);
-	console.log("replyLookup: ", JSON.stringify(reply));
     replyLookup[reply.permlink] = reply;
 
     try {
       const meta = JSON.parse(reply.json_metadata);
-      if (meta.app?.startsWith(APP_PREFIX) && meta.action === "move") {
-   	    console.log("reply.permlink: ", reply.permlink);
-   	    console.log("moveCommentMap: ", meta.index);
-        moveCommentMap[reply.permlink] = meta.index; // store move index
+      if (meta.app?.startsWith(APP_NAME + "/") && meta.action === "move") {
+        moveCommentMap[reply.permlink] = meta.index;
       }
-    } catch (err) {
-      // ignore invalid metadata
-    }
+    } catch {}
   });
 
-  // --- Render each reply ---
   replies
     .sort((a, b) => new Date(a.created) - new Date(b.created))
     .forEach(reply => {
-	  console.log("reply: ", JSON.stringify(reply));
       const line = document.createElement("div");
       const time = new Date(reply.created).toLocaleTimeString();
       let extra = "";
 
       try {
-        // Find nearest move in parent chain
+        const meta = JSON.parse(reply.json_metadata);
+
+        // Traverse parent chain until we find a move
+        let parentPermlink = reply.parent_permlink; // use top-level field
         let moveIndex = null;
-        let parentPermlink = reply.parent_permlink;
-	    console.log("parentPermlink: ", parentPermlink);
 
         while (parentPermlink) {
           if (moveCommentMap[parentPermlink] != null) {
             moveIndex = moveCommentMap[parentPermlink];
             break;
           }
+
           const parentReply = replyLookup[parentPermlink];
-    	  console.log("parentReply: ", JSON.stringify(parentReply));
-          if (!parentReply) break; // parent missing
+          if (!parentReply) {
+            // parent move not in the array
+            moveIndex = "?";
+            break;
+          }
+
           parentPermlink = parentReply.parent_permlink;
- 	      console.log("parentPermlink: ", parentPermlink);
         }
 
         if (moveIndex != null) {
-          extra = ` on ${indexToCoord(moveIndex)}`;
+          extra = ` on ${moveIndex === "?" ? "?" : indexToCoord(moveIndex)}`;
         }
-      } catch (err) {
-        console.warn("Error processing reply:", err);
-      }
+
+      } catch {}
 
       line.innerHTML = `
         <span style="color:#888;">[${time}]</span>
