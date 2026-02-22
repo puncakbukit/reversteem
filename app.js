@@ -818,7 +818,7 @@ function escapeConsoleText(text) {
   return div.innerHTML;
 }
 
-function renderSpectatorConsole(replies) {
+function renderSpectatorConsole(allReplies, replies) {
   const container = document.getElementById("spectatorMessages");
   container.innerHTML = "";
 
@@ -832,7 +832,7 @@ function renderSpectatorConsole(replies) {
   const replyLookup = {};
 
   // store all replies in a lookup for easy parent traversal
-  replies.forEach(reply => {
+  allReplies.forEach(reply => {
     replyLookup[reply.permlink] = reply;
 
     try {
@@ -999,7 +999,7 @@ async function loadMovesFromSteem() {
 		      `Move timeout: ${formatTimeout(state.timeoutMinutes)}`;
 		
 		    renderBoard();
-		    renderSpectatorConsole(allForConsole);
+		    renderSpectatorConsole(allForConsole, spectatorReplies);
 		    renderPlayerBar(playerBarDiv, blackPlayer, whitePlayer);
 		    updateTurnIndicator(state);
 		    renderClaimButton();
