@@ -153,7 +153,7 @@ function showLoggedIn(user) {
   userP.innerText = `Welcome @${user}`;
   loginBtn.style.display = "none";
   shownWhenLoggedInDiv.style.display = "block";
-  
+
   loadUserProfile(username);
 }
 
@@ -177,15 +177,15 @@ function login() {
   username = input.trim().toLowerCase();
 
   steem_keychain.requestSignBuffer(username, "Login to Reversteem", "Posting", (res) => {
-if (!res.success) return;
-const verified = res.data?.username || res.username;
-if (verified !== username.toLowerCase()) {
-alert("Signed account does not match entered username.");
-return;
-}
-localStorage.setItem("steem_user", username);
-showLoggedIn(username);
-});
+    if (!res.success) return;
+    const verified = res.data?.username || res.username;
+    if (verified !== username.toLowerCase()) {
+      alert("Signed account does not match entered username.");
+      return;
+    }
+    localStorage.setItem("steem_user", username);
+    showLoggedIn(username);
+  });
 
 }
 
@@ -298,19 +298,19 @@ function deriveGameStateFull(rootPost, replies) {
   let moves = [];
   let timeoutMinutes = DEFAULT_TIMEOUT_MINUTES;
   let timeoutClaims = [];
-  
+
   // ---- Extract black from root ----
   try {
     const rootMeta = JSON.parse(rootPost.json_metadata);
     _blackPlayer = rootMeta.black;
-let tm = parseInt(rootMeta.timeoutMinutes);
+    let tm = parseInt(rootMeta.timeoutMinutes);
 
-if (isNaN(tm)) tm = DEFAULT_TIMEOUT_MINUTES;
+    if (isNaN(tm)) tm = DEFAULT_TIMEOUT_MINUTES;
 
-timeoutMinutes = Math.max(
-  MIN_TIMEOUT_MINUTES,
-  Math.min(tm, MAX_TIMEOUT_MINUTES)
-);
+    timeoutMinutes = Math.max(
+      MIN_TIMEOUT_MINUTES,
+      Math.min(tm, MAX_TIMEOUT_MINUTES)
+    );
   } catch {}
 
   // ---- Sort replies chronologically ----
@@ -323,14 +323,14 @@ timeoutMinutes = Math.max(
       if (!meta.app?.startsWith(APP_NAME + "/")) return;
 
       // Detect white join
-  if (
-  meta.action === "join" &&
-  !_whitePlayer &&
-  reply.author !== _blackPlayer
-) {
-  _whitePlayer = reply.author;
-  gameStartTime = reply.created;
-}    
+      if (
+        meta.action === "join" &&
+        !_whitePlayer &&
+        reply.author !== _blackPlayer
+      ) {
+        _whitePlayer = reply.author;
+        gameStartTime = reply.created;
+      }
       if (meta.action === "timeout_claim") {
         timeoutClaims.push({
           author: reply.author,
@@ -452,20 +452,20 @@ timeoutMinutes = Math.max(
     }
   }
 
- return {
-  blackPlayer: _blackPlayer,
-  whitePlayer: _whitePlayer,
-  board,
-  currentPlayer: finished ? null : turn,
-  appliedMoves,
-  finished,
-  winner,
-  score,
-  moves,
-  timeoutMinutes,
-  gameStartTime,
-  lastMoveTime
-};
+  return {
+    blackPlayer: _blackPlayer,
+    whitePlayer: _whitePlayer,
+    board,
+    currentPlayer: finished ? null : turn,
+    appliedMoves,
+    finished,
+    winner,
+    score,
+    moves,
+    timeoutMinutes,
+    gameStartTime,
+    lastMoveTime
+  };
 }
 
 // Wrapper with cache
@@ -776,10 +776,10 @@ function deriveWhitePlayer(post) {
 async function loadMovesFromSteem() {
   if (!currentGame) return;
 
-// inside loadMovesFromSteem, replace setTimeout with:
+  // inside loadMovesFromSteem, replace setTimeout with:
 
 
-// inside clearUI() / initRoute():
+  // inside clearUI() / initRoute():
   return new Promise((resolve, reject) => {
     callWithFallback(
       steem.api.getContent,
@@ -796,10 +796,10 @@ async function loadMovesFromSteem() {
             if (err2) return reject(err2);
 
             const state = deriveGameState(root, replies);
-            
-timeoutMinutes = state.timeoutMinutes;
-gameStartTime = state.gameStartTime;
-lastMoveTime = state.lastMoveTime;
+
+            timeoutMinutes = state.timeoutMinutes;
+            gameStartTime = state.gameStartTime;
+            lastMoveTime = state.lastMoveTime;
             blackPlayer = state.blackPlayer;
             whitePlayer = state.whitePlayer;
             board = state.board;
@@ -817,9 +817,9 @@ lastMoveTime = state.lastMoveTime;
             if (!finished && isTimeoutClaimable()) {
               renderClaimButton();
             }
-if (!finished) {
-pollTimer = setTimeout(() => loadMovesFromSteem(), 15000);
-}
+            if (!finished) {
+              pollTimer = setTimeout(() => loadMovesFromSteem(), 15000);
+            }
             resolve();
           }
         );
@@ -888,13 +888,13 @@ function startGame() {
   }
 
   // 🔥 Clamp safely
-timeoutMinutes = Math.max(
-  MIN_TIMEOUT_MINUTES,
-  Math.min(
-    timeoutMinutes,
-    MAX_TIMEOUT_MINUTES
-  )
-);
+  timeoutMinutes = Math.max(
+    MIN_TIMEOUT_MINUTES,
+    Math.min(
+      timeoutMinutes,
+      MAX_TIMEOUT_MINUTES
+    )
+  );
 
   const permlink = `${APP_NAME}-${Date.now()}`;
 
@@ -1009,8 +1009,7 @@ function indexToCoord(index) {
 // ============================================================
 
 function joinGame(author, permlink) {
-  alert("author" + author);
-  alert("permlink" + permlink);
+
   // Update URL hash
   window.location.hash = `#/game/${author}/${permlink}`;
 
@@ -1112,11 +1111,11 @@ function loadGamesByUser(user) {
           return false;
         }
       });
-(async () => {
-  const enriched = await enrichGamesWithWhitePlayer(games);
-  await updateEloRatingsFromGames(enriched);
-  renderDashboard(enriched);
-})();
+      (async () => {
+        const enriched = await enrichGamesWithWhitePlayer(games);
+        await updateEloRatingsFromGames(enriched);
+        renderDashboard(enriched);
+      })();
     }
   );
 }
@@ -1180,15 +1179,18 @@ function loadUserProfile(username) {
 
 // Sanitize user data 
 function esc(str) {
-const d = document.createElement('div');
-d.textContent = str ?? '';
-return d.innerHTML;
+  const d = document.createElement('div');
+  d.textContent = str ?? '';
+  return d.innerHTML;
 }
+
 function safeUrl(url) {
-try {
-const u = new URL(url);
-return (u.protocol === 'https:') ? url : '';
-} catch { return ''; }
+  try {
+    const u = new URL(url);
+    return (u.protocol === 'https:') ? url : '';
+  } catch {
+    return '';
+  }
 }
 
 // Render Profile UI
@@ -1240,14 +1242,14 @@ function renderFeaturedGame(game) {
     <p>Status: ${getGameStatus(game)}</p>
     <button class="viewBtn">View</button>
   `;
-  
-if (username && !game.whitePlayer && username !== game.blackPlayer) {
-  const joinBtn = document.createElement("button");
-  joinBtn.textContent = "Join";
-  joinBtn.onclick = () => submitJoin(game);
-  div.appendChild(joinBtn);
-}
-  
+
+  if (username && !game.whitePlayer && username !== game.blackPlayer) {
+    const joinBtn = document.createElement("button");
+    joinBtn.textContent = "Join";
+    joinBtn.onclick = () => submitJoin(game);
+    div.appendChild(joinBtn);
+  }
+
   div.querySelector(".viewBtn").onclick = () => {
     joinGame(game.author, game.permlink);
   };
@@ -1270,13 +1272,13 @@ function renderGameList(games) {
       <button class="viewBtn">View</button>
     `;
 
-if (username && !game.whitePlayer && username !== game.blackPlayer) {
-  const joinBtn = document.createElement("button");
-  joinBtn.textContent = "Join";
-  joinBtn.onclick = () => submitJoin(game);
-  div.appendChild(joinBtn);
-}
-    
+    if (username && !game.whitePlayer && username !== game.blackPlayer) {
+      const joinBtn = document.createElement("button");
+      joinBtn.textContent = "Join";
+      joinBtn.onclick = () => submitJoin(game);
+      div.appendChild(joinBtn);
+    }
+
     div.querySelector(".viewBtn").onclick = () => {
       joinGame(game.author, game.permlink);
     };
@@ -1313,12 +1315,13 @@ function submitJoin(game) {
     `## @${username} joined as White\n\n` +
     `Game link: ${LIVE_DEMO}#/game/${game.author}/${game.permlink}`;
 
+  alert("username: " + username);
   steem_keychain.requestPost(
     username,
     "",
     body,
-    game.author,              // ✅ CORRECT ORDER
-    game.permlink,            // ✅ CORRECT ORDER
+    game.author, // ✅ CORRECT ORDER
+    game.permlink, // ✅ CORRECT ORDER
     JSON.stringify(meta),
     `reversteem-join-${Date.now()}`,
     "",
@@ -1391,7 +1394,10 @@ function clearUI() {
   gameListDiv.innerHTML = "";
   boardDiv.innerHTML = "";
 
-if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+  if (pollTimer) {
+    clearTimeout(pollTimer);
+    pollTimer = null;
+  }
 }
 
 // Init route
@@ -1659,12 +1665,12 @@ function isTimeoutClaimable() {
   if (!gameStartTime) return false;
   if (finished) return false;
   if (!whitePlayer) return false;
-  
-const loser =
-  currentPlayer === "black" ? blackPlayer : whitePlayer;
-const winner =
-  currentPlayer === "black" ? whitePlayer : blackPlayer;
-if (username !== winner) return false;
+
+  const loser =
+    currentPlayer === "black" ? blackPlayer : whitePlayer;
+  const winner =
+    currentPlayer === "black" ? whitePlayer : blackPlayer;
+  if (username !== winner) return false;
 
   let referenceTime = new Date(lastMoveTime);
   if (currentAppliedMoves === 0)
@@ -1755,4 +1761,3 @@ function lockBoardUI() {
 function unlockBoardUI() {
   boardOverlayDiv.style.display = "none";
 }
-
