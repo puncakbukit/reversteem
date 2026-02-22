@@ -846,6 +846,7 @@ function renderSpectatorConsole(replies) {
   replies
     .sort((a, b) => new Date(a.created) - new Date(b.created))
     .forEach(reply => {
+	  console.log("reply: ", JSON.stringify(reply));
       const line = document.createElement("div");
       const time = new Date(reply.created).toLocaleTimeString();
       let extra = "";
@@ -855,9 +856,12 @@ function renderSpectatorConsole(replies) {
 
 		// Traverse parent chain until we find a move
 		let parentPermlink = reply.parent_permlink; // use top-level field
+	    console.log("parentPermlink: ", parentPermlink);
 		while (parentPermlink && moveCommentMap[parentPermlink] == null) {
 		  const parentReply = replyLookup[parentPermlink];
+  	      console.log("parentReply: ", JSON.stringify(parentReply));
 		  parentPermlink = parentReply ? parentReply.parent_permlink : null;
+	      console.log("parentPermlink: ", parentPermlink);
 		}
 		
 		if (parentPermlink && moveCommentMap[parentPermlink] != null) {
