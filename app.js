@@ -291,7 +291,7 @@ function renderBoard() {
   }
 }
 
-function updateTurnIndicator() {
+function updateTurnIndicator(state) {
   const el = document.getElementById("turnIndicator");
 
   if (!currentGame) {
