@@ -827,6 +827,67 @@ function renderSpectatorConsole(replies) {
     return;
   }
 
+  // Build a lookup for move comments by permlink
+  const moveCommentMap = {};
+  const replyLookup = {};
+
+  // store all replies in a lookup for easy parent traversal
+  replies.forEach(reply => {
+    replyLookup[reply.permlink] = reply;
+
+    try {
+      const meta = JSON.parse(reply.json_metadata);
+      if (meta.app?.startsWith(APP_NAME + "/") && meta.action === "move") {
+        moveCommentMap[reply.permlink] = meta.index;
+      }
+    } catch {}
+  });
+
+  replies
+    .sort((a, b) => new Date(a.created) - new Date(b.created))
+    .forEach(reply => {
+      const line = document.createElement("div");
+      const time = new Date(reply.created).toLocaleTimeString();
+      let extra = "";
+
+      try {
+        const meta = JSON.parse(reply.json_metadata);
+
+		// Traverse parent chain until we find a move
+		let parentPermlink = reply.parent_permlink; // use top-level field
+		while (parentPermlink && moveCommentMap[parentPermlink] == null) {
+		  const parentReply = replyLookup[parentPermlink];
+		  parentPermlink = parentReply ? parentReply.parent_permlink : null;
+		}
+		
+		if (parentPermlink && moveCommentMap[parentPermlink] != null) {
+		  extra = ` on ${indexToCoord(moveCommentMap[parentPermlink])}`;
+		}
+      } catch {}
+
+      line.innerHTML = `
+        <span style="color:#888;">[${time}]</span>
+        <span style="color:#4fc3f7;">@${reply.author}</span>${extra}:
+        <span style="color:#0f0;">
+          ${escapeConsoleText(reply.body.slice(0, 200))}
+        </span>
+      `;
+
+      container.appendChild(line);
+    });
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function renderSpectatorConsole(replies) {
+  const container = document.getElementById("spectatorMessages");
+  container.innerHTML = "";
+
+  if (!replies || replies.length === 0) {
+    container.innerHTML = `<div style="color:#555;">No spectator comments yet.</div>`;
+    return;
+  }
+
   // 1️⃣ Build lookup maps
   const moveCommentMap = {};      // permlink -> index
   const parentMap = {};           // permlink -> parent_permlink
