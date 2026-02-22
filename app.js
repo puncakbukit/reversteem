@@ -846,6 +846,7 @@ function renderSpectatorConsole(replies) {
       let extra = "";
 
       try {
+		console.log("reply", JSON.stringify(reply));
         const meta = JSON.parse(reply.json_metadata);
 
         // If this reply is replying to a move, show "on <coord>"
