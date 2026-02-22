@@ -291,6 +291,36 @@ function renderBoard() {
   }
 }
 
+function updateTurnIndicator() {
+  const el = document.getElementById("turnIndicator");
+
+  if (!currentGame) {
+    el.innerHTML = "";
+    return;
+  }
+
+  const blackPlayer = currentGame.author;
+  const whitePlayer = currentGame.white;
+
+  const playerToMove =
+    currentPlayer === "black" ? blackPlayer : whitePlayer;
+
+  const colorLabel =
+    currentPlayer === "black" ? "Black ⚫" : "White ⚪";
+
+  if (isGameOver) {
+    el.innerHTML = "🏁 Game Over";
+    return;
+  }
+
+  if (username === playerToMove) {
+    el.innerHTML = `🟢 Your turn (${colorLabel})`;
+  } else {
+    el.innerHTML =
+      `⏳ Waiting for @${playerToMove} (${colorLabel})`;
+  }
+}
+
 function deriveGameStateFull(rootPost, replies) {
 
   let _blackPlayer = null;
@@ -814,7 +844,7 @@ async function loadMovesFromSteem() {
 
             renderBoard();
             renderPlayerBar(playerBarDiv, blackPlayer, whitePlayer);
-
+            updateTurnIndicator();
             renderClaimButton();
             if (!finished) {
               pollTimer = setTimeout(() => loadMovesFromSteem(), 15000);
