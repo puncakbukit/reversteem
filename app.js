@@ -819,7 +819,6 @@ function escapeConsoleText(text) {
 }
 
 function renderSpectatorConsole(replies) {
-
   const container = document.getElementById("spectatorMessages");
   container.innerHTML = "";
 
@@ -828,17 +827,36 @@ function renderSpectatorConsole(replies) {
     return;
   }
 
+  // Build a lookup for move comments by permlink
+  const moveCommentMap = {};
+  replies.forEach(reply => {
+    try {
+      const meta = JSON.parse(reply.json_metadata);
+      if (meta.app?.startsWith(APP_NAME + "/") && meta.action === "move") {
+        moveCommentMap[reply.permlink] = meta.index;
+      }
+    } catch {}
+  });
+
   replies
     .sort((a, b) => new Date(a.created) - new Date(b.created))
     .forEach(reply => {
-
       const line = document.createElement("div");
-
       const time = new Date(reply.created).toLocaleTimeString();
+      let extra = "";
+
+      try {
+        const meta = JSON.parse(reply.json_metadata);
+
+        // If this reply is replying to a move, show "on <coord>"
+        if (meta.parent_permlink && moveCommentMap[meta.parent_permlink] != null) {
+          extra = ` on ${indexToCoord(moveCommentMap[meta.parent_permlink])}`;
+        }
+      } catch {}
 
       line.innerHTML = `
         <span style="color:#888;">[${time}]</span>
-        <span style="color:#4fc3f7;">@${reply.author}</span>:
+        <span style="color:#4fc3f7;">@${reply.author}</span>${extra}:
         <span style="color:#0f0;">
           ${escapeConsoleText(reply.body.slice(0, 200))}
         </span>
