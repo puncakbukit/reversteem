@@ -893,12 +893,12 @@ async function loadMovesFromSteem() {
         if (err) return reject(err);
 		steem.api.getState(
 		  `/@${currentGame.author}/${currentGame.permlink}`,
-		  (err2, state) => {
+		  (err2, _state) => {
 
             if (err2) return reject(err2);
 
 			// Extract all comments except root
-			const allComments = Object.values(state.content)
+			const allComments = Object.values(_state.content)
 			  .filter(c =>
 				c.depth > 0 &&
 				c.root_author === currentGame.author &&
