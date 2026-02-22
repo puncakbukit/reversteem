@@ -96,7 +96,9 @@ const timeoutControlsDiv = document.getElementById("timeout-controls");
 const timeoutDisplayDiv = document.getElementById("timeoutDisplay");
 const timeControlsDiv = document.getElementById("time-controls");
 const timeoutInput = document.getElementById("timeout-input");
-
+const gameContainerDiv = document.getElementById("gameContainer");
+const turnIndicatorDiv = document.getElementById("turnIndicator");
+const spectatorMessagesDiv = document.getElementById("spectatorMessages");
 // ============================================================
 // STATE
 // ============================================================
@@ -1548,6 +1550,15 @@ function clearUI() {
   gameListDiv.innerHTML = "";
   boardDiv.innerHTML = "";
 
+  // 🔥 Hide entire game container
+  gameContainerDiv.style.display = "none";
+
+  // 🔥 Clear game-specific UI elements
+  turnIndicatorDiv.innerHTML = "";
+  spectatorMessagesDiv.innerHTML = "";
+  timeoutDisplayDiv.innerHTML = "";
+  playerBarDiv.innerHTML = "";
+
   if (pollTimer) {
     clearTimeout(pollTimer);
     pollTimer = null;
@@ -1566,8 +1577,12 @@ function initRoute() {
   const gameFromURL = getGameFromURL();
 
   if (gameFromURL) {
-    currentGame = gameFromURL;
-    loadMovesFromSteem();
+	currentGame = gameFromURL;
+	
+	// 🔥 Show game UI
+	gameContainerDiv.style.display = "block";
+	
+	loadMovesFromSteem();
   } else if (profileUser) {
     loadGamesByUser(profileUser);
   } else {
