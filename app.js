@@ -943,6 +943,16 @@ function postMove(index) {
 
   boardOverlayDiv.style.display = "flex";
 
+  // 🔥 1. Clone current board
+  const simulatedBoard = [...board];
+
+  // 🔥 2. Apply move deterministically
+  const flips = getFlipsForBoard(simulatedBoard, index, currentPlayer);
+
+  simulatedBoard[index] = currentPlayer;
+  flips.forEach(f => simulatedBoard[f] = currentPlayer);
+
+  // 🔥 3. Build metadata
   const meta = {
     app: APP_INFO,
     action: "move",
@@ -950,10 +960,11 @@ function postMove(index) {
     moveNumber: currentAppliedMoves
   };
 
+  // 🔥 4. Generate markdown from simulated board
   const body =
     `## Move by @${username}\n\n` +
-    `Played at index ${indexToCoord(index)}\n\n` +
-    boardToMarkdown(board);
+    `Played at ${indexToCoord(index)}\n\n` +
+    boardToMarkdown(simulatedBoard);
 
   steem_keychain.requestPost(
     username,
@@ -967,6 +978,8 @@ function postMove(index) {
     () => {
       isSubmittingMove = false;
       boardOverlayDiv.style.display = "none";
+
+      // Reload authoritative state from blockchain
       loadMovesFromSteem();
     }
   );
