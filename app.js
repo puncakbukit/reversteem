@@ -815,9 +815,7 @@ async function loadMovesFromSteem() {
             renderBoard();
             renderPlayerBar(playerBarDiv, blackPlayer, whitePlayer);
 
-            if (!finished && isTimeoutClaimable()) {
-              renderClaimButton();
-            }
+            renderClaimButton();
             if (!finished) {
               pollTimer = setTimeout(() => loadMovesFromSteem(), 15000);
             }
