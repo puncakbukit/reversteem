@@ -1322,7 +1322,7 @@ function submitJoin(game) {
     game.permlink,            // ✅ CORRECT ORDER
     JSON.stringify(meta),
     `reversteem-join-${Date.now()}`,
-    ""
+    "",
     (res) => {
 
       unlockBoardUI();
