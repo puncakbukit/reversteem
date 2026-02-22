@@ -834,11 +834,15 @@ function renderSpectatorConsole(replies) {
   const replyLookup = {};
 
   replies.forEach(reply => {
+	console.log("reply.permlink: ", reply.permlink);
+	console.log("replyLookup: ", JSON.stringify(reply));
     replyLookup[reply.permlink] = reply;
 
     try {
       const meta = JSON.parse(reply.json_metadata);
       if (meta.app?.startsWith(APP_PREFIX) && meta.action === "move") {
+   	    console.log("reply.permlink: ", reply.permlink);
+   	    console.log("moveCommentMap: ", meta.index);
         moveCommentMap[reply.permlink] = meta.index; // store move index
       }
     } catch (err) {
