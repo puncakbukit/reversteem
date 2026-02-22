@@ -186,17 +186,44 @@
        ========================= -->
   <div id="playerBar">
   </div>
-  <!-- =========================
-       Active Game Board
-       Used when viewing a specific game
-       ========================= -->
-  <div id="turnIndicator"></div>
-  <div id="board">
-  </div>
   <div id="board-overlay" class="overlay"> Posting move... </div>
   <div id="timeoutDisplay" style="margin-bottom:10px;">
   </div>
   <div id="timeout-controls" style="margin: 10px 0;">
+  </div>
+  <!-- =========================
+     Spectator Console
+     ========================= -->
+  <div id="gameContainer" style="display:flex; justify-content:center; gap:20px; margin-top:20px;">
+  
+    <div id="boardArea">
+    <!-- =========================
+         Active Game Board
+         Used when viewing a specific game
+         ========================= -->
+    <div id="turnIndicator"></div>
+    <div id="board">
+    </div>
+    </div>
+  
+    <div id="spectatorConsole" style="
+        width:300px;
+        max-height:420px;
+        overflow-y:auto;
+        background:#111;
+        color:#0f0;
+        font-family:monospace;
+        font-size:12px;
+        padding:10px;
+        border-radius:6px;
+        text-align:left;
+    ">
+      <div style="color:#fff; margin-bottom:6px;">
+        Spectator Chat
+      </div>
+      <div id="spectatorMessages"></div>
+    </div>
+  
   </div>
   <!-- =========================
        Featured Game Section
