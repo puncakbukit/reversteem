@@ -979,6 +979,8 @@ async function loadMovesFromSteem() {
 		    const { gameReplies, spectatorReplies } =
 		      classifyReplies(allReplies);
 		
+		    const allForConsole = [...gameReplies, ...spectatorReplies];
+
 		    const state = deriveGameState(root, gameReplies);
 		
 		    timeoutMinutes = state.timeoutMinutes;
@@ -997,7 +999,7 @@ async function loadMovesFromSteem() {
 		      `Move timeout: ${formatTimeout(state.timeoutMinutes)}`;
 		
 		    renderBoard();
-		    renderSpectatorConsole(spectatorReplies);
+		    renderSpectatorConsole(allForConsole);
 		    renderPlayerBar(playerBarDiv, blackPlayer, whitePlayer);
 		    updateTurnIndicator(state);
 		    renderClaimButton();
