@@ -844,6 +844,8 @@ function renderSpectatorConsole(replies) {
   // Helper: recursively find nearest move ancestor
   function findMoveIndex(permlink) {
     if (!permlink) return null;
+    console.log("permlink: ", permlink);
+    console.log("moveCommentMap: ", JSON.stringify(moveCommentMap[permlink]));
     if (moveCommentMap[permlink] != null) return moveCommentMap[permlink];
     return findMoveIndex(parentMap[permlink]);
   }
@@ -852,6 +854,7 @@ function renderSpectatorConsole(replies) {
   replies
     .sort((a, b) => new Date(a.created) - new Date(b.created))
     .forEach(reply => {
+	  console.log("reply: ", JSON.stringify(reply));
       const line = document.createElement("div");
       const time = new Date(reply.created).toLocaleTimeString();
       let extra = "";
