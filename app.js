@@ -810,6 +810,73 @@ function deriveWhitePlayer(post) {
 // BLOCKCHAIN STATE LOADING
 // ============================================================
 
+function escapeConsoleText(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function renderSpectatorConsole(replies) {
+
+  const container = document.getElementById("spectatorMessages");
+  container.innerHTML = "";
+
+  if (!replies || replies.length === 0) {
+    container.innerHTML = `<div style="color:#555;">No spectator comments yet.</div>`;
+    return;
+  }
+
+  replies
+    .sort((a, b) => new Date(a.created) - new Date(b.created))
+    .forEach(reply => {
+
+      const line = document.createElement("div");
+
+      const time = new Date(reply.created).toLocaleTimeString();
+
+      line.innerHTML = `
+        <span style="color:#888;">[${time}]</span>
+        <span style="color:#4fc3f7;">@${reply.author}</span>:
+        <span style="color:#0f0;">
+          ${escapeConsoleText(reply.body.slice(0, 200))}
+        </span>
+      `;
+
+      container.appendChild(line);
+    });
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function classifyReplies(replies) {
+
+  const gameReplies = [];
+  const spectatorReplies = [];
+
+  replies.forEach(reply => {
+
+    let isGameReply = false;
+
+    try {
+      const meta = JSON.parse(reply.json_metadata);
+
+      if (meta.app?.startsWith(APP_NAME + "/")) {
+        isGameReply = true;
+      }
+
+    } catch {}
+
+    if (isGameReply) {
+      gameReplies.push(reply);
+    } else {
+      spectatorReplies.push(reply);
+    }
+
+  });
+
+  return { gameReplies, spectatorReplies };
+}
+
 async function loadMovesFromSteem() {
   if (!currentGame) return;
 
@@ -832,8 +899,10 @@ async function loadMovesFromSteem() {
 
             if (err2) return reject(err2);
 
-            const state = deriveGameState(root, replies);
-
+            // Separate replies
+            const { gameReplies, spectatorReplies } = classifyReplies(replies);
+            // Derive engine state only from gameReplies
+            const state = deriveGameState(root, gameReplies);            
             timeoutMinutes = state.timeoutMinutes;
             gameStartTime = state.gameStartTime;
             lastMoveTime = state.lastMoveTime;
@@ -849,6 +918,7 @@ async function loadMovesFromSteem() {
               `Move timeout: ${formatTimeout(state.timeoutMinutes)}`;
 
             renderBoard();
+            renderSpectatorConsole(spectatorReplies);
             renderPlayerBar(playerBarDiv, blackPlayer, whitePlayer);
             updateTurnIndicator(state);
             renderClaimButton();
