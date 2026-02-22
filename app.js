@@ -1321,8 +1321,8 @@ function submitJoin(game) {
     username,
     "",
     body,
-    game.author, // ✅ CORRECT ORDER
     game.permlink, // ✅ CORRECT ORDER
+    game.author, // ✅ CORRECT ORDER
     JSON.stringify(meta),
     `reversteem-join-${Date.now()}`,
     "",
