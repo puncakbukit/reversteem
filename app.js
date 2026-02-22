@@ -294,13 +294,19 @@ function renderBoard() {
 function updateTurnIndicator(state) {
   const el = document.getElementById("turnIndicator");
 
-  if (!currentGame) {
+  if (!state) {
     el.innerHTML = "";
     return;
   }
 
-  const blackPlayer = currentGame.author;
-  const whitePlayer = currentGame.white;
+  if (state.finished) {
+    el.innerHTML = "🏁 Game Over";
+    return;
+  }
+
+  const blackPlayer = state.blackPlayer;
+  const whitePlayer = state.whitePlayer;
+  const currentPlayer = state.currentPlayer;
 
   const playerToMove =
     currentPlayer === "black" ? blackPlayer : whitePlayer;
@@ -308,8 +314,8 @@ function updateTurnIndicator(state) {
   const colorLabel =
     currentPlayer === "black" ? "Black ⚫" : "White ⚪";
 
-  if (state.finished) {
-    el.innerHTML = "🏁 Game Over";
+  if (!playerToMove) {
+    el.innerHTML = "Waiting for opponent...";
     return;
   }
 
