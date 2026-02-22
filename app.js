@@ -1,3 +1,4 @@
+
 // ============================================================
 // Reversteem
 // Reversi fully derived from Steem blockchain comments
@@ -1008,7 +1009,7 @@ function indexToCoord(index) {
 // JOIN FLOW
 // ============================================================
 
-function joinGame(author, permlink) {
+function viewGame(author, permlink) {
 
   // Update URL hash
   window.location.hash = `#/game/${author}/${permlink}`;
@@ -1141,7 +1142,7 @@ function renderUserGameList(user, games) {
 
     div.querySelector("button").onclick = () => {
       console.log("post", JSON.stringify(post));
-      joinGame(post.author, post.permlink);
+      viewGame(post.author, post.permlink);
     };
 
     gameListDiv.appendChild(div);
@@ -1251,7 +1252,7 @@ function renderFeaturedGame(game) {
   }
 
   div.querySelector(".viewBtn").onclick = () => {
-    joinGame(game.author, game.permlink);
+    viewGame(game.author, game.permlink);
   };
 
   featuredGameDiv.appendChild(div);
@@ -1280,7 +1281,7 @@ function renderGameList(games) {
     }
 
     div.querySelector(".viewBtn").onclick = () => {
-      joinGame(game.author, game.permlink);
+      viewGame(game.author, game.permlink);
     };
 
     gameListDiv.appendChild(div);
