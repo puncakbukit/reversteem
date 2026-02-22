@@ -874,7 +874,7 @@ function renderSpectatorConsole(allReplies, replies) {
         }
 
         if (moveIndex != null) {
-          extra = ` on ${moveIndex === "?" ? "?" : indexToCoord(moveIndex)}`;
+          extra = moveIndex === "?" ? "" : ` on ${indexToCoord(moveIndex)}`;
         }
 
       } catch {}
