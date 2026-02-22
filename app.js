@@ -894,7 +894,7 @@ async function loadMovesFromSteem() {
 		steem.api.getState(
 		  `/@${currentGame.author}/${currentGame.permlink}`,
 		  (err2, _state) => {
-
+			console.log("_state: ", JSON.stringify(_state));
             if (err2) return reject(err2);
 
 			// Extract all comments except root
