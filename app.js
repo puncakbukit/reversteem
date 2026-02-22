@@ -827,17 +827,28 @@ function renderSpectatorConsole(replies) {
     return;
   }
 
-  // Build a lookup for move comments by permlink
-  const moveCommentMap = {};
+  // 1️⃣ Build lookup maps
+  const moveCommentMap = {};      // permlink -> index
+  const parentMap = {};           // permlink -> parent_permlink
+
   replies.forEach(reply => {
     try {
       const meta = JSON.parse(reply.json_metadata);
       if (meta.app?.startsWith(APP_NAME + "/") && meta.action === "move") {
         moveCommentMap[reply.permlink] = meta.index;
       }
+      parentMap[reply.permlink] = reply.parent_permlink;
     } catch {}
   });
 
+  // Helper: recursively find nearest move ancestor
+  function findMoveIndex(permlink) {
+    if (!permlink) return null;
+    if (moveCommentMap[permlink] != null) return moveCommentMap[permlink];
+    return findMoveIndex(parentMap[permlink]);
+  }
+
+  // 2️⃣ Render sorted
   replies
     .sort((a, b) => new Date(a.created) - new Date(b.created))
     .forEach(reply => {
@@ -846,12 +857,11 @@ function renderSpectatorConsole(replies) {
       let extra = "";
 
       try {
-		console.log("reply", JSON.stringify(reply));
         const meta = JSON.parse(reply.json_metadata);
 
-        // If this reply is replying to a move, show "on <coord>"
-        if (meta.parent_permlink && moveCommentMap[meta.parent_permlink] != null) {
-          extra = ` on ${indexToCoord(moveCommentMap[meta.parent_permlink])}`;
+        const moveIndex = findMoveIndex(meta.parent_permlink);
+        if (moveIndex != null) {
+          extra = ` on ${indexToCoord(moveIndex)}`;
         }
       } catch {}
 
