@@ -877,6 +877,40 @@ function classifyReplies(replies) {
   return { gameReplies, spectatorReplies };
 }
 
+function fetchAllReplies(author, permlink, callback, collected = []) {
+
+  callWithFallback(
+    steem.api.getContentReplies,
+    [author, permlink],
+    (err, replies) => {
+
+      if (err || !replies || replies.length === 0) {
+        return callback(collected);
+      }
+
+      let pending = replies.length;
+
+      replies.forEach(reply => {
+
+        collected.push(reply);
+
+        fetchAllReplies(
+          reply.author,
+          reply.permlink,
+          () => {
+            pending--;
+            if (pending === 0) {
+              callback(collected);
+            }
+          },
+          collected
+        );
+
+      });
+    }
+  );
+}
+
 async function loadMovesFromSteem() {
   if (!currentGame) return;
 
@@ -891,51 +925,45 @@ async function loadMovesFromSteem() {
       (err, root) => {
 
         if (err) return reject(err);
-		steem.api.getState(
-		  `/${currentGame.author}/${currentGame.permlink}`,
-		  (err2, _state) => {
-			console.log("_state: ", JSON.stringify(_state));
-            if (err2) return reject(err2);
 
-			// Extract all comments except root
-			const allComments = Object.values(_state.content)
-			  .filter(c =>
-				c.depth > 0 &&
-				c.root_author === currentGame.author &&
-				c.root_permlink === currentGame.permlink
-			  );
-
-			// Separate replies
-			const { gameReplies, spectatorReplies } =
-			  classifyReplies(allComments);
-			  
-            // Derive engine state only from gameReplies
-            const state = deriveGameState(root, gameReplies);            
-            timeoutMinutes = state.timeoutMinutes;
-            gameStartTime = state.gameStartTime;
-            lastMoveTime = state.lastMoveTime;
-            blackPlayer = state.blackPlayer;
-            whitePlayer = state.whitePlayer;
-            board = state.board;
-            currentPlayer = state.currentPlayer;
-            moves = state.moves;
-            finished = state.finished;
-            winner = state.winner;
-            currentAppliedMoves = state.appliedMoves;
-            timeoutDisplayDiv.innerText =
-              `Move timeout: ${formatTimeout(state.timeoutMinutes)}`;
-
-            renderBoard();
-            renderSpectatorConsole(spectatorReplies);
-            renderPlayerBar(playerBarDiv, blackPlayer, whitePlayer);
-            updateTurnIndicator(state);
-            renderClaimButton();
-            if (!finished) {
-              pollTimer = setTimeout(() => loadMovesFromSteem(), 15000);
-            }
-            resolve();
-          }
-        );
+		fetchAllReplies(
+		  currentGame.author,
+		  currentGame.permlink,
+		  (allReplies) => {
+		
+		    const { gameReplies, spectatorReplies } =
+		      classifyReplies(allReplies);
+		
+		    const state = deriveGameState(root, gameReplies);
+		
+		    timeoutMinutes = state.timeoutMinutes;
+		    gameStartTime = state.gameStartTime;
+		    lastMoveTime = state.lastMoveTime;
+		    blackPlayer = state.blackPlayer;
+		    whitePlayer = state.whitePlayer;
+		    board = state.board;
+		    currentPlayer = state.currentPlayer;
+		    moves = state.moves;
+		    finished = state.finished;
+		    winner = state.winner;
+		    currentAppliedMoves = state.appliedMoves;
+		
+		    timeoutDisplayDiv.innerText =
+		      `Move timeout: ${formatTimeout(state.timeoutMinutes)}`;
+		
+		    renderBoard();
+		    renderSpectatorConsole(spectatorReplies);
+		    renderPlayerBar(playerBarDiv, blackPlayer, whitePlayer);
+		    updateTurnIndicator(state);
+		    renderClaimButton();
+		
+		    if (!finished) {
+		      pollTimer = setTimeout(() => loadMovesFromSteem(), 15000);
+		    }
+		
+		    resolve();
+		  }
+		);		  
       }
     );
   });
