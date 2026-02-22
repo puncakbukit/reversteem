@@ -192,34 +192,32 @@
   <div id="timeout-controls" style="margin: 10px 0;">
   </div>
   <!-- =========================
-     Spectator Console
-     ========================= -->
-  <div id="gameContainer" style="display:flex; justify-content:center; gap:20px; margin-top:20px;">
+       Game Container
+       ========================= -->
+  <div id="gameContainer" style="margin-top:20px;">
   
+    <!-- Board Section -->
     <div id="boardArea">
-    <!-- =========================
-         Active Game Board
-         Used when viewing a specific game
-         ========================= -->
-    <div id="turnIndicator"></div>
-    <div id="board">
-    </div>
+      <div id="turnIndicator" style="margin-bottom:10px; font-weight:bold;"></div>
+      <div id="board"></div>
     </div>
   
+    <!-- Spectator Chat Below Board -->
     <div id="spectatorConsole" style="
-        width:300px;
-        max-height:420px;
-        overflow-y:auto;
-        background:#111;
-        color:#0f0;
-        font-family:monospace;
-        font-size:12px;
-        padding:10px;
-        border-radius:6px;
-        text-align:left;
+        margin: 30px auto 0 auto;
+        max-width: 800px;
+        max-height: 300px;
+        overflow-y: auto;
+        background: #111;
+        color: #0f0;
+        font-family: monospace;
+        font-size: 13px;
+        padding: 12px;
+        border-radius: 6px;
+        text-align: left;
     ">
-      <div style="color:#fff; margin-bottom:6px;">
-        Spectator Chat
+      <div style="color:#fff; margin-bottom:8px; font-weight:bold;">
+        💬 Spectator Chat
       </div>
       <div id="spectatorMessages"></div>
     </div>
