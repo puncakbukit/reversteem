@@ -891,16 +891,24 @@ async function loadMovesFromSteem() {
       (err, root) => {
 
         if (err) return reject(err);
-
-        steem.api.getContentReplies(
-          currentGame.author,
-          currentGame.permlink,
-          (err2, replies) => {
+		steem.api.getState(
+		  `/@${currentGame.author}/${currentGame.permlink}`,
+		  (err2, state) => {
 
             if (err2) return reject(err2);
 
-            // Separate replies
-            const { gameReplies, spectatorReplies } = classifyReplies(replies);
+			// Extract all comments except root
+			const allComments = Object.values(state.content)
+			  .filter(c =>
+				c.depth > 0 &&
+				c.root_author === currentGame.author &&
+				c.root_permlink === currentGame.permlink
+			  );
+
+			// Separate replies
+			const { gameReplies, spectatorReplies } =
+			  classifyReplies(allComments);
+			  
             // Derive engine state only from gameReplies
             const state = deriveGameState(root, gameReplies);            
             timeoutMinutes = state.timeoutMinutes;
