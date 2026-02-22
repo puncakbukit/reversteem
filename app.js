@@ -892,7 +892,7 @@ async function loadMovesFromSteem() {
 
         if (err) return reject(err);
 		steem.api.getState(
-		  `/@${currentGame.author}/${currentGame.permlink}`,
+		  `/${currentGame.author}/${currentGame.permlink}`,
 		  (err2, _state) => {
 			console.log("_state: ", JSON.stringify(_state));
             if (err2) return reject(err2);
