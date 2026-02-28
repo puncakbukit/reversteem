@@ -306,7 +306,19 @@ const GameView = {
       return `⏳ Waiting for @${playerToMove} (${colorLabel})`; // @username replaced in template
     },
     canClaimTimeout() {
-      return isTimeoutClaimable(this.gameState) && !!this.username;
+      const s = this.gameState;
+      if (!isTimeoutClaimable(s) || !this.username) return false;
+      // Only the opponent of the timed-out player may claim.
+      // currentPlayer is the one who timed out — the winner is the other.
+      const expectedWinner = s.currentPlayer === "black" ? s.whitePlayer : s.blackPlayer;
+      return this.username === expectedWinner;
+    },
+    isLosingByTimeout() {
+      const s = this.gameState;
+      if (!isTimeoutClaimable(s) || !this.username || s.finished) return false;
+      // The timed-out player is whoever's turn it currently is
+      const timedOutPlayer = s.currentPlayer === "black" ? s.blackPlayer : s.whitePlayer;
+      return this.username === timedOutPlayer;
     },
     loserName() {
       const s = this.gameState;
@@ -484,7 +496,23 @@ const GameView = {
       flips.forEach(f => (simulatedBoard[f] = state.currentPlayer));
 
       const meta = { app: APP_INFO, action: "move", index, moveNumber: state.appliedMoves };
-      const body = `## Move by @${this.username}\n\nPlayed at ${indexToCoord(index)}\n\n${boardToMarkdown(simulatedBoard)}`;
+
+      // Detect if this move ends the game
+      const nextColor = state.currentPlayer === "black" ? "white" : "black";
+      const blackCanMove = hasAnyValidMove(simulatedBoard, "black");
+      const whiteCanMove = hasAnyValidMove(simulatedBoard, "white");
+      const gameEndsAfterMove = !blackCanMove && !whiteCanMove;
+      let finishSuffix = "";
+      if (gameEndsAfterMove) {
+        const score = countDiscs(simulatedBoard);
+        let resultLine;
+        if (score.black > score.white) resultLine = `⚫ ${state.blackPlayer} wins! (${score.black}–${score.white})`;
+        else if (score.white > score.black) resultLine = `⚪ ${state.whitePlayer} wins! (${score.white}–${score.black})`;
+        else resultLine = `🤝 Draw! (${score.black}–${score.white})`;
+        finishSuffix = `\n\n---\n🏁 **Game Over** — ${resultLine}`;
+      }
+
+      const body = `## Move by @${this.username}\n\nPlayed at ${indexToCoord(index)}\n\n${boardToMarkdown(simulatedBoard)}${finishSuffix}`;
 
       keychainPost(
         this.username, "", body,
@@ -505,14 +533,22 @@ const GameView = {
     postTimeoutClaim() {
       const state = this.gameState;
       if (!state) return;
+      // Guard: only the opponent of the timed-out player may post a claim
+      const expectedWinner = state.currentPlayer === "black" ? state.whitePlayer : state.blackPlayer;
+      if (this.username !== expectedWinner) {
+        this.notify("You are not the opponent of the timed-out player.", "error");
+        return;
+      }
       const meta = {
         app: APP_INFO,
         action: "timeout_claim",
         claimAgainst: state.currentPlayer,
         moveNumber: state.appliedMoves
       };
+      const timedOutPlayer = state.currentPlayer === "black" ? state.blackPlayer : state.whitePlayer;
+      const claimBody = `## Timeout Claim by @${this.username}\n\n@${timedOutPlayer} exceeded the ${formatTimeout(state.timeoutMinutes)} move time limit.\n\n---\n🏁 **Game Over** — ⏰ @${this.username} wins by timeout!`;
       keychainPost(
-        this.username, "", `Timeout claim by @${this.username}`,
+        this.username, "", claimBody,
         this.permlink, this.author,
         meta,
         `reversteem-timeout-${Date.now()}`, "",
@@ -552,6 +588,15 @@ const GameView = {
         <!-- Timeout Claim -->
         <div v-if="canClaimTimeout" style="margin:10px 0;">
           <button @click="postTimeoutClaim">Claim Timeout Victory vs @{{ loserName }}</button>
+        </div>
+
+        <!-- Timeout loss warning for the player who ran out of time -->
+        <div v-if="isLosingByTimeout" style="
+          margin: 10px auto; padding: 12px 16px; max-width: 480px;
+          background: #fff3e0; border: 2px solid #e65100;
+          border-radius: 8px; font-weight: bold; color: #b71c1c;
+        ">
+          ⏰ Your time is up! Your opponent may claim timeout victory against you at any moment.
         </div>
 
         <!-- Turn Indicator -->

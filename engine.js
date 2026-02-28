@@ -21,6 +21,16 @@ const MAX_TIMEOUT_MINUTES = 10080; // 7 days
 
 const LIVE_DEMO = "https://puncakbukit.github.io/reversteem/";
 
+// Steem timestamps are UTC but lack the 'Z' suffix (e.g. "2024-01-01T12:00:00").
+// Parsing them with new Date() treats them as local time in most browsers,
+// causing timeout calculations to be off by the user's UTC offset.
+// Always append 'Z' to force UTC interpretation.
+function steemDate(ts) {
+  if (!ts) return new Date(NaN);
+  if (typeof ts === "string" && !ts.endsWith("Z")) ts += "Z";
+  return new Date(ts);
+}
+
 // ---- Board helpers ----
 
 function isOnBoardGeneric(from, to, dir) {
@@ -103,7 +113,7 @@ function deriveGameStateFull(rootPost, replies) {
     }
   } catch {}
 
-  replies.sort((a, b) => new Date(a.created) - new Date(b.created));
+  replies.sort((a, b) => steemDate(a.created) - steemDate(b.created));
 
   replies.forEach(reply => {
     try {
@@ -146,7 +156,10 @@ function deriveGameStateFull(rootPost, replies) {
   const board = initialBoard();
   let appliedMoves = 0;
   let turn = "black";
-  let lastMoveTime = rootPost.created;
+  // Clock starts when both players are present (gameStartTime = join time).
+  // Using rootPost.created would make moves by the first player appear timed-out
+  // if white joined late, since the clock would have been running since creation.
+  let lastMoveTime = gameStartTime || rootPost.created;
 
   for (const move of moves) {
     if (move.moveNumber !== appliedMoves) continue;
@@ -195,7 +208,7 @@ function deriveGameStateFull(rootPost, replies) {
     if (claim.author !== expectedWinner) continue;
     if (claim.claimAgainst !== turn) continue;
 
-    const minutesPassed = (new Date(claim.created) - new Date(lastMoveTime)) / (1000 * 60);
+    const minutesPassed = (steemDate(claim.created) - steemDate(lastMoveTime)) / (1000 * 60);
     if (minutesPassed >= timeoutMinutes) {
       finished = true;
       winner = turn === "black" ? "white" : "black";
@@ -228,7 +241,7 @@ function deriveGameState(rootPost, replies) {
   let cache = null;
   try { cache = JSON.parse(localStorage.getItem(cacheKey)); } catch {}
 
-  replies.sort((a, b) => new Date(a.created) - new Date(b.created));
+  replies.sort((a, b) => steemDate(a.created) - steemDate(b.created));
   const latestCreated = replies.length > 0 ? replies[replies.length - 1].created : null;
 
   if (cache && cache.lastCreated === latestCreated && cache.replyCount === replies.length) {
@@ -279,13 +292,13 @@ function calculateEloDelta(rA, rB, scoreA) {
 
 async function updateEloRatingsFromGames(posts) {
   if (!posts || posts.length === 0) return;
-  const sorted = [...posts].sort((a, b) => new Date(a.created) - new Date(b.created));
+  const sorted = [...posts].sort((a, b) => steemDate(a.created) - steemDate(b.created));
 
   let cache = getEloCache() || { lastProcessed: null, ratings: {} };
   const ratings = cache.ratings;
 
   for (const post of sorted) {
-    if (cache.lastProcessed && new Date(post.created) <= new Date(cache.lastProcessed)) continue;
+    if (cache.lastProcessed && steemDate(post.created) <= steemDate(cache.lastProcessed)) continue;
 
     const gameState = await deriveGameForElo(post);
     if (!gameState.finished || !gameState.blackPlayer || !gameState.whitePlayer) continue;
@@ -343,11 +356,11 @@ function formatTimeout(minutes) {
 
 function isTimeoutClaimable(state) {
   if (!state || state.finished || !state.currentPlayer || !state.whitePlayer) return false;
-  const lastMoveTime = state.moves.length > 0
-    ? state.moves[state.moves.length - 1].created
-    : state.gameStartTime || state.rootCreated;
-  if (!lastMoveTime) return false;
-  const minutesPassed = (new Date() - new Date(lastMoveTime)) / (1000 * 60);
+  // Use the authoritative lastMoveTime from derived state — this is set to
+  // gameStartTime (join time) initially, then updated on each applied move.
+  // This ensures the clock only starts when both players are present.
+  if (!state.lastMoveTime) return false;
+  const minutesPassed = (new Date() - steemDate(state.lastMoveTime)) / (1000 * 60);
   return minutesPassed >= state.timeoutMinutes;
 }
 
