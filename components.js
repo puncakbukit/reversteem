@@ -149,7 +149,8 @@ const AuthControlsComponent = {
       usernameInput: "",
       showLoginForm: false,
       gameTitle: "",
-      titleEdited: false
+      titleEdited: false,
+      inviteInputs: ["", "", ""]   // up to 3 invite slots
     };
   },
   watch: {
@@ -207,7 +208,11 @@ const AuthControlsComponent = {
     },
     submitStartGame() {
       const title = this.gameTitle.trim() || this.defaultTitle;
-      this.$emit("start-game", { title, timeoutMinutes: this.timeoutMinutes });
+      const invites = this.inviteInputs
+        .map(u => u.trim().toLowerCase().replace(/^@/, ""))
+        .filter(Boolean)
+        .filter((u, i, a) => a.indexOf(u) === i); // dedupe
+      this.$emit("start-game", { title, timeoutMinutes: this.timeoutMinutes, invites });
     }
   },
   template: `
@@ -267,6 +272,32 @@ const AuthControlsComponent = {
             title="Reset to default title"
             style="background:#888; padding:7px 10px;"
           >↺</button>
+        </div>
+
+        <!-- Invite inputs -->
+        <div style="margin:8px 0;">
+          <div style="font-size:12px; color:#555; margin-bottom:4px;">
+            Invite players (optional, max 3) — only they can join:
+          </div>
+          <div style="display:inline-flex; flex-direction:column; gap:4px;">
+            <div v-for="(_, i) in inviteInputs" :key="i" style="display:flex; align-items:center; gap:4px;">
+              <span style="color:#888; font-size:13px; width:12px;">@</span>
+              <input
+                v-model="inviteInputs[i]"
+                type="text"
+                placeholder="username"
+                maxlength="50"
+                style="padding:5px 8px; border-radius:6px; border:1px solid #ccc; font-size:13px; width:180px;"
+              />
+            </div>
+          </div>
+          <div v-if="inviteInputs.some(u => u.trim())" style="margin-top:4px; font-size:12px; color:#2e7d32;">
+            Only
+            <span v-for="(u, i) in inviteInputs.filter(u => u.trim())" :key="i">
+              <strong>@{{ u.trim().replace(/^@/, '') }}</strong><span v-if="i < inviteInputs.filter(u => u.trim()).length - 1">, </span>
+            </span>
+            can join.
+          </div>
         </div>
 
         <br/>
@@ -560,7 +591,10 @@ const GamePreviewComponent = {
   methods: {
     getGameStatus,
     canJoin() {
-      return this.username && !this.game.whitePlayer && this.username !== this.game.blackPlayer;
+      if (!this.username || this.game.whitePlayer || this.username === this.game.blackPlayer) return false;
+      const invites = Array.isArray(this.game.invites) ? this.game.invites : [];
+      if (invites.length > 0) return invites.includes(this.username.toLowerCase());
+      return true;
     }
   },
   components: { MiniBoardComponent, PlayerBarComponent, OthelloTableComponent },
