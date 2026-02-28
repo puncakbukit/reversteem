@@ -13,18 +13,32 @@ const { createRouter, createWebHashHistory } = VueRouter;
 // ---- DashboardView ----
 const DashboardView = {
   name: "DashboardView",
-  inject: ["username", "hasKeychain", "notify"],
+  inject: ["username", "hasKeychain", "notify", "setInviteCount"],
   components: { GamePreviewComponent, GameFilterComponent },
   data() {
     return { games: [], loading: true, filterFn: null };
   },
   computed: {
+    invitedGames() {
+      if (!this.username) return [];
+      return this.games.filter(g =>
+        !g.whitePlayer &&
+        Array.isArray(g.invites) &&
+        g.invites.includes(this.username.toLowerCase())
+      );
+    },
     filteredGames() {
-      if (!this.filterFn) return this.games;
-      return this.games.filter(this.filterFn);
+      // Exclude already-shown invited games from the main list
+      const invitedPermalinks = new Set(this.invitedGames.map(g => g.permlink));
+      const base = this.games.filter(g => !invitedPermalinks.has(g.permlink));
+      if (!this.filterFn) return base;
+      return base.filter(this.filterFn);
     },
     featuredGames() { return this.filteredGames.slice(0, 2); },
     otherGames()    { return this.filteredGames.slice(2); }
+  },
+  watch: {
+    invitedGames(val) { this.setInviteCount(val.length); }
   },
   async created() {
     await this.loadGames();
@@ -37,10 +51,15 @@ const DashboardView = {
         const enriched = await enrichGamesWithWhitePlayer(raw);
         await updateEloRatingsFromGames(enriched);
         this.games = enriched.sort((a, b) => new Date(b.created) - new Date(a.created));
+        this.setInviteCount(this.invitedGames.length);
       } catch (e) {
         console.error("Failed to load games", e);
       }
       this.loading = false;
+    },
+    timePresetLabel(mins) {
+      const preset = Object.entries(TIME_PRESETS).find(([, v]) => v === mins);
+      return preset ? preset[0].charAt(0).toUpperCase() + preset[0].slice(1) : mins + ' min';
     },
     viewGame(game) {
       this.$router.push(`/game/${game.author}/${game.permlink}`);
@@ -56,6 +75,13 @@ const DashboardView = {
       }
       if (this.username === game.blackPlayer) {
         this.notify("You cannot join your own game.", "error");
+        return;
+      }
+
+      // Guard: enforce invite list before posting to blockchain
+      const invites = Array.isArray(game.invites) ? game.invites : [];
+      if (invites.length > 0 && !invites.includes(this.username.toLowerCase())) {
+        this.notify("You are not invited to this game.", "error");
         return;
       }
 
@@ -81,6 +107,33 @@ const DashboardView = {
     <div>
       <div v-if="loading"><p>Loading games...</p></div>
       <div v-else>
+        <!-- Invitations banner -->
+        <div v-if="invitedGames.length" style="
+          margin: 12px auto; padding: 14px 18px; max-width: 600px;
+          background: #fff8e1; border: 2px solid #f9a825;
+          border-radius: 8px; text-align: left;
+        ">
+          <div style="font-weight: bold; margin-bottom: 8px; color: #e65100;">
+            📬 You have {{ invitedGames.length === 1 ? '1 invitation' : invitedGames.length + ' invitations' }}
+          </div>
+          <div v-for="game in invitedGames" :key="game.permlink"
+            style="display:flex; align-items:center; justify-content:space-between;
+              padding: 6px 0; border-top: 1px solid #ffe082; flex-wrap:wrap; gap:6px;"
+          >
+            <span style="font-size:13px; color:#333;">
+              <a :href="'#/@' + game.blackPlayer" style="color:#2e7d32; text-decoration:none; font-weight:bold;">@{{ game.blackPlayer }}</a>
+              invited you to a
+              <strong>{{ timePresetLabel(game.timeoutMinutes) }}</strong>
+              game
+            </span>
+            <button
+              @click="$emit('view-game', game) || $router.push('/game/' + game.author + '/' + game.permlink)"
+              style="padding: 4px 14px; background: #f9a825; border: none;
+                border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 13px;"
+            >View &amp; Join →</button>
+          </div>
+        </div>
+
         <game-filter-component @filter="fn => filterFn = fn"></game-filter-component>
         <p v-if="!filteredGames.length" style="color:#888;">No games match the current filter.</p>
         <div id="featuredGame" v-if="featuredGames.length">
@@ -153,6 +206,13 @@ const ProfileView = {
         this.notify("You cannot join your own game.", "error");
         return;
       }
+      // Guard: enforce invite list before posting to blockchain
+      const invites = Array.isArray(game.invites) ? game.invites : [];
+      if (invites.length > 0 && !invites.includes(this.username.toLowerCase())) {
+        this.notify("You are not invited to this game.", "error");
+        return;
+      }
+
       const meta = { app: APP_INFO, action: "join" };
       const body = `## @${this.username} joined as White\n\nGame link: ${LIVE_DEMO}#/game/${game.author}/${game.permlink}`;
       keychainPost(
@@ -268,7 +328,13 @@ const GameView = {
     canJoin() {
       const s = this.gameState;
       if (!s || s.finished || s.whitePlayer) return false;
-      return this.hasKeychain && !!this.username && this.username !== s.blackPlayer;
+      if (!this.hasKeychain || !this.username || this.username === s.blackPlayer) return false;
+      // invites is always an array after the cache fix ([] = open game)
+      const invites = Array.isArray(s.invites) ? s.invites : [];
+      if (invites.length > 0) {
+        return invites.includes(this.username.toLowerCase());
+      }
+      return true;
     },
     // The author+permlink that a spectator comment should reply to.
     // Replies to last move while game is in progress; replies to root otherwise.
@@ -321,6 +387,7 @@ const GameView = {
           this.gameState.lastMoveTime = state.lastMoveTime;
           // whitePlayer may have just joined
           this.gameState.whitePlayer = state.whitePlayer;
+          this.gameState.invites = state.invites || [];
         }
 
         // Fetch account data only when a player username is newly seen
@@ -383,6 +450,12 @@ const GameView = {
     async joinGame() {
       const state = this.gameState;
       if (!state) return;
+      // Guard: enforce invite list before posting to blockchain
+      const invites = Array.isArray(state.invites) ? state.invites : [];
+      if (invites.length > 0 && !invites.includes(this.username.toLowerCase())) {
+        this.notify("You are not invited to this game.", "error");
+        return;
+      }
       const meta = { app: APP_INFO, action: "join" };
       const body = `## @${this.username} joined as White\n\nGame link: ${LIVE_DEMO}#/game/${this.author}/${this.permlink}`;
       keychainPost(
@@ -495,6 +568,15 @@ const GameView = {
         <!-- Join -->
         <div v-if="canJoin" style="margin:10px 0;">
           <button @click="joinGame">Join as White ⚪</button>
+        </div>
+
+        <!-- Invite list (shown when game is open and has restrictions) -->
+        <div v-if="!gameState.whitePlayer && gameState.invites && gameState.invites.length > 0"
+          style="margin:8px 0; font-size:13px; color:#555;">
+          Open to:
+          <span v-for="(u, i) in gameState.invites" :key="u">
+            <a :href="'#/@' + u" style="color:#2e7d32; text-decoration:none; font-weight:bold;">@{{ u }}</a><span v-if="i < gameState.invites.length - 1">, </span>
+          </span>
         </div>
 
         <!-- Board -->
@@ -1213,7 +1295,7 @@ const App = {
       localStorage.removeItem("steem_user");
     }
 
-    async function startGame({ title, timeoutMinutes: rawTimeout } = {}) {
+    async function startGame({ title, timeoutMinutes: rawTimeout, invites: rawInvites } = {}) {
       if (!window.steem_keychain || !username.value) {
         notify("Please log in first.", "error");
         return;
@@ -1222,12 +1304,28 @@ const App = {
       const clampedTimeout = Math.max(MIN_TIMEOUT_MINUTES, Math.min(rawTimeout || DEFAULT_TIMEOUT_MINUTES, MAX_TIMEOUT_MINUTES));
       const gameTitle = (title || defaultTitle.value).trim();
       const permlink = `${APP_NAME}-${Date.now()}`;
+
+      // Sanitise invites: strip @, lowercase, dedupe, exclude self, cap at 3
+      const invites = (rawInvites || [])
+        .map(u => u.trim().toLowerCase().replace(/^@/, ""))
+        .filter(Boolean)
+        .filter(u => u !== username.value.toLowerCase())
+        .filter((u, i, a) => a.indexOf(u) === i)
+        .slice(0, 3);
+
       const meta = { app: APP_INFO, type: "game_start", black: username.value, white: null, timeoutMinutes: clampedTimeout, status: "open" };
+      if (invites.length > 0) meta.invites = invites;
+
       const board = initialBoard();
+      const inviteLine = invites.length > 0
+        ? `Invited: ${invites.map(u => `@${u}`).join(", ")} (only they can join)\n`
+        : "";
       const body =
         `## New Reversteem Game\n\n` +
         `Black: @${username.value}\n` +
-        `Timeout per move: ${clampedTimeout} minutes\n\n` +
+        `Timeout per move: ${clampedTimeout} minutes\n` +
+        inviteLine +
+        `\n` +
         boardToMarkdown(board) +
         `\n\n---\nMove by commenting via [Reversteem](${LIVE_DEMO}).`;
 
@@ -1259,9 +1357,12 @@ const App = {
     // Provide shared state to all descendant components (including route views).
     // This is the correct Vue pattern for passing data that isn't route-param-based
     // down through <router-view> without manually threading props on every route.
+    const inviteCount = ref(0);
+    function setInviteCount(n) { inviteCount.value = n; }
     provide("username", username);
     provide("hasKeychain", hasKeychain);
     provide("notify", notify);
+    provide("setInviteCount", setInviteCount);
 
     return {
       username,
@@ -1281,7 +1382,8 @@ const App = {
       updateTimeout,
       updateAccountCache,
       TIME_PRESETS,
-      getUserRating
+      getUserRating,
+      inviteCount
     };
   },
 
@@ -1299,7 +1401,12 @@ const App = {
         style="margin: 0 10px; text-decoration: none; color: #2e7d32; font-weight: bold;"
         active-class=""
         exact-active-class="nav-active"
-      >Home</router-link>
+      >Home<span v-if="inviteCount > 0" style="
+          display:inline-flex; align-items:center; justify-content:center;
+          background:#c62828; color:white; font-size:10px; font-weight:bold;
+          border-radius:50%; width:16px; height:16px; margin-left:4px;
+          vertical-align:middle; line-height:1;
+        ">{{ inviteCount }}</span></router-link>
       <router-link
         v-if="username"
         :to="'/@' + username"

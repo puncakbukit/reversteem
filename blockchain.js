@@ -175,7 +175,12 @@ function deriveWhitePlayer(post) {
             try {
               const rmeta = JSON.parse(reply.json_metadata);
               if (rmeta.app?.startsWith(APP_NAME + "/") && rmeta.action === "join" && reply.author !== blackPlayer) {
-                whitePlayer = reply.author;
+                const invites = Array.isArray(meta.invites)
+                  ? meta.invites.map(u => String(u).toLowerCase())
+                  : [];
+                if (invites.length === 0 || invites.includes(reply.author.toLowerCase())) {
+                  whitePlayer = reply.author;
+                }
               }
             } catch {}
           });
@@ -185,6 +190,9 @@ function deriveWhitePlayer(post) {
         const tm = parseInt(meta.timeoutMinutes);
         if (!isNaN(tm)) timeoutMinutes = Math.max(MIN_TIMEOUT_MINUTES, Math.min(tm, MAX_TIMEOUT_MINUTES));
       } catch {}
+      const invites = Array.isArray(meta.invites)
+        ? meta.invites.map(u => String(u).toLowerCase()).filter(Boolean)
+        : [];
       resolve({
         author: post.author,
         permlink: post.permlink,
@@ -193,6 +201,7 @@ function deriveWhitePlayer(post) {
         blackPlayer,
         whitePlayer,
         timeoutMinutes,
+        invites,
         status: whitePlayer ? "in_progress" : "open"
       });
     });
