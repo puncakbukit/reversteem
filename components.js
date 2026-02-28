@@ -56,12 +56,12 @@ const ProfileHeaderComponent = {
               {{ displayData.displayName }}
               <span style="font-size:14px; color:#666;">(ELO: {{ userRating }})</span>
             </h2>
-            <small>@{{ displayData.username }}</small>
+            <small><a :href="'#/@' + displayData.username" style="color:#555;text-decoration:none;">@{{ displayData.username }}</a></small>
             <p style="margin:5px 0;">{{ displayData.about }}</p>
           </template>
           <template v-else>
             <h2 style="margin:0;">{{ displayData.displayName }}</h2>
-            <small>@{{ displayData.username }}</small>
+            <small><a :href="'#/@' + displayData.username" style="color:#555;text-decoration:none;">@{{ displayData.username }}</a></small>
             <p style="margin:5px 0;">{{ displayData.about }}</p>
           </template>
         </div>
@@ -271,7 +271,7 @@ const AuthControlsComponent = {
 
         <br/>
         <button @click="submitStartGame">Start New Game</button>
-        <p>Welcome @{{ username }}</p>
+        <p>Welcome <a :href="'#/@' + username" style="color:#2e7d32;font-weight:bold;text-decoration:none;">@{{ username }}</a></p>
       </div>
     </div>
   `
@@ -344,7 +344,7 @@ const PlayerBarComponent = {
                style="width:40px;height:40px;border-radius:50%;border:3px solid #ccc;"
                :style="cardStyle('white')">
           <div>
-            <strong>@{{ whiteData.username }}</strong><br>
+            <strong><a :href="'#/@' + whiteData.username" style="color:inherit;text-decoration:none;">@{{ whiteData.username }}</a></strong><br>
             <small>ELO: {{ getUserRating(whiteData.username) }}</small>
           </div>
         </template>
@@ -358,7 +358,7 @@ const PlayerBarComponent = {
                style="width:40px;height:40px;border-radius:50%;border:3px solid black;"
                :style="cardStyle('black')">
           <div>
-            <strong>@{{ blackData.username }}</strong><br>
+            <strong><a :href="'#/@' + blackData.username" style="color:inherit;text-decoration:none;">@{{ blackData.username }}</a></strong><br>
             <small>ELO: {{ getUserRating(blackData.username) }}</small>
           </div>
         </template>
@@ -482,7 +482,7 @@ const SpectatorConsoleComponent = {
         <div v-if="!sortedMessages.length" style="color:#555;">No spectator comments yet.</div>
         <div v-for="reply in sortedMessages" :key="reply.permlink">
           <span style="color:#888;">[{{ formatTime(reply.created) }}]</span>
-          <span style="color:#4fc3f7;">@{{ reply.author }}</span>{{ getMoveExtra(reply) }}:
+          <a :href="'#/@' + reply.author" style="color:#4fc3f7;text-decoration:none;">@{{ reply.author }}</a>{{ getMoveExtra(reply) }}:
           <span style="color:#0f0;" v-html="escapeConsoleText(reply.body.slice(0, 200))"></span>
         </div>
       </div>

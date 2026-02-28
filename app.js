@@ -172,7 +172,7 @@ const ProfileView = {
   },
   template: `
     <div>
-      <h3>Games by @{{ $route.params.user }}</h3>
+      <h3>Games by <a :href="'#/@' + $route.params.user" style="color:#2e7d32;text-decoration:none;">@{{ $route.params.user }}</a></h3>
       <div v-if="loading">Loading...</div>
       <div v-else-if="!games.length"><p>No games found.</p></div>
       <div v-else>
@@ -237,13 +237,13 @@ const GameView = {
       if (!s) return "";
       if (s.finished) {
         if (s.winner === "draw") return "🏁 Game Over — Draw!";
-        return `🏁 Game Over — ${s.winner === "black" ? s.blackPlayer : s.whitePlayer} wins!`;
+        return `🏁 Game Over — @${s.winner === "black" ? s.blackPlayer : s.whitePlayer} wins!`;
       }
       if (!s.whitePlayer) return "Waiting for opponent...";
       const playerToMove = s.currentPlayer === "black" ? s.blackPlayer : s.whitePlayer;
       const colorLabel = s.currentPlayer === "black" ? "Black ⚫" : "White ⚪";
       if (this.username === playerToMove) return `🟢 Your turn (${colorLabel})`;
-      return `⏳ Waiting for @${playerToMove} (${colorLabel})`;
+      return `⏳ Waiting for @${playerToMove} (${colorLabel})`; // @username replaced in template
     },
     canClaimTimeout() {
       return isTimeoutClaimable(this.gameState) && !!this.username;
@@ -252,6 +252,18 @@ const GameView = {
       const s = this.gameState;
       if (!s) return "";
       return s.currentPlayer === "black" ? s.blackPlayer : s.whitePlayer;
+    },
+    waitingForPlayer() {
+      const s = this.gameState;
+      if (!s || s.finished || !s.whitePlayer) return null;
+      const playerToMove = s.currentPlayer === "black" ? s.blackPlayer : s.whitePlayer;
+      if (this.username === playerToMove) return null;
+      return playerToMove;
+    },
+    winnerPlayer() {
+      const s = this.gameState;
+      if (!s || !s.finished || s.winner === "draw") return null;
+      return s.winner === "black" ? s.blackPlayer : s.whitePlayer;
     },
     canJoin() {
       const s = this.gameState;
@@ -466,12 +478,18 @@ const GameView = {
 
         <!-- Timeout Claim -->
         <div v-if="canClaimTimeout" style="margin:10px 0;">
-          <button @click="postTimeoutClaim">Claim Timeout Victory vs {{ loserName }}</button>
+          <button @click="postTimeoutClaim">Claim Timeout Victory vs @{{ loserName }}</button>
         </div>
 
         <!-- Turn Indicator -->
         <div id="turnIndicator" style="margin-bottom:10px; font-weight:bold;">
-          {{ turnIndicatorText }}
+          <template v-if="winnerPlayer">
+            🏁 Game Over — <a :href="'#/@' + winnerPlayer" style="color:#2e7d32;text-decoration:none;">@{{ winnerPlayer }}</a> wins!
+          </template>
+          <template v-else-if="waitingForPlayer">
+            ⏳ Waiting for <a :href="'#/@' + waitingForPlayer" style="color:#2e7d32;text-decoration:none;">@{{ waitingForPlayer }}</a> ({{ gameState.currentPlayer === 'black' ? 'Black ⚫' : 'White ⚪' }})
+          </template>
+          <template v-else>{{ turnIndicatorText }}</template>
         </div>
 
         <!-- Join -->
