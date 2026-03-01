@@ -367,21 +367,7 @@ const PlayerBarComponent = {
   },
   template: `
     <div style="display:flex; justify-content:space-between; align-items:center; margin:15px 0;">
-      <!-- White Player -->
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span v-if="!whiteData" style="color:#888;">Waiting...</span>
-        <template v-else>
-          <img :src="whiteData.profileImage || 'https://via.placeholder.com/40'"
-               style="width:40px;height:40px;border-radius:50%;border:3px solid #ccc;"
-               :style="cardStyle('white')">
-          <div>
-            <strong><a :href="'#/@' + whiteData.username" style="color:inherit;text-decoration:none;">@{{ whiteData.username }}</a></strong><br>
-            <small>ELO: {{ getUserRating(whiteData.username) }}</small>
-          </div>
-        </template>
-      </div>
-
-      <!-- Black Player -->
+      <!-- Black Player (left) -->
       <div style="display:flex; align-items:center; gap:10px;">
         <span v-if="!blackData" style="color:#888;">Waiting...</span>
         <template v-else>
@@ -390,7 +376,21 @@ const PlayerBarComponent = {
                :style="cardStyle('black')">
           <div>
             <strong><a :href="'#/@' + blackData.username" style="color:inherit;text-decoration:none;">@{{ blackData.username }}</a></strong><br>
-            <small>ELO: {{ getUserRating(blackData.username) }}</small>
+            <small>⚫ ELO: {{ getUserRating(blackData.username) }}</small>
+          </div>
+        </template>
+      </div>
+
+      <!-- White Player (right) -->
+      <div style="display:flex; align-items:center; gap:10px; flex-direction:row-reverse; text-align:right;">
+        <span v-if="!whiteData" style="color:#888;">Waiting...</span>
+        <template v-else>
+          <img :src="whiteData.profileImage || 'https://via.placeholder.com/40'"
+               style="width:40px;height:40px;border-radius:50%;border:3px solid #ccc;"
+               :style="cardStyle('white')">
+          <div>
+            <strong><a :href="'#/@' + whiteData.username" style="color:inherit;text-decoration:none;">@{{ whiteData.username }}</a></strong><br>
+            <small>⚪ ELO: {{ getUserRating(whiteData.username) }}</small>
           </div>
         </template>
       </div>

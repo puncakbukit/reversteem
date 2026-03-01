@@ -4,6 +4,7 @@
 // ============================================================
 
 const { createApp, ref, computed, onMounted, onUnmounted, watch, provide } = Vue;
+const { useRoute } = VueRouter;
 const { createRouter, createWebHashHistory } = VueRouter;
 
 // ============================================================
@@ -283,6 +284,8 @@ const GameView = {
       whiteData: null,
       isSubmitting: false,
       pollTimer: null,
+      nowTick: Date.now(),   // updated every second so timeout computeds stay reactive
+      nowTickTimer: null,
       // `loading` is only true on the very first load, not on subsequent polls.
       // This prevents the board from unmounting/remounting every 15 seconds.
       loading: true,
@@ -306,6 +309,7 @@ const GameView = {
       return `⏳ Waiting for @${playerToMove} (${colorLabel})`; // @username replaced in template
     },
     canClaimTimeout() {
+      void this.nowTick; // reactive dependency — re-evaluates every second
       const s = this.gameState;
       if (!isTimeoutClaimable(s) || !this.username) return false;
       // Only the opponent of the timed-out player may claim.
@@ -314,6 +318,7 @@ const GameView = {
       return this.username === expectedWinner;
     },
     isLosingByTimeout() {
+      void this.nowTick; // reactive dependency — re-evaluates every second
       const s = this.gameState;
       if (!isTimeoutClaimable(s) || !this.username || s.finished) return false;
       // The timed-out player is whoever's turn it currently is
@@ -370,9 +375,11 @@ const GameView = {
   },
   async created() {
     await this.load();
+    this.nowTickTimer = setInterval(() => { this.nowTick = Date.now(); }, 1000);
   },
   beforeUnmount() {
     if (this.pollTimer) clearTimeout(this.pollTimer);
+    if (this.nowTickTimer) clearInterval(this.nowTickTimer);
   },
   methods: {
     async load() {
@@ -1404,6 +1411,7 @@ const App = {
     // down through <router-view> without manually threading props on every route.
     const inviteCount = ref(0);
     function setInviteCount(n) { inviteCount.value = n; }
+    const currentRoute = useRoute();
     provide("username", username);
     provide("hasKeychain", hasKeychain);
     provide("notify", notify);
@@ -1428,7 +1436,8 @@ const App = {
       updateAccountCache,
       TIME_PRESETS,
       getUserRating,
-      inviteCount
+      inviteCount,
+      currentRoute
     };
   },
 
@@ -1470,32 +1479,34 @@ const App = {
       >License</router-link>
     </nav>
 
-    <auth-controls-component
-      :username="username"
-      :has-keychain="hasKeychain"
-      :time-presets="TIME_PRESETS"
-      :timeout-minutes="timeoutMinutes"
-      :login-error="loginError"
-      :default-title="defaultTitle"
-      @login="login"
-      @logout="logout"
-      @start-game="startGame"
-      @update-timeout="updateTimeout"
-    ></auth-controls-component>
+    <template v-if="!currentRoute || !currentRoute.path.startsWith('/game/')">
+      <auth-controls-component
+        :username="username"
+        :has-keychain="hasKeychain"
+        :time-presets="TIME_PRESETS"
+        :timeout-minutes="timeoutMinutes"
+        :login-error="loginError"
+        :default-title="defaultTitle"
+        @login="login"
+        @logout="logout"
+        @start-game="startGame"
+        @update-timeout="updateTimeout"
+      ></auth-controls-component>
+
+      <div v-if="keychainReady && !hasKeychain" class="keychain-notice">
+        <strong>Spectator Mode</strong><br><br>
+        You are currently viewing games in read-only mode.<br><br>
+        To start or join games, please install
+        <a href="https://www.google.com/search?q=steem+keychain" target="_blank">Steem Keychain</a>
+        browser extension.
+      </div>
+    </template>
 
     <app-notification-component
       :message="notification.message"
       :type="notification.type"
       @dismiss="dismissNotification"
     ></app-notification-component>
-
-    <div v-if="keychainReady && !hasKeychain" class="keychain-notice">
-      <strong>Spectator Mode</strong><br><br>
-      You are currently viewing games in read-only mode.<br><br>
-      To start or join games, please install
-      <a href="https://www.google.com/search?q=steem+keychain" target="_blank">Steem Keychain</a>
-      browser extension.
-    </div>
 
     <router-view></router-view>
   `
