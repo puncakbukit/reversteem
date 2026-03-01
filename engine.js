@@ -203,6 +203,8 @@ function deriveGameStateFull(rootPost, replies) {
   for (const claim of timeoutClaims) {
     if (finished) break;
     if (claim.moveNumber !== appliedMoves) continue;
+    // First move is exempt — no timeout claim can be valid before any move is played
+    if (appliedMoves === 0) continue;
 
     const expectedWinner = turn === "black" ? _whitePlayer : _blackPlayer;
     if (claim.author !== expectedWinner) continue;
@@ -356,9 +358,13 @@ function formatTimeout(minutes) {
 
 function isTimeoutClaimable(state) {
   if (!state || state.finished || !state.currentPlayer || !state.whitePlayer) return false;
+  // The very first move (appliedMoves === 0) is exempt from timeout.
+  // Black may not be aware white has joined yet (e.g. they left their browser
+  // while waiting for an opponent), so it would be unfair to time them out
+  // before they have even had a chance to respond.
+  if (state.appliedMoves === 0) return false;
   // Use the authoritative lastMoveTime from derived state — this is set to
   // gameStartTime (join time) initially, then updated on each applied move.
-  // This ensures the clock only starts when both players are present.
   if (!state.lastMoveTime) return false;
   const minutesPassed = (new Date() - steemDate(state.lastMoveTime)) / (1000 * 60);
   return minutesPassed >= state.timeoutMinutes;
@@ -367,15 +373,29 @@ function isTimeoutClaimable(state) {
 function boardToMarkdown(boardArray) {
   const symbols = { black: "⚫", white: "⚪", null: "·" };
   let md = "### Current Board\n\n";
-  md += "| A | B | C | D | E | F | G | H |\n";
-  md += "|---|---|---|---|---|---|---|---|\n";
+  md += "|   | A | B | C | D | E | F | G | H |\n";
+  md += "|---|---|---|---|---|---|---|---|---|\n";
   for (let r = 0; r < 8; r++) {
-    md += "|";
+    md += `| **${r + 1}** |`;
     for (let c = 0; c < 8; c++) {
       md += ` ${symbols[boardArray[r * 8 + c]]} |`;
     }
     md += "\n";
   }
+  return md;
+}
+
+function movesToTranscript(moves, blackPlayer, whitePlayer) {
+  if (!moves || moves.length === 0) return "";
+  let md = "### Move Transcript\n\n";
+  md += "| # | Color | Square | Time |\n";
+  md += "|---|-------|--------|------|\n";
+  moves.forEach((move, i) => {
+    const color = move.author === blackPlayer ? "⚫ Black" : "⚪ White";
+    const square = indexToCoord(move.index);
+    const time = steemDate(move.created).toUTCString();
+    md += `| ${i + 1} | ${color} | ${square} | ${time} |\n`;
+  });
   return md;
 }
 

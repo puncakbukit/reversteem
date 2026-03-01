@@ -521,6 +521,65 @@ const SpectatorConsoleComponent = {
   `
 };
 
+// ---- MoveTranscriptComponent ----
+const MoveTranscriptComponent = {
+  name: "MoveTranscriptComponent",
+  props: {
+    moves: Array,        // array of applied move objects from gameState.moves
+    blackPlayer: String,
+    whitePlayer: String
+  },
+  computed: {
+    transcriptRows() {
+      if (!this.moves || !this.moves.length) return [];
+      return this.moves.map((move, i) => ({
+        num: i + 1,
+        author: move.author,
+        color: move.author === this.blackPlayer ? "black" : "white",
+        colorLabel: move.author === this.blackPlayer ? "⚫ Black" : "⚪ White",
+        square: indexToCoord(move.index),
+        time: steemDate(move.created).toLocaleTimeString()
+      }));
+    }
+  },
+  template: `
+    <div style="margin:16px auto 0 auto; max-width:800px;">
+      <div style="
+        background:#111; color:#0f0; font-family:monospace;
+        font-size:13px; padding:12px; border-radius:6px; text-align:left;
+      ">
+        <div style="color:#fff; margin-bottom:8px; font-weight:bold;">📋 Move Transcript</div>
+        <div v-if="!transcriptRows.length" style="color:#555;">No moves yet.</div>
+        <table v-else style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr style="color:#888; border-bottom:1px solid #333;">
+              <th style="text-align:left; padding:3px 8px; font-weight:normal;">#</th>
+              <th style="text-align:left; padding:3px 8px; font-weight:normal;">Color</th>
+              <th style="text-align:left; padding:3px 8px; font-weight:normal;">Square</th>
+              <th style="text-align:left; padding:3px 8px; font-weight:normal;">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="row in transcriptRows"
+              :key="row.num"
+              :style="{
+                color: row.color === 'black' ? '#bbb' : '#0f0',
+                borderBottom: '1px solid #1a1a1a'
+              }"
+            >
+              <td style="padding:3px 8px; color:#555;">{{ row.num }}</td>
+              <td style="padding:3px 8px;">{{ row.colorLabel }}</td>
+              <td style="padding:3px 8px; font-weight:bold; color:#ffeb3b;">{{ row.square }}</td>
+              <td style="padding:3px 8px; color:#888;">{{ row.time }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `
+};
+
 // ---- MiniBoardComponent ----
 const MiniBoardComponent = {
   name: "MiniBoardComponent",

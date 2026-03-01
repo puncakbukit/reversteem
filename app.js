@@ -271,7 +271,8 @@ const GameView = {
   components: {
     BoardComponent,
     PlayerBarComponent,
-    SpectatorConsoleComponent
+    SpectatorConsoleComponent,
+    MoveTranscriptComponent
   },
   data() {
     return {
@@ -519,7 +520,10 @@ const GameView = {
         finishSuffix = `\n\n---\n🏁 **Game Over** — ${resultLine}`;
       }
 
-      const body = `## Move by @${this.username}\n\nPlayed at ${indexToCoord(index)}\n\n${boardToMarkdown(simulatedBoard)}${finishSuffix}`;
+      const simulatedMoves = [...(state.moves || []), { author: this.username, index, created: new Date().toISOString() }];
+      const transcript = movesToTranscript(simulatedMoves, state.blackPlayer, state.whitePlayer);
+
+      const body = `## Move by @${this.username}\n\nPlayed at ${indexToCoord(index)}\n\n${boardToMarkdown(simulatedBoard)}\n\n${transcript}${finishSuffix}`;
 
       keychainPost(
         this.username, "", body,
@@ -646,6 +650,13 @@ const GameView = {
           :has-keychain="hasKeychain"
           @post-comment="postComment"
         ></spectator-console-component>
+
+        <!-- Move Transcript -->
+        <move-transcript-component
+          :moves="gameState.moves"
+          :black-player="gameState.blackPlayer"
+          :white-player="gameState.whitePlayer"
+        ></move-transcript-component>
       </template>
     </div>
   `
@@ -1519,6 +1530,7 @@ const App = {
 const vueApp = createApp(App);
 
 // Register global components
+vueApp.component("MoveTranscriptComponent", MoveTranscriptComponent);
 vueApp.component("ProfileHeaderComponent", ProfileHeaderComponent);
 vueApp.component("AuthControlsComponent", AuthControlsComponent);
 vueApp.component("AppNotificationComponent", AppNotificationComponent);
