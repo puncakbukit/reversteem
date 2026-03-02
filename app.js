@@ -1439,7 +1439,7 @@ const App = {
 
       const clampedTimeout = Math.max(MIN_TIMEOUT_MINUTES, Math.min(rawTimeout || DEFAULT_TIMEOUT_MINUTES, MAX_TIMEOUT_MINUTES));
       const gameTitle = (title || defaultTitle.value).trim();
-      const permlink = `${APP_NAME}-${Date.now()}`;
+      const permlink = `${convertToPermlink(gameTitle)}-${Date.now()}`;
 
       // Sanitise invites: strip @, lowercase, dedupe, exclude self, cap at 3
       const invites = (rawInvites || [])

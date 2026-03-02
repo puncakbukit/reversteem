@@ -337,6 +337,18 @@ function indexToCoord(index) {
   return file + rank;
 }
 
+function convertToPermlink(title) {
+  const slug = title
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")          // spaces → hyphens
+    .replace(/[^a-z0-9-]/g, "")   // strip characters invalid in Steem permlinks
+    .replace(/-+/g, "-")           // collapse consecutive hyphens
+    .replace(/^-|-$/g, "");        // trim leading/trailing hyphens
+  // Steem permlinks max 255 chars. Timestamp suffix is "-" + 13 digits = 14 chars.
+  return slug.slice(0, 241).replace(/-$/g, "");  // re-trim trailing hyphen after slice
+}
+
 function esc(str) {
   const d = document.createElement("div");
   d.textContent = str ?? "";

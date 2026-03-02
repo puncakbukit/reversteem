@@ -29,11 +29,13 @@ This project is both a playable game and a protocol experiment.
 * Automatic game tagging on creation (time mode, ELO, genre tags)
 * Replay caching for fast reloads
 * Multi-RPC automatic fallback
-* Markdown board export for native Steemit viewing
+* Markdown board export with row/column labels for native Steemit viewing
+* Move transcript embedded in reply comments and displayed in-game
 * Deterministic per-move time limit (claimable)
-* On-chain derived ELO rating system
-* Double-click / duplicate move prevention
+* On-chain derived ELO rating system with leaderboard page
+* Double-submission prevention on all Keychain actions
 * Flicker-free background polling (stable Vue reactivity)
+* Title-based permlink generation for human-readable game URLs
 
 ---
 
@@ -63,10 +65,10 @@ The application is split into four focused files loaded in order:
 | File | Purpose |
 |---|---|
 | `index.html` | Minimal HTML shell — CDN script tags, global CSS, `<div id="app">` mount point |
-| `engine.js` | Pure game logic — board replay, ELO calculation, tag generation, utility functions. No Vue, no DOM, no blockchain dependencies |
+| `engine.js` | Pure game logic — board replay, ELO calculation, tag generation, move transcript, permlink conversion, utility functions. No Vue, no DOM, no blockchain dependencies |
 | `blockchain.js` | All Steem API interactions — RPC fallback, account fetching, reply traversal, Keychain posting |
-| `components.js` | Reusable Vue 3 components — Board, PlayerBar, SpectatorConsole, MiniBoard, GamePreview, GameFilter, Auth controls |
-| `app.js` | Vue Router setup, route views (Dashboard / Game / Profile), root `App` component, mount |
+| `components.js` | Reusable Vue 3 components — Board, PlayerBar, SpectatorConsole, MoveTranscript, MiniBoard, GamePreview, GameFilter, Auth controls |
+| `app.js` | Vue Router setup, route views (Dashboard / Game / Profile / Leaderboard / About), root `App` component, mount |
 
 This separation keeps the game engine independently testable and the blockchain layer independently swappable.
 
@@ -94,8 +96,10 @@ Vue Router 4 uses **hash history** (`createWebHashHistory`), making it compatibl
 | Route | View | Description |
 |---|---|---|
 | `#/` | `DashboardView` | Open games list with featured game board preview |
-| `#/game/:author/:permlink` | `GameView` | Live game board, polling, spectator chat |
+| `#/game/:author/:permlink` | `GameView` | Live game board, polling, spectator chat, move transcript |
 | `#/@:user` | `ProfileView` | All games posted by a specific user |
+| `#/leaderboard` | `LeaderboardView` | ELO rankings across all rated players |
+| `#/about` | `AboutView` | Project documentation |
 
 `username` and `hasKeychain` are passed into each route view via Vue `provide` / `inject`.
 
@@ -106,12 +110,13 @@ Vue Router 4 uses **hash history** (`createWebHashHistory`), making it compatibl
 | Component | Responsibility |
 |---|---|
 | `ProfileHeaderComponent` | Displays the logged-in user's cover image, avatar, display name, and ELO rating. Falls back to the `@reversteem` account's cover and avatar for guests |
-| `AuthControlsComponent` | Login / logout buttons, time preset selector, timeout input (min 1), Start Game button |
+| `AuthControlsComponent` | Login form (shown on all pages via nav Login link), time preset selector, timeout input (min 1), game title input, invite inputs, Start Game button |
 | `BoardComponent` | Renders the 8×8 game board reactively; emits `cell-click`; disables interaction while a move is submitting |
 | `PlayerBarComponent` | Displays both players' avatars and ELO ratings; highlights the active player with a gold glow |
+| `SpectatorConsoleComponent` | Terminal-style chat panel; shows spectator comments anchored to move coordinates |
+| `MoveTranscriptComponent` | Terminal-style panel displayed below the spectator console; shows a chronological table of all moves (number, color, square, time) |
 | `MiniBoardComponent` | Compact 20px-per-cell board used in featured game previews |
 | `OthelloTableComponent` | Static marble table image thumbnail used for non-featured game cards |
-| `SpectatorConsoleComponent` | Terminal-style chat panel; shows spectator comments anchored to move coordinates |
 | `GamePreviewComponent` | Game card used in Dashboard and Profile views; fetches preview state once on mount |
 | `GameFilterComponent` | Inline filter bar for Dashboard and Profile views; filters by timeout preset or custom operator and by ELO operator |
 
@@ -130,6 +135,17 @@ When no user is logged in, `ProfileHeaderComponent` automatically fetches the `@
 
 ---
 
+## 🔐 Login / Logout
+
+Login and logout are controlled via links in the navigation menu:
+
+* **Login** link appears at the end of the nav when no user is logged in. Clicking it toggles an inline login form (username input + Sign in / Cancel buttons) that is visible on **all pages** — not only the homepage. Clicking Login again or pressing Escape collapses the form.
+* **Logout** link replaces Login once the user is authenticated. Clicking it immediately logs out and hides the form if open.
+
+The login form is part of `AuthControlsComponent` but its visibility is controlled by the `showLoginForm` ref in the root `App`, passed down as a prop. This keeps the form accessible globally while the game creation controls remain restricted to the home and profile pages.
+
+---
+
 # 🔗 On-Chain Game Model
 
 | Blockchain Object | Meaning |
@@ -143,6 +159,32 @@ When no user is logged in, `ProfileHeaderComponent` automatically fetches the `@
 Only comments containing valid JSON metadata for the `reversteem/x.y` app are processed as game events.
 
 All other comments (including spectator chat) are classified separately and displayed in the spectator console without affecting game state.
+
+---
+
+# 🔖 Game Permlinks
+
+When a game is created, its root post permlink is generated from the game title:
+
+```
+convertToPermlink(title) + "-" + Date.now()
+```
+
+`convertToPermlink` performs the following transforms in order:
+
+1. Lowercase the title
+2. Trim leading/trailing whitespace
+3. Replace whitespace runs with hyphens
+4. Strip any characters not in `[a-z0-9-]` (Steem permlink alphabet)
+5. Collapse consecutive hyphens
+6. Trim leading/trailing hyphens
+7. Truncate the slug to **241 characters** (leaving 14 characters for the `-` + 13-digit timestamp, staying within Steem's 255-character permlink limit)
+
+This produces human-readable, URL-safe permlinks such as:
+
+```
+standard-reversteem-game-by-an-elo-1200-player-1747123456789
+```
 
 ---
 
@@ -164,7 +206,46 @@ When a game is created, Reversteem automatically builds and attaches up to 7 Ste
 
 Tags are generated by `buildGameTags(timeoutMinutes, username)` in `engine.js` and merged into the post's `json_metadata.tags` array before submission. Steem Keychain's `requestPost` reads tags from `json_metadata` — there is no separate tags argument.
 
-The game title and the `elo-` tag both use the player's raw ELO rating (integer-rounded) for consistency.
+---
+
+# 📝 `boardToMarkdown` – Native Steemit Compatibility
+
+Steemit's default interface does not execute JavaScript.
+
+Reversteem includes a `boardToMarkdown(board)` function in `engine.js` to render a visual board snapshot using a Markdown table with emoji pieces (⚫ / ⚪ / ·).
+
+The board includes both **column labels** (A–H in the header row) and **row labels** (1–8 in the first column of each data row), making it easy to read move coordinates directly from the Steemit interface.
+
+Example header:
+
+```
+|   | A | B | C | D | E | F | G | H |
+|---|---|---|---|---|---|---|---|---|
+| **1** | · | · | ...
+```
+
+This is embedded in every move comment body, allowing:
+
+* Spectators on Steemit to view the board position after each move
+* Non-dApp users to follow the game
+* Protocol transparency to remain intact outside the dApp
+
+---
+
+# 📋 Move Transcript
+
+Every move reply comment includes a **move transcript** table below the board, listing all moves made in the game up to and including the current one.
+
+The transcript is generated by `movesToTranscript(moves, blackPlayer, whitePlayer)` in `engine.js` and rendered as a Markdown table with columns:
+
+| Column | Content |
+|---|---|
+| `#` | Move number |
+| `Color` | ⚫ Black or ⚪ White |
+| `Square` | Board coordinate (e.g. `D3`) |
+| `Time` | UTC timestamp of the move |
+
+The same transcript is displayed **in-game** via `MoveTranscriptComponent`, rendered as a terminal-style table below the spectator console. It updates live with each poll cycle.
 
 ---
 
@@ -344,6 +425,18 @@ Because outcomes are deterministic, ratings are deterministic. Any client replay
 
 ---
 
+## 📈 Leaderboard
+
+The **Leaderboard** page (`#/leaderboard`) displays all rated players sorted by ELO rating descending.
+
+* Accessible from the navigation menu at all times (no login required)
+* On load, fetches recent games from the `reversteem` tag to refresh the local ELO cache before rendering
+* Top three players are shown with 🥇 🥈 🥉 medals
+* Ratings are colour-coded: red (≥ 1400), orange (≥ 1300), green (≥ 1200), grey (below baseline)
+* Game creation controls and the Spectator Mode notice are hidden on the Leaderboard page
+
+---
+
 # 🔢 Move Validation Rules
 
 During deterministic replay:
@@ -387,27 +480,20 @@ When finished:
 
 ---
 
-# 🛑 Double-Click Prevention
+# 🛑 Double-Submission Prevention
 
-To prevent accidental duplicate moves:
+All Keychain actions are guarded against double-submission:
 
-* The board UI disables clicks while a move is submitting (`isSubmitting` flag in `GameView`)
-* `moveNumber` validation during replay rejects any duplicate or out-of-sequence move comment
-* Even if the UI fails, deterministic replay enforces correctness
+| Action | Guard mechanism |
+|---|---|
+| Start New Game | `isStartingGame` ref in root `App`; Start Game button disabled while pending |
+| Join Game (game page) | `isSubmitting` flag in `GameView`; Join button disabled while pending |
+| Join Game (dashboard / profile) | `isJoining` dictionary keyed by permlink; each game card tracked independently |
+| Post Move | `isSubmitting` flag in `GameView`; board disabled while pending |
+| Claim Timeout | `isSubmitting` flag in `GameView`; Claim button disabled while pending |
+| Post Comment | `isSubmitting` flag in `GameView`; send action blocked while pending |
 
----
-
-# 📝 `boardToMarkdown` – Native Steemit Compatibility
-
-Steemit's default interface does not execute JavaScript.
-
-Reversteem includes a `boardToMarkdown(board)` function in `engine.js` to render a visual board snapshot using a Markdown table with emoji pieces (⚫ / ⚪ / ·).
-
-This is embedded in every move comment body, allowing:
-
-* Spectators on Steemit to view the board position after each move
-* Non-dApp users to follow the game
-* Protocol transparency to remain intact outside the dApp
+All guards reset on both success and failure callback paths so the UI never locks permanently if Keychain rejects a request.
 
 ---
 
@@ -453,7 +539,8 @@ Reversteem enforces:
 * Deterministic ELO reconstruction
 * Replay cache validation (invalidated on reply count or timestamp change)
 * RPC failover resilience
-* Double-move prevention (UI lock + `moveNumber` replay guard)
+* Double-submission prevention on all Keychain actions (UI lock + `moveNumber` replay guard)
+* Invite list enforcement (UI + replay)
 
 Because state is derived from immutable history:
 
@@ -483,10 +570,14 @@ It is a deterministic state machine embedded in a social blockchain.
 
 ## 📄 License
 
-MIT
+MIT — see [LICENSE](LICENSE) on GitHub.
 
 ---
 
 ## 🌐 Live Demo
 
 [https://puncakbukit.github.io/reversteem/](https://puncakbukit.github.io/reversteem/)
+
+## 💻 Source Code
+
+[https://github.com/puncakbukit/reversteem](https://github.com/puncakbukit/reversteem)
