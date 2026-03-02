@@ -582,7 +582,7 @@ MIT — see [LICENSE](LICENSE) on GitHub.
 
 [https://github.com/puncakbukit/reversteem](https://github.com/puncakbukit/reversteem)
 
-## 💻 Assisted By
+## ⚙ Assisted By
 
 [https://chatgpt.com/](https://chatgpt.com/)
 [https://claude.ai/](https://claude.ai/)
