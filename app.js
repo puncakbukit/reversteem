@@ -17,7 +17,7 @@ const DashboardView = {
   inject: ["username", "hasKeychain", "notify", "setInviteCount"],
   components: { GamePreviewComponent, GameFilterComponent },
   data() {
-    return { games: [], loading: true, filterFn: null };
+    return { games: [], loading: true, filterFn: null, isJoining: {} };
   },
   computed: {
     invitedGames() {
@@ -85,6 +85,8 @@ const DashboardView = {
         this.notify("You are not invited to this game.", "error");
         return;
       }
+      if (this.isJoining[game.permlink]) return;
+      this.isJoining = { ...this.isJoining, [game.permlink]: true };
 
       const meta = { app: APP_INFO, action: "join" };
       const body = `## @${this.username} joined as White\n\nGame link: ${LIVE_DEMO}#/game/${game.author}/${game.permlink}`;
@@ -95,6 +97,7 @@ const DashboardView = {
         meta,
         `reversteem-join-${Date.now()}`, "",
         (res) => {
+          this.isJoining = { ...this.isJoining, [game.permlink]: false };
           if (!res.success) {
             this.notify("Keychain rejected the join request.", "error");
             return;
@@ -170,7 +173,7 @@ const ProfileView = {
   inject: ["username", "hasKeychain", "notify"],
   components: { GamePreviewComponent, GameFilterComponent },
   data() {
-    return { games: [], loading: true, filterFn: null };
+    return { games: [], loading: true, filterFn: null, isJoining: {} };
   },
   computed: {
     filteredGames() {
@@ -213,6 +216,8 @@ const ProfileView = {
         this.notify("You are not invited to this game.", "error");
         return;
       }
+      if (this.isJoining[game.permlink]) return;
+      this.isJoining = { ...this.isJoining, [game.permlink]: true };
 
       const meta = { app: APP_INFO, action: "join" };
       const body = `## @${this.username} joined as White\n\nGame link: ${LIVE_DEMO}#/game/${game.author}/${game.permlink}`;
@@ -222,6 +227,7 @@ const ProfileView = {
         meta,
         `reversteem-join-${Date.now()}`, "",
         (res) => {
+          this.isJoining = { ...this.isJoining, [game.permlink]: false };
           if (!res.success) {
             this.notify("Keychain rejected the join request.", "error");
             return;
@@ -450,7 +456,8 @@ const GameView = {
 
     postComment(text) {
       const target = this.commentTarget;
-      if (!target || !text.trim()) return;
+      if (!target || !text.trim() || this.isSubmitting) return;
+      this.isSubmitting = true;
       const meta = { app: APP_INFO, action: "spectator_comment" };
       keychainPost(
         this.username, "", text.trim(),
@@ -458,6 +465,7 @@ const GameView = {
         meta,
         `reversteem-comment-${Date.now()}`, "",
         (res) => {
+          this.isSubmitting = false;
           if (!res.success) {
             this.notify(res.message || "Failed to post comment.", "error");
             return;
@@ -469,13 +477,14 @@ const GameView = {
 
     async joinGame() {
       const state = this.gameState;
-      if (!state) return;
+      if (!state || this.isSubmitting) return;
       // Guard: enforce invite list before posting to blockchain
       const invites = Array.isArray(state.invites) ? state.invites : [];
       if (invites.length > 0 && !invites.includes(this.username.toLowerCase())) {
         this.notify("You are not invited to this game.", "error");
         return;
       }
+      this.isSubmitting = true;
       const meta = { app: APP_INFO, action: "join" };
       const body = `## @${this.username} joined as White\n\nGame link: ${LIVE_DEMO}#/game/${this.author}/${this.permlink}`;
       keychainPost(
@@ -484,6 +493,7 @@ const GameView = {
         meta,
         `reversteem-join-${Date.now()}`, "",
         (res) => {
+          this.isSubmitting = false;
           if (!res.success) {
             this.notify(res.message || "Failed to join game.", "error");
             return;
@@ -543,13 +553,14 @@ const GameView = {
 
     postTimeoutClaim() {
       const state = this.gameState;
-      if (!state) return;
+      if (!state || this.isSubmitting) return;
       // Guard: only the opponent of the timed-out player may post a claim
       const expectedWinner = state.currentPlayer === "black" ? state.whitePlayer : state.blackPlayer;
       if (this.username !== expectedWinner) {
         this.notify("You are not the opponent of the timed-out player.", "error");
         return;
       }
+      this.isSubmitting = true;
       const meta = {
         app: APP_INFO,
         action: "timeout_claim",
@@ -564,6 +575,7 @@ const GameView = {
         meta,
         `reversteem-timeout-${Date.now()}`, "",
         (res) => {
+          this.isSubmitting = false;
           if (!res.success) {
             this.notify(res.message || "Timeout claim failed. Please try again.", "error");
             return;
@@ -598,7 +610,7 @@ const GameView = {
 
         <!-- Timeout Claim -->
         <div v-if="canClaimTimeout" style="margin:10px 0;">
-          <button @click="postTimeoutClaim">Claim Timeout Victory vs @{{ loserName }}</button>
+          <button @click="postTimeoutClaim" :disabled="isSubmitting">Claim Timeout Victory vs @{{ loserName }}</button>
         </div>
 
         <!-- Timeout loss warning for the player who ran out of time -->
@@ -623,7 +635,7 @@ const GameView = {
 
         <!-- Join -->
         <div v-if="canJoin" style="margin:10px 0;">
-          <button @click="joinGame">Join as White ⚪</button>
+          <button @click="joinGame" :disabled="isSubmitting">Join as White ⚪</button>
         </div>
 
         <!-- Invite list (shown when game is open and has restrictions) -->
@@ -1352,6 +1364,8 @@ const App = {
     const loginError = ref("");
     const notification = ref({ message: "", type: "error" });
     const timeoutMinutes = ref(DEFAULT_TIMEOUT_MINUTES);
+    const isStartingGame = ref(false);
+    const showLoginForm = ref(false);
 
     const defaultTitle = computed(() => {
       const mins = timeoutMinutes.value;
@@ -1406,6 +1420,7 @@ const App = {
         hasKeychain.value = true;
         localStorage.setItem("steem_user", user);
         loginError.value = "";
+        showLoginForm.value = false;
       });
     }
 
@@ -1419,6 +1434,8 @@ const App = {
         notify("Please log in first.", "error");
         return;
       }
+      if (isStartingGame.value) return;
+      isStartingGame.value = true;
 
       const clampedTimeout = Math.max(MIN_TIMEOUT_MINUTES, Math.min(rawTimeout || DEFAULT_TIMEOUT_MINUTES, MAX_TIMEOUT_MINUTES));
       const gameTitle = (title || defaultTitle.value).trim();
@@ -1455,6 +1472,7 @@ const App = {
         JSON.stringify(meta),
         permlink, "",
         (res) => {
+          isStartingGame.value = false;
           if (!res.success) {
             notify(res.message || "Failed to create game. Please try again.", "error");
             return;
@@ -1504,7 +1522,9 @@ const App = {
       TIME_PRESETS,
       getUserRating,
       inviteCount,
-      currentRoute
+      currentRoute,
+      isStartingGame,
+      showLoginForm
     };
   },
 
@@ -1549,9 +1569,22 @@ const App = {
         target="_blank"
         style="margin: 0 10px; text-decoration: none; color: #2e7d32; font-weight: bold;"
       >GitHub</a>
+      <a
+        v-if="!username"
+        href="#"
+        @click.prevent="showLoginForm = !showLoginForm"
+        style="margin: 0 10px; text-decoration: none; color: #2e7d32; font-weight: bold;"
+      >Login</a>
+      <a
+        v-else
+        href="#"
+        @click.prevent="logout(); showLoginForm = false;"
+        style="margin: 0 10px; text-decoration: none; color: #2e7d32; font-weight: bold;"
+      >Logout</a>
     </nav>
 
-    <template v-if="!currentRoute || (!currentRoute.path.startsWith('/game/') && currentRoute.path !== '/leaderboard' && currentRoute.path !== '/about')">
+    <!-- Login form: always visible on all pages when Login link is clicked -->
+    <div v-if="!username && showLoginForm" style="margin:8px 0;">
       <auth-controls-component
         :username="username"
         :has-keychain="hasKeychain"
@@ -1559,10 +1592,32 @@ const App = {
         :timeout-minutes="timeoutMinutes"
         :login-error="loginError"
         :default-title="defaultTitle"
+        :is-submitting="isStartingGame"
+        :show-login-form="showLoginForm"
         @login="login"
         @logout="logout"
         @start-game="startGame"
         @update-timeout="updateTimeout"
+        @close-login-form="showLoginForm = false"
+      ></auth-controls-component>
+    </div>
+
+    <!-- Game creation controls: only shown on home/profile pages, and only when logged in -->
+    <template v-if="username && (!currentRoute || (!currentRoute.path.startsWith('/game/') && currentRoute.path !== '/leaderboard' && currentRoute.path !== '/about'))">
+      <auth-controls-component
+        :username="username"
+        :has-keychain="hasKeychain"
+        :time-presets="TIME_PRESETS"
+        :timeout-minutes="timeoutMinutes"
+        :login-error="loginError"
+        :default-title="defaultTitle"
+        :is-submitting="isStartingGame"
+        :show-login-form="showLoginForm"
+        @login="login"
+        @logout="logout"
+        @start-game="startGame"
+        @update-timeout="updateTimeout"
+        @close-login-form="showLoginForm = false"
       ></auth-controls-component>
 
       <div v-if="keychainReady && !hasKeychain" class="keychain-notice">

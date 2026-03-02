@@ -140,23 +140,31 @@ const AuthControlsComponent = {
     timePresets: Object,
     timeoutMinutes: Number,
     loginError: String,
-    defaultTitle: String
+    defaultTitle: String,
+    isSubmitting: { type: Boolean, default: false },
+    showLoginForm: { type: Boolean, default: false }
   },
-  emits: ["login", "logout", "start-game", "update-timeout"],
+  emits: ["login", "logout", "start-game", "update-timeout", "close-login-form"],
   data() {
     return {
       selectedMode: "standard",
       usernameInput: "",
-      showLoginForm: false,
       gameTitle: "",
       titleEdited: false,
       inviteInputs: ["", "", ""]   // up to 3 invite slots
     };
   },
   watch: {
+    // Clear input and focus field whenever the form is shown
+    showLoginForm(val) {
+      if (val) {
+        this.usernameInput = "";
+        this.$nextTick(() => this.$refs.usernameField?.focus());
+      }
+    },
     // Close login form when login succeeds
     username(val) {
-      if (val) this.showLoginForm = false;
+      if (val) this.$emit("close-login-form");
     },
     // Keep gameTitle in sync with the computed default whenever it changes,
     // but only if the user hasn't manually edited it
@@ -197,14 +205,9 @@ const AuthControlsComponent = {
       if (!val) return;
       this.$emit("login", val);
     },
-    openLoginForm() {
-      this.usernameInput = "";
-      this.showLoginForm = true;
-      this.$nextTick(() => this.$refs.usernameField?.focus());
-    },
     onLoginKeydown(e) {
       if (e.key === "Enter") this.submitLogin();
-      if (e.key === "Escape") this.showLoginForm = false;
+      if (e.key === "Escape") this.$emit("close-login-form");
     },
     submitStartGame() {
       const title = this.gameTitle.trim() || this.defaultTitle;
@@ -217,33 +220,26 @@ const AuthControlsComponent = {
   },
   template: `
     <div>
-      <!-- Logged-out state -->
-      <div v-if="!username">
-        <button v-if="!showLoginForm" @click="openLoginForm">Login with Steem</button>
-
-        <!-- Inline login form -->
-        <div v-if="showLoginForm" style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:center;">
-          <input
-            ref="usernameField"
-            v-model="usernameInput"
-            type="text"
-            placeholder="Steem username"
-            autocomplete="username"
-            style="padding:7px 10px; border-radius:6px; border:1px solid #ccc; font-size:14px; width:180px;"
-            @keydown="onLoginKeydown"
-          />
-          <button @click="submitLogin" :disabled="!usernameInput.trim()">Sign in</button>
-          <button @click="showLoginForm = false" style="background:#888;">Cancel</button>
-          <div v-if="loginError" style="width:100%; color:#c62828; font-size:13px; margin-top:4px;">
-            {{ loginError }}
-          </div>
+      <!-- Login form (shown when nav Login link is clicked, logged-out only) -->
+      <div v-if="!username && showLoginForm" style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:center; margin:8px 0;">
+        <input
+          ref="usernameField"
+          v-model="usernameInput"
+          type="text"
+          placeholder="Steem username"
+          autocomplete="username"
+          style="padding:7px 10px; border-radius:6px; border:1px solid #ccc; font-size:14px; width:180px;"
+          @keydown="onLoginKeydown"
+        />
+        <button @click="submitLogin" :disabled="!usernameInput.trim()">Sign in</button>
+        <button @click="$emit('close-login-form')" style="background:#888;">Cancel</button>
+        <div v-if="loginError" style="width:100%; color:#c62828; font-size:13px; margin-top:4px;">
+          {{ loginError }}
         </div>
       </div>
 
-      <!-- Logged-in state -->
+      <!-- Logged-in: game creation controls -->
       <div v-if="username && hasKeychain">
-        <button @click="$emit('logout')">Logout</button>
-
         <!-- Time controls -->
         <div id="time-controls">
           <button
@@ -301,7 +297,7 @@ const AuthControlsComponent = {
         </div>
 
         <br/>
-        <button @click="submitStartGame">Start New Game</button>
+        <button @click="submitStartGame" :disabled="isSubmitting">Start New Game</button>
         <p>Welcome <a :href="'#/@' + username" style="color:#2e7d32;font-weight:bold;text-decoration:none;">@{{ username }}</a></p>
       </div>
     </div>
