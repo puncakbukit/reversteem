@@ -584,7 +584,7 @@ MIT — see [LICENSE](LICENSE) on GitHub.
 
 ## ⚙ Assisted By
 
-[https://chatgpt.com/](https://chatgpt.com/)
-[https://claude.ai/](https://claude.ai/)
+* [https://chatgpt.com/](https://chatgpt.com/)
+* [https://claude.ai/](https://claude.ai/)
 
 
